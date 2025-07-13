@@ -3,6 +3,7 @@
 
 import { getAppState } from './app-state.js';
 import { showMessage, addLogEntry } from './utilities.js';
+import { fetchBatchImages } from './data-loader.js';
 
 /**
  * Handle batch selection and load images for the selected batch
@@ -324,4 +325,120 @@ export function updateBatchInfo(batchData) {
     `;
     
     batchInfo.classList.remove('hidden');
+}
+
+/**
+ * Show loading state in image list
+ */
+function showLoadingState() {
+    const imageList = document.getElementById('image-list');
+    if (imageList) {
+        imageList.innerHTML = `
+            <li class="flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <span>Loading images...</span>
+                </div>
+            </li>
+        `;
+    }
+}
+
+/**
+ * Hide loading state 
+ */
+function hideLoadingState() {
+    // Loading state is hidden when images are displayed
+    console.log('[DEBUG] Loading state hidden');
+}
+
+/**
+ * Clear image display
+ */
+function clearImageDisplay() {
+    const imageList = document.getElementById('image-list');
+    if (imageList) {
+        imageList.innerHTML = '';
+    }
+}
+
+/**
+ * Show no images state
+ */
+function showNoImagesState() {
+    const imageList = document.getElementById('image-list');
+    if (imageList) {
+        imageList.innerHTML = `
+            <li class="flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                <div class="text-center">
+                    <i class="fas fa-images text-4xl mb-2"></i>
+                    <div>No images found in this batch</div>
+                </div>
+            </li>
+        `;
+    }
+}
+
+/**
+ * Show error state
+ */
+function showErrorState(errorMessage) {
+    const imageList = document.getElementById('image-list');
+    if (imageList) {
+        imageList.innerHTML = `
+            <li class="flex items-center justify-center p-8 text-red-500 dark:text-red-400">
+                <div class="text-center">
+                    <i class="fas fa-exclamation-triangle text-4xl mb-2"></i>
+                    <div>Error loading images</div>
+                    <small class="text-gray-500">${errorMessage}</small>
+                </div>
+            </li>
+        `;
+    }
+}
+
+/**
+ * Update image list with new images
+ */
+async function updateImageList(images) {
+    const AppState = getAppState();
+    const batchId = AppState.selectedBatch;
+    
+    if (!images || images.length === 0) {
+        showNoImagesState();
+        return;
+    }
+    
+    // Use existing displayBatchImages function
+    displayBatchImages(images, batchId);
+}
+
+/**
+ * Load first image
+ */
+async function loadFirstImage(image, batchId) {
+    if (!image) return;
+    
+    // Extract image info
+    let imageId, imagePath;
+    
+    if (typeof image === 'string') {
+        imagePath = image;
+        const filename = image.split('/').pop();
+        const lastDotIndex = filename.lastIndexOf('.');
+        imageId = lastDotIndex > -1 ? filename.substring(0, lastDotIndex) : filename;
+    } else if (image.file_name) {
+        imagePath = image.file_name;
+        const filename = image.file_name.split('/').pop();
+        const lastDotIndex = filename.lastIndexOf('.');
+        imageId = lastDotIndex > -1 ? filename.substring(0, lastDotIndex) : filename;
+    } else {
+        console.warn('[DEBUG] Unknown image format:', image);
+        return;
+    }
+    
+    console.log(`[DEBUG] Loading first image: ${imageId} (${imagePath})`);
+    
+    // Use existing handleImageSelection function
+    await handleImageSelection(imageId, imagePath, batchId);
 }

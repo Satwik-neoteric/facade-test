@@ -193,49 +193,11 @@ Promise.all([
     console.log("[DEBUG] All 15 modules loaded and available globally");
     console.log("[DEBUG] Labelling code refactoring complete - organized into modular structure");
     
-    // Setup batch selection handler after modules are loaded
-    setupBatchSelectionHandler();
-    
 }).catch(error => {
     console.error("[DEBUG] Error loading modules:", error);
 });
 
-/**
- * Setup the batch selection dropdown handler
- */
-function setupBatchSelectionHandler() {
-    const batchSelect = document.getElementById('batch-selector');
-    if (batchSelect) {
-        console.log('[DEBUG] Setting up batch selection handler');
-        
-        batchSelect.addEventListener('change', async function(event) {
-            const selectedBatchId = event.target.value;
-            console.log(`[DEBUG] Batch selection changed to: ${selectedBatchId}`);
-            
-            if (selectedBatchId && window.modules?.batchManager?.handleBatchSelection) {
-                try {
-                    await window.modules.batchManager.handleBatchSelection(selectedBatchId);
-                } catch (error) {
-                    console.error('[ERROR] Batch selection failed:', error);
-                    showMessage(`Failed to load batch: ${error.message}`, 'error');
-                }
-            } else if (selectedBatchId && window.handleBatchSelection) {
-                // Fallback to global function
-                try {
-                    await window.handleBatchSelection(selectedBatchId);
-                } catch (error) {
-                    console.error('[ERROR] Batch selection failed (fallback):', error);
-                    showMessage(`Failed to load batch: ${error.message}`, 'error');
-                }
-            }
-        });
-        
-        console.log('[DEBUG] Batch selection handler setup complete');
-    } else {
-        console.warn('[DEBUG] Batch selector element not found, retrying in 1 second...');
-        setTimeout(setupBatchSelectionHandler, 1000);
-    }
-}
-
-// Remove the placeholder function since we now have proper implementation
-// The real handleBatchSelection is now available from batchManager module
+// Error handler for any other uncaught errors
+window.addEventListener('error', function(error) {
+    console.error('[ERROR] Uncaught error:', error);
+});

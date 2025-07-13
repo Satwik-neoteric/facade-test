@@ -44,6 +44,30 @@ export async function loadBatches() {
     }
 }
 
+/**
+ * Fetch images for a specific batch
+ */
+export async function fetchBatchImages(batchId) {
+    try {
+        console.log(`[DEBUG] Fetching images for batch: ${batchId}`);
+        const response = await fetch(`/api/batch/${batchId}/images`);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load batch images: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log(`[DEBUG] Batch images loaded successfully:`, data);
+        
+        // Return the images array from the response
+        return data.images || [];
+        
+    } catch (error) {
+        console.error(`[DEBUG] Error loading batch images for ${batchId}:`, error);
+        showMessage(`Error loading batch images: ${error.message}`, "error");
+        throw error;
+    }
+}
 
 /**
  * Load available classes/categories
