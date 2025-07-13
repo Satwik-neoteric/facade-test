@@ -6,6 +6,7 @@ import { initUserRole, initializeUserRoles, setupBasedOnRole } from './modules/u
 import { loadBatches, loadClasses } from './modules/data-loader.js';
 import { initCanvas } from './modules/canvas-manager.js';
 import { showMessage } from './modules/utilities.js';
+import { setupEventHandlers, setupNotesDialogHandlers, setupFilterDialogHandlers } from './modules/event-handlers.js';
 
 $(document).ready(function() {
     // Import image preloader
@@ -43,6 +44,8 @@ $(document).ready(function() {
             
             // Setup event handlers
             setupEventHandlers();
+            setupNotesDialogHandlers();
+            setupFilterDialogHandlers();
             
             // Initialize canvas
             initCanvas();
@@ -92,35 +95,6 @@ $(document).ready(function() {
         }
     }
 
-    // Setup event handlers (this will need to be modularized later)
-    function setupEventHandlers() {
-        console.log("[DEBUG] Setting up event handlers");
-        
-        // Batch selection handler
-        const batchSelector = document.getElementById('batch-selector');
-        if (batchSelector) {
-            batchSelector.addEventListener('change', function() {
-                const batchId = this.value;
-                if (batchId) {
-                    handleBatchSelection(batchId);
-                }
-            });
-        }
-        
-        // Mode toggle handler
-        const modeToggle = document.getElementById('mode-toggle-switch');
-        if (modeToggle) {
-            modeToggle.addEventListener('change', function() {
-                if (window.toggleValidationMode) {
-                    window.toggleValidationMode(this.checked);
-                }
-            });
-        }
-        
-        // Button handlers will be added by the event-handlers module
-        console.log("[DEBUG] Basic event handlers setup complete");
-    }
-
     // Start the application
     initApp();
 });
@@ -144,13 +118,21 @@ Promise.all([
     import('./modules/user-roles.js'),
     import('./modules/data-loader.js'),
     import('./modules/canvas-manager.js'),
-    import('./modules/utilities.js')
-]).then(([appState, userRoles, dataLoader, canvasManager, utilities]) => {
+    import('./modules/utilities.js'),
+    import('./modules/batch-manager.js'),
+    import('./modules/annotation-manager.js'),
+    import('./modules/data-converter.js'),
+    import('./modules/event-handlers.js')
+]).then(([appState, userRoles, dataLoader, canvasManager, utilities, batchManager, annotationManager, dataConverter, eventHandlers]) => {
     window.modules.appState = appState;
     window.modules.userRoles = userRoles;
     window.modules.dataLoader = dataLoader;
     window.modules.canvasManager = canvasManager;
     window.modules.utilities = utilities;
+    window.modules.batchManager = batchManager;
+    window.modules.annotationManager = annotationManager;
+    window.modules.dataConverter = dataConverter;
+    window.modules.eventHandlers = eventHandlers;
     
     console.log("[DEBUG] All modules loaded and available globally");
 }).catch(error => {
