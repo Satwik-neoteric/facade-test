@@ -467,6 +467,18 @@ function setupKeyboardShortcuts() {
                 }
                 break;
                 
+            case 'enter':
+                // Enter: Complete polygon or commit edits
+                event.preventDefault();
+                if (AppState.currentMode === 'polygon' && AppState.isDrawing && AppState.polyPoints && AppState.polyPoints.length >= 3) {
+                    console.log("[DEBUG] Enter key - completing polygon");
+                    if (window.modules?.canvasManager?.completePolygon) {
+                        // Need to expose the completePolygon function
+                        window.modules.canvasManager.completePolygon();
+                    }
+                }
+                break;
+                
             case 'escape':
                 // Escape: Deselect
                 event.preventDefault();
@@ -480,18 +492,31 @@ function setupKeyboardShortcuts() {
                 break;
                 
             case 'x':
-                // X: Toggle annotations visibility (same as H)
+                // X: Zoom out
+                event.preventDefault();
+                if (window.modules?.canvasManager?.zoomCanvas) {
+                    window.modules.canvasManager.zoomCanvas(1/1.2);
+                } else if (AppState.fabricCanvas) {
+                    const currentZoom = AppState.fabricCanvas.getZoom();
+                    AppState.fabricCanvas.setZoom(currentZoom / 1.2);
+                    AppState.fabricCanvas.renderAll();
+                }
+                break;
+                
+            case 'y':
+                // Y: Toggle annotations visibility (same as H)
                 event.preventDefault();
                 toggleAnnotationVisibility();
                 break;
                 
-            case 'y':
-                // Y: Toggle zoom mode or reset zoom
+            case 'z':
+                // Z: Zoom in
                 event.preventDefault();
-                if (window.modules?.canvasManager?.resetZoom) {
-                    window.modules.canvasManager.resetZoom();
+                if (window.modules?.canvasManager?.zoomCanvas) {
+                    window.modules.canvasManager.zoomCanvas(1.2);
                 } else if (AppState.fabricCanvas) {
-                    AppState.fabricCanvas.setZoom(1);
+                    const currentZoom = AppState.fabricCanvas.getZoom();
+                    AppState.fabricCanvas.setZoom(currentZoom * 1.2);
                     AppState.fabricCanvas.renderAll();
                 }
                 break;

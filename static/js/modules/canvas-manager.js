@@ -56,6 +56,9 @@ export function setupCanvasEvents(canvas) {
     // Mouse up event
     canvas.on('mouse:up', handleMouseUp);
     
+    // Double click to complete polygon
+    canvas.on('mouse:dblclick', handleDoubleClick);
+    
     // Selection events
     canvas.on('selection:created', handleSelectionEvent);
     canvas.on('selection:updated', handleSelectionEvent);
@@ -127,6 +130,88 @@ function handleMouseUp(options) {
     if (AppState.currentMode === 'polygon' && AppState.isDrawing) {
         // Continue polygon drawing
         return;
+    }
+}
+
+/**
+ * Handle double click events
+ */
+function handleDoubleClick(options) {
+    const AppState = getAppState();
+    
+    if (AppState.currentMode === 'polygon' && AppState.isDrawing && AppState.polyPoints && AppState.polyPoints.length >= 3) {
+        console.log("[DEBUG] Double click - completing polygon");
+        completePolygon();
+    }
+}
+
+/**
+ * Complete polygon drawing
+ */
+export function completePolygon() {
+    const AppState = getAppState();
+    const canvas = AppState.fabricCanvas;
+    
+    if (!AppState.isDrawing || !AppState.polyPoints || AppState.polyPoints.length < 3) {
+        return;
+    }
+    
+    try {
+        // Remove temporary line
+        if (AppState.activeLine) {
+            canvas.remove(AppState.activeLine);
+            AppState.activeLine = null;
+        }
+        
+        // Create final polygon
+        const polygon = new fabric.Polygon(AppState.polyPoints, {
+            left: 0,
+            top: 0,
+            fill: getCategoryColorByName(AppState.currentClass, true),
+            stroke: getCategoryColorByName(AppState.currentClass),
+            strokeWidth: 2,
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: false,
+            lockMovementX: true,
+            lockMovementY: true
+        });
+        
+        // Add class and metadata
+        polygon.class = AppState.currentClass;
+        polygon.customData = {
+            objectId: generateObjectId(AppState.currentClass),
+            imagePoints: [...AppState.polyPoints] // Copy the points
+        };
+        
+        // Add to canvas and annotations
+        canvas.add(polygon);
+        AppState.annotations.push(polygon);
+        
+        // Reset drawing state
+        AppState.isDrawing = false;
+        AppState.polyPoints = [];
+        AppState.linePoints = [];
+        AppState.currentMode = 'select';
+        
+        // Update mode display
+        const modeStatus = document.getElementById('mode-status');
+        if (modeStatus) {
+            modeStatus.textContent = 'Select';
+        }
+        
+        // Update annotation list
+        if (window.modules?.annotationManager?.rebuildAnnotationList) {
+            window.modules.annotationManager.rebuildAnnotationList();
+        }
+        
+        canvas.renderAll();
+        addLogEntry(`Created ${AppState.currentClass} annotation`);
+        
+    } catch (error) {
+        console.error("[DEBUG] Error completing polygon:", error);
+        showMessage("Error creating annotation", "error");
     }
 }
 
