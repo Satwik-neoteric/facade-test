@@ -38,11 +38,10 @@ export async function saveAnnotations(options = {}) {
             throw new Error("COCO payload is missing required keys or is malformed");
         }
         
-        // Prepare the payload for saving
+        // Prepare the payload for saving - match AnnotationSaveRequest structure
         const payload = {
-            coco: cocoPayload, // Should be a dict with keys: images, annotations, categories
-            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`],
-            admin_metadata: {} // Add this if your backend expects it, even if empty
+            coco: cocoPayload, // CocoModel with all required fields
+            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
         };
         
         console.log("[DEBUG] Saving annotations payload:", payload);

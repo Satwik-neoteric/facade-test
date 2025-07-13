@@ -182,8 +182,10 @@ export function completePolygon() {
         // Add class and metadata
         polygon.class = AppState.currentClass;
         polygon.customData = {
+            class: AppState.currentClass, // Add class to customData for data converter
             objectId: generateObjectId(AppState.currentClass),
-            imagePoints: [...AppState.polyPoints] // Copy the points
+            imagePoints: [...AppState.polyPoints], // Copy the points
+            created: new Date().toISOString()
         };
         
         // Add to canvas and annotations

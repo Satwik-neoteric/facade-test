@@ -189,7 +189,7 @@ export function convertFabricToCoco(annotations) {
     }
     
     try {
-        // Create COCO structure
+        // Create COCO structure with all required metadata fields
         const coco = {
             info: {
                 description: "Facade Studio Annotations",
@@ -199,7 +199,18 @@ export function convertFabricToCoco(annotations) {
             },
             images: [],
             annotations: [],
-            categories: AppState.classes || []
+            categories: AppState.classes || [],
+            // Add required metadata fields like the working example
+            BatchID: AppState.currentBatch,
+            ImageID: AppState.currentImageId,
+            id: AppState.currentImageId,
+            Status: "Labelled",
+            admin_metadata: {
+                Validation_User: "",
+                Validation_Date: "",
+                Validation_Action: "",
+                Notes: ""
+            }
         };
         
         // Add current image info if available
