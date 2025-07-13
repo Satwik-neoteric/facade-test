@@ -34,6 +34,9 @@ export function setupEventHandlers() {
     // Mode toggle handler
     setupModeToggleHandler();
     
+    // Class selection handlers
+    setupClassSelectionHandlers();
+    
     // Keyboard shortcuts
     setupKeyboardShortcuts();
     
@@ -420,6 +423,85 @@ function setupModeToggleHandler() {
             window.toggleValidationMode(isValidationMode);
         }
     });
+}
+
+/**
+ * Setup class selection button handlers
+ */
+function setupClassSelectionHandlers() {
+    // Set up delegated event handler for dynamically created class buttons
+    const classTable = document.getElementById('class-selection-table');
+    if (!classTable) return;
+    
+    classTable.addEventListener('click', function(event) {
+        const button = event.target.closest('.class-button');
+        if (!button) return;
+        
+        handleClassButtonClick(button);
+    });
+    
+    console.log("[DEBUG] Class selection handlers setup complete");
+}
+
+/**
+ * Handle class button click
+ */
+function handleClassButtonClick(button) {
+    const AppState = getAppState();
+    
+    // Update active state
+    document.querySelectorAll('.class-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    button.classList.add('active');
+    
+    // Set current class
+    const className = button.dataset.class;
+    AppState.currentClass = className;
+    AppState.currentMode = 'polygon'; // Switch to drawing mode
+    
+    // Update status displays
+    const classStatus = document.getElementById('class-status');
+    if (classStatus) {
+        classStatus.textContent = className;
+    }
+    
+    const modeStatus = document.getElementById('mode-status');
+    if (modeStatus) {
+        modeStatus.textContent = 'Draw';
+    }
+    
+    console.log(`[DEBUG] Selected class: ${className}, switched to drawing mode`);
+    addLogEntry(`Selected class: ${className}`);
+    showMessage(`Selected class: ${className}. Click on canvas to start drawing.`, "info");
+}
+
+/**
+ * Populate class selection buttons
+ */
+export function populateClassButtons(classes) {
+    const container = document.getElementById('class-selection-table');
+    if (!container || !classes || !Array.isArray(classes)) return;
+    
+    container.innerHTML = '';
+    
+    classes.forEach((cls, index) => {
+        const button = document.createElement('button');
+        button.className = 'class-button px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-md';
+        button.dataset.class = cls.name;
+        button.style.backgroundColor = cls.color;
+        button.style.color = '#ffffff';
+        button.textContent = cls.name.replace(/-/g, ' ');
+        container.appendChild(button);
+    });
+    
+    // Auto-select first class
+    const firstButton = container.querySelector('.class-button');
+    if (firstButton) {
+        handleClassButtonClick(firstButton);
+    }
+    
+    console.log(`[DEBUG] Populated ${classes.length} class buttons`);
 }
 
 /**
