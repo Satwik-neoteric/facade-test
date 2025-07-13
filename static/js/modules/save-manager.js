@@ -33,10 +33,9 @@ export async function saveAnnotations(options = {}) {
         
         // Prepare the payload for saving
         const payload = {
-            annotations: cocoPayload.annotations,
-            categories: cocoPayload.categories,
-            action: options.action || 'save',
-            auto_save: options.autoSave || false
+            coco: cocoPayload, // Should be a dict with keys: images, annotations, categories
+            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`],
+            admin_metadata: {} // Add this if your backend expects it, even if empty
         };
         
         console.log("[DEBUG] Saving annotations payload:", payload);

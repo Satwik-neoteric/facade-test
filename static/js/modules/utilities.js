@@ -104,7 +104,7 @@ export function addLogEntry(message) {
 export function getCategoryColorByName(className, asTransparentFill = false) {
     const AppState = getAppState();
     const category = AppState.classes.find(cls => cls.name === className);
-    
+    let resultColor = null;
     if (category) {
         if (asTransparentFill) {
             // Convert solid color to transparent fill
@@ -114,13 +114,19 @@ export function getCategoryColorByName(className, asTransparentFill = false) {
                 const r = parseInt(color.slice(1, 3), 16);
                 const g = parseInt(color.slice(3, 5), 16);
                 const b = parseInt(color.slice(5, 7), 16);
-                return `rgba(${r}, ${g}, ${b}, 0.3)`;
+                resultColor = `rgba(${r}, ${g}, ${b}, 0.3)`;
             } else if (color.startsWith('rgb')) {
                 // Convert rgb to rgba with transparency
-                return color.replace('rgb', 'rgba').replace(')', ', 0.3)');
+                resultColor = color.replace('rgb', 'rgba').replace(')', ', 0.3)');
             }
+        } else {
+            resultColor = category.color;
         }
-        return category.color;
+        console.log('[getCategoryColorByName]', { className, asTransparentFill, resultColor });
+        return resultColor;
+    } else {
+        console.log('[getCategoryColorByName] Category not found:', { className });
+        return null;
     }
     
     // Default color if not found

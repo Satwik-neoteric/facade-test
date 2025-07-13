@@ -168,7 +168,7 @@ export function completePolygon() {
         
         // Create final polygon with proper positioning
         const polygon = new fabric.Polygon(AppState.polyPoints, {
-            fill: getCategoryColorByName(AppState.currentClass, true),
+            fill: getCategoryColorByName(AppState.currentClass),
             stroke: getCategoryColorByName(AppState.currentClass),
             strokeWidth: 2,
             selectable: true,

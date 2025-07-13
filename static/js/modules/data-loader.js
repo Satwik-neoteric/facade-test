@@ -282,11 +282,12 @@ export async function loadAnnotations(imagePath) {
         }
         
         const response = await fetch(`/api/annotations/${batchId}/${imageId}`);
-        
+        const data = await response.json();
+        console.log('[ANNOTATION API RESPONSE]', data);
         if (response.ok) {
             const data = await response.json();
+            console.log('[ANNOTATION API RESPONSE]', data);
             console.log(`[DEBUG] Loaded ${data.annotations?.length || 0} annotations`);
-            
             if (data.annotations && data.annotations.length > 0) {
                 // Parse and display annotations - pass the full data structure
                 if (window.parseCocoAnnotations) {
@@ -305,7 +306,6 @@ export async function loadAnnotations(imagePath) {
         } else {
             console.warn(`[DEBUG] Failed to load annotations: ${response.status}`);
         }
-        
         return [];
         
     } catch (error) {

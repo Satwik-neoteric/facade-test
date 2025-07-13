@@ -341,7 +341,7 @@ export function initializePolygon(polygon, className, points) {
     polygon.set({
         strokeWidth: 2,
         stroke: getCategoryColorByName(className),
-        fill: getCategoryColorByName(className, true),
+        fill: getCategoryColorByName(className),
         selectable: true,
         evented: true,
         hasControls: false,
@@ -394,7 +394,7 @@ export function createPolygonAnnotation(points, className) {
     const polygon = new fabric.Polygon(points, {
         strokeWidth: 2,
         stroke: getCategoryColorByName(className),
-        fill: getCategoryColorByName(className, true),
+        fill: getCategoryColorByName(className),
         selectable: true,
         evented: true,
         objectCaching: false,

@@ -63,69 +63,62 @@ function setupSubmitButtonHandler() {
  */
 async function handleSubmitAnnotations() {
     const AppState = getAppState();
-    
+
     try {
         console.log("[DEBUG] Submit button clicked");
-        
+
         if (!AppState.currentBatch || !AppState.currentImageId) {
             showMessage("No image loaded to submit annotations for", "warning");
             return;
         }
-        
+
         if (!AppState.annotations || AppState.annotations.length === 0) {
             showMessage("No annotations to submit", "warning");
             return;
         }
-        
-        // Show loading state
-        const submitBtn = document.getElementById('submit-btn');
-        if (submitBtn) {
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Submitting...</span>';
-        }
-        
+
         // Convert annotations to COCO format
         const cocoPayload = convertFabricToCoco(AppState.annotations);
-        
+
         if (!cocoPayload) {
             throw new Error("Failed to convert annotations to COCO format");
         }
-        
+
         // Prepare the payload for submission
         const payload = {
-            batch_id: AppState.currentBatch,
-            image_id: AppState.currentImageId,
-            annotations: cocoPayload.annotations,
-            categories: cocoPayload.categories
+            coco: cocoPayload,
+            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
         };
-        
-        console.log("[DEBUG] Submitting annotations:", payload);
-        
+
+        const apiUrl = `/api/annotations/${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
+
+        console.log("[DEBUG] Submitting annotations to:", apiUrl, payload);
+
         // Submit to server
-        const response = await fetch('/api/annotations', {
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.detail || `Server error: ${response.status}`);
         }
-        
+
         const result = await response.json();
         console.log("[DEBUG] Submission successful:", result);
-        
+
         addLogEntry(`Submitted ${AppState.annotations.length} annotations for ${AppState.currentImageId}`);
         showMessage(`Successfully submitted ${AppState.annotations.length} annotations`, "success");
-        
+
         // Auto-navigate to next image after successful submission
         setTimeout(() => {
             navigateToNextImage();
         }, 1000);
-        
+
     } catch (error) {
         console.error("[DEBUG] Error submitting annotations:", error);
         showMessage(`Error submitting annotations: ${error.message}`, "error");
