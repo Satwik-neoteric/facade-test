@@ -154,8 +154,9 @@ export async function loadImage(imagePath, loadId = null) {
                     console.log(`[DEBUG] Image loaded successfully: ${img.naturalWidth}x${img.naturalHeight}`);
                     
                     if (canvas) {
-                        // Clear canvas
+                        // Clear canvas and annotations
                         canvas.clear();
+                        AppState.annotations = []; // Clear annotations array
                         
                         // Get container dimensions for responsive sizing
                         const canvasContainer = document.getElementById('canvas-container');
@@ -214,6 +215,9 @@ export async function loadImage(imagePath, loadId = null) {
                         // Update state
                         AppState.currentImage = fabricImg;
                         AppState.currentImagePath = imagePath;
+                        AppState.currentScale = scale; // Set currentScale for annotation coordinate conversion
+                        AppState.originalImageWidth = img.naturalWidth;
+                        AppState.originalImageHeight = img.naturalHeight;
                         
                         // Center canvas in container
                         if (window.modules?.canvasManager?.centerCanvas) {

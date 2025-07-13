@@ -25,12 +25,13 @@ export function parseCocoAnnotations(cocoData) {
     AppState.annotations = [];
 
     try {
-        // Get image scale and offset for correct placement
-        const imageObj = AppState.currentImage;
-        const scaleX = imageObj?.scaleX || 1;
-        const scaleY = imageObj?.scaleY || 1;
-        const imageLeft = imageObj?.left || 0;
-        const imageTop = imageObj?.top || 0;
+        // Use the same scaling logic as original main.js
+        if (!AppState.currentScale || !AppState.originalImageWidth) {
+            console.warn("[DEBUG] Missing scale information for annotation loading");
+            return;
+        }
+
+        console.log(`[DEBUG] Current scale: ${AppState.currentScale}, Original dimensions: ${AppState.originalImageWidth}x${AppState.originalImageHeight}`);
 
         cocoData.annotations.forEach((annotation, index) => {
             console.log(`[DEBUG] Processing annotation ${index}:`, annotation);
@@ -51,22 +52,25 @@ export function parseCocoAnnotations(cocoData) {
                 const segmentation = annotation.segmentation[0]; // Take first segmentation
 
                 if (Array.isArray(segmentation) && segmentation.length >= 6) {
-                    // Convert flat array to points array with proper scaling and offset
+                    // Convert flat array to points array using original main.js scaling logic
                     const points = [];
                     for (let i = 0; i < segmentation.length; i += 2) {
-                        if (i + 1 < segmentation.length) {
-                            // Convert image coordinates to canvas coordinates
-                            const canvasX = imageLeft + segmentation[i] * scaleX;
-                            const canvasY = imageTop + segmentation[i + 1] * scaleY;
-
-                            points.push({
-                                x: canvasX,
-                                y: canvasY
-                            });
+                        if (typeof segmentation[i] !== 'number' || typeof segmentation[i+1] !== 'number') {
+                            console.warn(`[DEBUG] Invalid coordinate at position ${i}`);
+                            continue;
                         }
+                        
+                        // Convert image coordinates to canvas coordinates using original formula
+                        const canvasX = segmentation[i] * AppState.currentScale;
+                        const canvasY = segmentation[i + 1] * AppState.currentScale;
+
+                        points.push({
+                            x: canvasX,
+                            y: canvasY
+                        });
                     }
 
-                    console.log(`[DEBUG] Converted ${points.length} points for ${className} with scaleX ${scaleX}, scaleY ${scaleY}, left ${imageLeft}, top ${imageTop}`);
+                    console.log(`[DEBUG] Converted ${points.length} points for ${className} with currentScale ${AppState.currentScale}`);
 
                     if (points.length >= 3) {
                         // Get proper colors
@@ -183,9 +187,13 @@ export function convertFabricToCoco(annotations) {
     
     console.log("[DEBUG] Converting Fabric.js annotations to COCO format");
     
-    if (!annotations || !Array.isArray(annotations)) {
-        console.warn("[DEBUG] No valid annotations provided for conversion");
-        return null;
+    // Always create valid COCO structure, even for empty annotations
+    if (!annotations) {
+        annotations = [];
+    }
+    if (!Array.isArray(annotations)) {
+        console.warn("[DEBUG] Invalid annotations format, using empty array");
+        annotations = [];
     }
     
     try {

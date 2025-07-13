@@ -97,6 +97,9 @@ async function handleSubmitAnnotations() {
                 fill: annotation.fill
             });
         });
+        // Allow empty annotations - save with empty array if no annotations exist
+        const annotationCount = AppState.annotations ? AppState.annotations.length : 0;
+        console.log(`[DEBUG] Submitting ${annotationCount} annotations`);
 
         // Convert annotations to COCO format
         console.log("[DEBUG] Converting to COCO format...");
@@ -136,6 +139,8 @@ async function handleSubmitAnnotations() {
                 categories: cocoPayload.categories || []
             },
             log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
+            coco: cocoPayload,
+            log: [`Submitted ${annotationCount} annotations at ${new Date().toISOString()}`]
         };
 
         console.log("[DEBUG] Final payload structure:", {
