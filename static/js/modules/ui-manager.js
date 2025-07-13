@@ -122,7 +122,7 @@ export function updateButtonStates() {
             deleteBtn.disabled = false;
             deleteBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         } else {
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> <span>Delete Image</span>';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> <span>Delete</span>';
             deleteBtn.disabled = !hasImage;
             if (deleteBtn.disabled) {
                 deleteBtn.classList.add('opacity-50', 'cursor-not-allowed');

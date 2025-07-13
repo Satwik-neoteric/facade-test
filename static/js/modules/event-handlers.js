@@ -234,7 +234,7 @@ function setupDeleteButtonHandler() {
 }
 
 /**
- * Handle delete action (either selected annotation or entire image)
+ * Handle delete action (either selected annotation or all annotations)
  */
 function handleDeleteAction() {
     const AppState = getAppState();
@@ -244,35 +244,99 @@ function handleDeleteAction() {
     if (AppState.activePolygon) {
         // Delete selected annotation
         if (confirm("Are you sure you want to delete the selected annotation?")) {
-            deleteSelectedPolygon();
+            if (window.modules?.annotationManager?.deleteSelectedPolygon) {
+                window.modules.annotationManager.deleteSelectedPolygon();
+            }
+        }
+    } else if (AppState.annotations && AppState.annotations.length > 0) {
+        // Delete all annotations from current image
+        if (confirm("Are you sure you want to delete ALL annotations from this image?")) {
+            handleDeleteAllAnnotations();
         }
     } else {
-        // Delete entire image (mark as deleted)
-        if (confirm("Are you sure you want to mark this image as deleted?")) {
-            handleDeleteImage();
+        showMessage("No annotations to delete", "info");
+    }
+}
+
+/**
+ * Delete all annotations from current image
+ */
+async function handleDeleteAllAnnotations() {
+    const AppState = getAppState();
+    
+    try {
+        console.log("[DEBUG] Deleting all annotations from current image");
+        
+        if (!AppState.currentBatch || !AppState.currentImageId) {
+            showMessage("No image loaded", "warning");
+            return;
+        }
+        
+        // Show loading message
+        showMessage("Deleting all annotations...", "info");
+        
+        // Clear annotations from UI immediately
+        if (window.modules?.annotationManager?.clearAllAnnotations) {
+            window.modules.annotationManager.clearAllAnnotations();
+        }
+        
+        // Save empty annotations to server to persist the deletion
+        const success = await saveEmptyAnnotations();
+        
+        if (success) {
+            showMessage("All annotations deleted successfully", "success");
+            addLogEntry(`Deleted all annotations from ${AppState.currentImageId}`);
+        } else {
+            throw new Error("Failed to save empty annotations to server");
+        }
+        
+    } catch (error) {
+        console.error("[DEBUG] Error deleting all annotations:", error);
+        showMessage(`Error deleting annotations: ${error.message}`, "error");
+        
+        // Try alternative deletion method
+        try {
+            await deleteAnnotationsAlternative();
+            showMessage("All annotations deleted successfully (alternative method)", "success");
+        } catch (altError) {
+            console.error("[DEBUG] Alternative deletion also failed:", altError);
+            showMessage("Failed to delete annotations", "error");
         }
     }
 }
 
 /**
- * Handle image deletion (marking as deleted)
+ * Save empty annotations to effectively delete all annotations
  */
-async function handleDeleteImage() {
+async function saveEmptyAnnotations() {
     const AppState = getAppState();
     
     try {
-        if (!AppState.currentBatch || !AppState.currentImageId) {
-            showMessage("No image loaded to delete", "warning");
-            return;
-        }
-        
-        const payload = {
-            batch_id: AppState.currentBatch,
-            image_id: AppState.currentImageId,
-            action: "mark_deleted"
+        // Create empty COCO data structure
+        const emptyCocoData = {
+            images: [{
+                id: 1,
+                file_name: AppState.currentImageId,
+                width: AppState.originalImageWidth || 800,
+                height: AppState.originalImageHeight || 600
+            }],
+            annotations: [],
+            categories: AppState.classes.map((className, index) => ({
+                id: index + 1,
+                name: className,
+                supercategory: "object"
+            }))
         };
         
-        const response = await fetch('/api/images/delete', {
+        // Prepare payload for server
+        const payload = {
+            coco: emptyCocoData,
+            log: [],
+            batch_id: AppState.currentBatch,
+            image_id: AppState.currentImageId
+        };
+        
+        const response = await fetch(`/api/annotations/${AppState.currentImageId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -284,17 +348,11 @@ async function handleDeleteImage() {
             throw new Error(`Server error: ${response.status}`);
         }
         
-        addLogEntry(`Marked image as deleted: ${AppState.currentImageId}`);
-        showMessage("Image marked as deleted", "success");
-        
-        // Navigate to next image
-        setTimeout(() => {
-            navigateToNextImage();
-        }, 1000);
+        return true;
         
     } catch (error) {
-        console.error("[DEBUG] Error deleting image:", error);
-        showMessage(`Error deleting image: ${error.message}`, "error");
+        console.error("[DEBUG] Error saving empty annotations:", error);
+        return false;
     }
 }
 
