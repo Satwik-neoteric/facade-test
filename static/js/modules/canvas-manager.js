@@ -445,13 +445,33 @@ export function resizeCanvas() {
     const canvasContainer = document.getElementById('canvas-container');
     if (!canvasContainer) return;
     
-    // Get container dimensions
-    const containerWidth = canvasContainer.offsetWidth;
-    const containerHeight = canvasContainer.offsetHeight;
+    // Get actual container dimensions considering collapsed sidebars
+    const leftSidebar = document.getElementById('left-sidebar');
+    const rightSidebar = document.getElementById('right-sidebar');
     
-    // Calculate optimal canvas size (taking up most of the available space)
-    const maxWidth = Math.max(800, containerWidth - 60); // Leave some margin
-    const maxHeight = Math.max(600, containerHeight - 60); // Leave some margin
+    // Calculate available space accounting for sidebars
+    let availableWidth = window.innerWidth;
+    let availableHeight = window.innerHeight;
+    
+    // Subtract toolbar height (approximately 80px)
+    availableHeight -= 120;
+    
+    // Account for sidebars
+    if (leftSidebar && !leftSidebar.classList.contains('collapsed')) {
+        availableWidth -= leftSidebar.offsetWidth;
+    } else if (leftSidebar && leftSidebar.classList.contains('collapsed')) {
+        availableWidth -= 60; // Collapsed sidebar width
+    }
+    
+    if (rightSidebar && !rightSidebar.classList.contains('collapsed')) {
+        availableWidth -= rightSidebar.offsetWidth;
+    } else if (rightSidebar && rightSidebar.classList.contains('collapsed')) {
+        availableWidth -= 60; // Collapsed sidebar width
+    }
+    
+    // Use most of the available space (leaving small margins)
+    const maxWidth = Math.max(600, availableWidth - 40);
+    const maxHeight = Math.max(400, availableHeight - 40);
     
     // If there's a current image, maintain its aspect ratio
     if (AppState.currentImage) {
@@ -469,7 +489,7 @@ export function resizeCanvas() {
             height: canvasHeight
         });
     } else {
-        // No image loaded, use default size
+        // No image loaded, use most of available space
         canvas.setDimensions({
             width: Math.min(maxWidth, 1200),
             height: Math.min(maxHeight, 800)
@@ -479,7 +499,7 @@ export function resizeCanvas() {
     // Center the canvas
     centerCanvas();
     
-    console.log(`[DEBUG] Canvas resized to: ${canvas.getWidth()}x${canvas.getHeight()}`);
+    console.log(`[DEBUG] Canvas resized to: ${canvas.getWidth()}x${canvas.getHeight()}, available space: ${availableWidth}x${availableHeight}`);
 }
 
 /**
@@ -498,7 +518,49 @@ export function setupCanvasResize() {
         }, 250);
     });
     
+    // Sidebar collapse handlers
+    setupSidebarResizeHandlers();
+    
     console.log("[DEBUG] Canvas resize handler setup complete");
+}
+
+/**
+ * Setup sidebar collapse/expand handlers to trigger canvas resize
+ */
+function setupSidebarResizeHandlers() {
+    // Left sidebar collapse/expand
+    const collapseLeftBtn = document.getElementById('collapse-left-sidebar');
+    const expandLeftBtn = document.getElementById('expand-left-sidebar');
+    
+    if (collapseLeftBtn) {
+        collapseLeftBtn.addEventListener('click', () => {
+            setTimeout(resizeCanvas, 300); // Wait for animation
+        });
+    }
+    
+    if (expandLeftBtn) {
+        expandLeftBtn.addEventListener('click', () => {
+            setTimeout(resizeCanvas, 300); // Wait for animation
+        });
+    }
+    
+    // Right sidebar collapse/expand
+    const collapseRightBtn = document.getElementById('collapse-right-sidebar');
+    const expandRightBtn = document.getElementById('expand-right-sidebar');
+    
+    if (collapseRightBtn) {
+        collapseRightBtn.addEventListener('click', () => {
+            setTimeout(resizeCanvas, 300); // Wait for animation
+        });
+    }
+    
+    if (expandRightBtn) {
+        expandRightBtn.addEventListener('click', () => {
+            setTimeout(resizeCanvas, 300); // Wait for animation
+        });
+    }
+    
+    console.log("[DEBUG] Sidebar resize handlers setup complete");
 }
 
 /**

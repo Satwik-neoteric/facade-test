@@ -154,12 +154,33 @@ export async function loadImage(imagePath, loadId = null) {
                         
                         // Get container dimensions for responsive sizing
                         const canvasContainer = document.getElementById('canvas-container');
-                        const containerWidth = canvasContainer ? canvasContainer.offsetWidth : 1200;
-                        const containerHeight = canvasContainer ? canvasContainer.offsetHeight : 800;
                         
-                        // Calculate optimal canvas size to fill screen space
-                        const maxWidth = Math.max(800, containerWidth - 60); // Leave some margin
-                        const maxHeight = Math.max(600, containerHeight - 60); // Leave some margin
+                        // Calculate available space accounting for sidebars
+                        let availableWidth = window.innerWidth;
+                        let availableHeight = window.innerHeight;
+                        
+                        // Account for toolbar and other UI elements
+                        availableHeight -= 140;
+                        
+                        // Account for sidebars
+                        const leftSidebar = document.getElementById('left-sidebar');
+                        const rightSidebar = document.getElementById('right-sidebar');
+                        
+                        if (leftSidebar && !leftSidebar.classList.contains('collapsed')) {
+                            availableWidth -= leftSidebar.offsetWidth;
+                        } else if (leftSidebar && leftSidebar.classList.contains('collapsed')) {
+                            availableWidth -= 60;
+                        }
+                        
+                        if (rightSidebar && !rightSidebar.classList.contains('collapsed')) {
+                            availableWidth -= rightSidebar.offsetWidth;
+                        } else if (rightSidebar && rightSidebar.classList.contains('collapsed')) {
+                            availableWidth -= 60;
+                        }
+                        
+                        // Use most of the available space
+                        const maxWidth = Math.max(600, availableWidth - 40);
+                        const maxHeight = Math.max(400, availableHeight - 40);
                         
                         // Calculate scale to fit image in available space
                         const scale = Math.min(maxWidth / img.naturalWidth, maxHeight / img.naturalHeight, 1);
@@ -290,7 +311,8 @@ export async function loadMetadata(imagePath) {
     try {
         console.log(`[DEBUG] Loading metadata for: ${imagePath}`);
         
-        const response = await fetch(`/api/metadata?image_path=${encodeURIComponent(imagePath)}`);
+        // Use the original path-based API that matches main.js
+        const response = await fetch(`/api/metadata/${imagePath}`);
         
         if (response.ok) {
             const metadata = await response.json();
@@ -362,11 +384,15 @@ export async function loadSensorData(batchId, imageId) {
     try {
         console.log(`[DEBUG] Loading sensor data for batch: ${batchId}, image: ${imageId}`);
         
-        const response = await fetch(`/api/sensor-data/${batchId}/${imageId}`);
+        // Use the correct API path that matches the original main.js
+        const response = await fetch(`/api/sensor/${imageId}?batch_id=${batchId}&image_id=${imageId}`);
         
         if (response.ok) {
-            const sensorData = await response.json();
-            console.log("[DEBUG] Sensor data loaded:", sensorData);
+            const data = await response.json();
+            console.log("[DEBUG] Sensor data response:", data);
+            
+            // Extract sensor data from response (matches original format)
+            const sensorData = data.sensor || {};
             
             // Display sensor data
             displaySensorData(sensorData);

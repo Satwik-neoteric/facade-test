@@ -7,14 +7,30 @@ from app.core.dependencies import get_blob_storage_service
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+@router.get("/metadata/{image_path:path}")
+async def get_image_metadata_by_path(
+    image_path: str = Path(..., description="Path to the image"),
+    blob_service: BlobStorageService = Depends(get_blob_storage_service)
+) -> Dict[str, Any]:
+    """
+    Get metadata for a specific image (path-based route for backward compatibility)
+    """
+    return await _get_image_metadata(image_path, blob_service)
+
 @router.get("/metadata")
 async def get_image_metadata(
     image_path: str = Query(..., description="Path to the image"),
     blob_service: BlobStorageService = Depends(get_blob_storage_service)
 ) -> Dict[str, Any]:
     """
-    Get metadata for a specific image
+    Get metadata for a specific image (query-based route)
     """
+    return await _get_image_metadata(image_path, blob_service)
+
+async def _get_image_metadata(
+    image_path: str,
+    blob_service: BlobStorageService
+) -> Dict[str, Any]:
     try:
         logger.info(f"Fetching metadata for image: {image_path}")
         
