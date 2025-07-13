@@ -472,8 +472,9 @@ function setupKeyboardShortcuts() {
                 event.preventDefault();
                 if (AppState.currentMode === 'polygon' && AppState.isDrawing && AppState.polyPoints && AppState.polyPoints.length >= 3) {
                     console.log("[DEBUG] Enter key - completing polygon");
-                    if (window.modules?.canvasManager?.completePolygon) {
-                        // Need to expose the completePolygon function
+                    if (window.completePolygon) {
+                        window.completePolygon();
+                    } else if (window.modules?.canvasManager?.completePolygon) {
                         window.modules.canvasManager.completePolygon();
                     }
                 }

@@ -168,6 +168,7 @@ Promise.all([
     window.addLogEntry = utilities.addLogEntry;
     window.getCategoryColorByName = utilities.getCategoryColorByName;
     window.generateObjectId = utilities.generateObjectId;
+    window.completePolygon = canvasManager.completePolygon;
     
     // Setup global event processors
     eventProcessor.setupEventProcessors();
