@@ -28,9 +28,16 @@ export function parseCocoAnnotations(cocoData) {
         cocoData.annotations.forEach((annotation, index) => {
             console.log(`[DEBUG] Processing annotation ${index}:`, annotation);
             
-            // Get category information
-            const category = cocoData.categories?.find(cat => cat.id === annotation.category_id);
-            const className = category?.name || 'unknown';
+            // Get category information - try from cocoData first, then from AppState.classes
+            let category = cocoData.categories?.find(cat => cat.id === annotation.category_id);
+            
+            // If not found in cocoData.categories, try AppState.classes
+            if (!category && AppState.classes) {
+                category = AppState.classes.find(cat => cat.id === annotation.category_id);
+            }
+            
+            const className = category?.name || `Category ${annotation.category_id}` || 'unknown';
+            console.log(`[DEBUG] Category mapping: id=${annotation.category_id} -> name=${className}`);
             
             // Handle segmentation data
             if (annotation.segmentation && annotation.segmentation.length > 0) {
@@ -79,6 +86,29 @@ export function parseCocoAnnotations(cocoData) {
                             lockMovementY: false,
                             id: annotation.id
                         });
+                        
+                        // Override the containsPoint method like the original main.js
+                        polygon._containsOriginal = polygon.containsPoint;
+                        polygon.containsPoint = function(point, lines, absolute) {
+                            // First check if the point is on the polygon border with a tolerance
+                            if (window.isPointOnPolygonPath && window.isPointOnPolygonPath(this, point, 5)) {
+                                return true;
+                            }
+                            
+                            // For clicks inside the polygon, use the original containsPoint method 
+                            const isInsidePolygon = this._containsOriginal(point, lines, absolute);
+                            
+                            // Check if the current action is "selecting a polygon" versus "drawing a new polygon"
+                            if (isInsidePolygon) {
+                                const AppState = getAppState();
+                                if (AppState.isDrawing || AppState.currentMode === 'create') {
+                                    return false;
+                                }
+                                return true;
+                            }
+                            
+                            return false;
+                        };
                         
                         // Store class and category information like original
                         polygon.class = className;

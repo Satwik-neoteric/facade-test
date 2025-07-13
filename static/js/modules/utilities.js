@@ -103,6 +103,13 @@ export function addLogEntry(message) {
  */
 export function getCategoryColorByName(className, asTransparentFill = false) {
     const AppState = getAppState();
+    
+    // Handle null or undefined classes array
+    if (!AppState.classes || !Array.isArray(AppState.classes)) {
+        console.warn(`[DEBUG] AppState.classes is not available, returning default color for ${className}`);
+        return asTransparentFill ? 'rgba(255, 0, 0, 0.3)' : '#FF0000';
+    }
+    
     const category = AppState.classes.find(cls => cls.name === className);
     let resultColor = null;
     if (category) {

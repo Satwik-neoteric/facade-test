@@ -281,31 +281,44 @@ export async function loadAnnotations(imagePath) {
             return [];
         }
         
-        const response = await fetch(`/api/annotations/${batchId}/${imageId}`);
-        const data = await response.json();
-        console.log('[ANNOTATION API RESPONSE]', data);
-        if (response.ok) {
-            const data = await response.json();
-            console.log('[ANNOTATION API RESPONSE]', data);
-            console.log(`[DEBUG] Loaded ${data.annotations?.length || 0} annotations`);
-            if (data.annotations && data.annotations.length > 0) {
-                // Parse and display annotations - pass the full data structure
-                if (window.parseCocoAnnotations) {
-                    // Create the full COCO structure that parseCocoAnnotations expects
-                    const cocoData = {
-                        annotations: data.annotations,
-                        categories: data.categories || AppState.classes || []
-                    };
-                    window.parseCocoAnnotations(cocoData);
-                }
-                addLogEntry(`Loaded ${data.annotations.length} annotations`);
-                return data.annotations;
+        // Use the correct API URL format that matches the original main.js
+        const apiUrl = `/api/annotations/${imagePath}?batch_id=${batchId}&image_id=${imageId}`;
+        console.log(`[DEBUG] Loading annotations from: ${apiUrl}`);
+        
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) {
+            if (response.status === 404) {
+                console.log("[DEBUG] No annotations found for this image");
+                return [];
+            } else {
+                console.warn(`[DEBUG] Failed to load annotations: ${response.status}`);
+                return [];
             }
-        } else if (response.status === 404) {
-            console.log("[DEBUG] No annotations found for this image");
-        } else {
-            console.warn(`[DEBUG] Failed to load annotations: ${response.status}`);
         }
+        
+        const data = await response.json();
+        console.log('[DEBUG] Full annotation API response:', data);
+        
+        // The API returns AnnotationGetResponse with structure: {exists: bool, coco: CocoModel, ...}
+        if (!data.exists || !data.coco) {
+            console.log("[DEBUG] No COCO data found in response");
+            return [];
+        }
+        
+        const cocoData = data.coco;
+        console.log(`[DEBUG] COCO data:`, cocoData);
+        console.log(`[DEBUG] Found ${cocoData.annotations?.length || 0} annotations`);
+        
+        if (cocoData.annotations && cocoData.annotations.length > 0) {
+            // Parse and display annotations using the full COCO structure
+            if (window.parseCocoAnnotations) {
+                window.parseCocoAnnotations(cocoData);
+            }
+            addLogEntry(`Loaded ${cocoData.annotations.length} annotations`);
+            return cocoData.annotations;
+        }
+        
         return [];
         
     } catch (error) {
