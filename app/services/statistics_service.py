@@ -74,10 +74,13 @@ class StatisticsService:
             label_status_counts = Counter()
             for item in all_items:
                 status = item.get("Status", "Unknown")
+                # Handle None status values explicitly
+                if status is None:
+                    status = "Unknown"
                 label_status_counts[status] += 1
             
             label_status_stats = [
-                LabelStatusStat(status=stat, count=cnt) for stat, cnt in label_status_counts.items()
+                LabelStatusStat(status=stat, count=cnt) for stat, cnt in label_status_counts.items() if stat is not None
             ]
 
             # 3. Label Breakdown (by category)

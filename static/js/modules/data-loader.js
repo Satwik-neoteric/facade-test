@@ -26,8 +26,10 @@ export async function loadBatches() {
             
             data.batches.forEach(batch => {
                 const option = document.createElement('option');
-                option.value = batch.batch_id;
-                option.textContent = batch.batch_id;
+                // Handle both string batches and object batches
+                const batchId = typeof batch === 'string' ? batch : batch.batch_id;
+                option.value = batchId;
+                option.textContent = batchId;
                 batchSelector.appendChild(option);
             });
         }
