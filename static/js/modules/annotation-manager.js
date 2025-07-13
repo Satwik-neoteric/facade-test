@@ -396,7 +396,10 @@ export function createPolygonAnnotation(points, className) {
         stroke: getCategoryColorByName(className),
         fill: getCategoryColorByName(className, true),
         selectable: true,
-        evented: true
+        evented: true,
+        objectCaching: false,
+        hasControls: false,
+        hasBorders: false
     });
     
     // Initialize the polygon

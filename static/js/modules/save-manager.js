@@ -33,8 +33,6 @@ export async function saveAnnotations(options = {}) {
         
         // Prepare the payload for saving
         const payload = {
-            batch_id: AppState.currentBatch,
-            image_id: AppState.currentImageId,
             annotations: cocoPayload.annotations,
             categories: cocoPayload.categories,
             action: options.action || 'save',
@@ -43,8 +41,14 @@ export async function saveAnnotations(options = {}) {
         
         console.log("[DEBUG] Saving annotations payload:", payload);
         
-        // Save to server
-        const response = await fetch('/api/annotations/save', {
+        // Build the correct API URL with image path and query parameters
+        const imagePath = `${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg`;
+        const apiUrl = `/api/annotations/${imagePath}?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
+        
+        console.log("[DEBUG] Saving to URL:", apiUrl);
+        
+        // Save to server using the correct endpoint format
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

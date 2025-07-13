@@ -74,7 +74,11 @@ export function initAppState() {
         // Flag to track the first image load
         isFirstImageLoad: true,
         // Object ID counter for annotations
-        nextObjectId: 1
+        nextObjectId: 1,
+        // Image scaling and dimension tracking
+        currentScale: 1,
+        originalImageWidth: null,
+        originalImageHeight: null
     };
     
     // Make AppState globally accessible for modules

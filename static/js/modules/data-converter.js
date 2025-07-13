@@ -37,56 +37,78 @@ export function parseCocoAnnotations(cocoData) {
                 const segmentation = annotation.segmentation[0]; // Take first segmentation
                 
                 if (Array.isArray(segmentation) && segmentation.length >= 6) {
-                    // Convert flat array to points array
+                    // Convert flat array to points array with proper scaling
                     const points = [];
                     for (let i = 0; i < segmentation.length; i += 2) {
                         if (i + 1 < segmentation.length) {
+                            // Apply scaling during conversion like original main.js
+                            const canvasX = segmentation[i] * (AppState.currentScale || 1);
+                            const canvasY = segmentation[i + 1] * (AppState.currentScale || 1);
+                            
                             points.push({
-                                x: segmentation[i],
-                                y: segmentation[i + 1]
+                                x: canvasX,
+                                y: canvasY
                             });
                         }
                     }
                     
-                    console.log(`[DEBUG] Converted ${points.length} points for ${className}`);
+                    console.log(`[DEBUG] Converted ${points.length} points for ${className} with scale ${AppState.currentScale}`);
                     
                     if (points.length >= 3) {
-                        // Create Fabric.js polygon with proper positioning
+                        // Get proper colors
+                        const strokeColor = getCategoryColorByName(className);
+                        const fillColor = getCategoryColorByName(className, true);
+                        
+                        console.log(`[DEBUG] Colors for ${className}: stroke=${strokeColor}, fill=${fillColor}`);
+                        
+                        // Create Fabric.js polygon with same settings as original main.js
                         const polygon = new fabric.Polygon(points, {
+                            stroke: strokeColor,
                             strokeWidth: 2,
-                            stroke: getCategoryColorByName(className),
-                            fill: getCategoryColorByName(className, true),
-                            selectable: true,
-                            evented: true,
+                            fill: fillColor,
                             objectCaching: false,
+                            transparentCorners: false,
+                            cornerColor: 'transparent',
+                            borderColor: 'transparent',
+                            selectable: true,
                             hasControls: false,
-                            hasBorders: false
+                            hasBorders: false,
+                            perPixelTargetFind: true,
+                            padding: 0,
+                            lockMovementX: false,
+                            lockMovementY: false,
+                            id: annotation.id
                         });
                         
-                        // Add custom data
+                        // Store class and category information like original
+                        polygon.class = className;
+                        polygon.category_id = annotation.category_id;
+                        
+                        // Add custom data with image points (original coordinates)
                         polygon.customData = {
                             class: className,
-                            objectId: annotation.objectId || `${className}_${String(index + 1).padStart(3, '0')}`,
+                            objectId: annotation.objectId || `obj-${Date.now()}-${index}`,
                             created: new Date().toISOString(),
-                            imagePoints: JSON.parse(JSON.stringify(points)),
+                            imagePoints: segmentation.reduce((arr, val, i) => {
+                                if (i % 2 === 0) {
+                                    arr.push({ x: segmentation[i], y: segmentation[i + 1] });
+                                }
+                                return arr;
+                            }, []),
                             cocoId: annotation.id,
                             categoryId: annotation.category_id,
                             area: annotation.area,
                             bbox: annotation.bbox
                         };
                         
-                        // Scale points if needed based on current image scale
-                        if (AppState.currentScale && AppState.currentScale !== 1) {
-                            const scaledPoints = points.map(point => ({
-                                x: point.x * AppState.currentScale,
-                                y: point.y * AppState.currentScale
-                            }));
-                            polygon.set('points', scaledPoints);
-                        }
-                        
                         // Add to canvas and annotations array
                         AppState.fabricCanvas.add(polygon);
                         AppState.annotations.push(polygon);
+                        
+                        // Respect current annotation visibility state
+                        if (AppState.annotationsHidden) {
+                            polygon.set({ visible: false });
+                        }
                         
                         console.log(`[DEBUG] Created polygon for ${className} with ${points.length} points`);
                     } else {
