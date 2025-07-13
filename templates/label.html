@@ -358,7 +358,8 @@
     
     <!-- Keep original files for backward compatibility during transition -->
     <script src="{{ url_for('static', path='/js/user-info.js') }}"></script>
-    <script src="{{ url_for('static', path='/js/label.js') }}"></script>
+    <!-- label.js removed - all functionality migrated to modular structure in main-refactored.js -->
+    <!-- Functions migrated include: user roles, batch management, data loading, event handling, canvas operations -->
     
     <!-- Original main.js commented out for testing -->
     <!-- <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script> -->
