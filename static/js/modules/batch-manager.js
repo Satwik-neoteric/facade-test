@@ -5,91 +5,68 @@ import { getAppState } from './app-state.js';
 import { showMessage, addLogEntry } from './utilities.js';
 
 /**
- * Handle batch selection
+ * Handle batch selection and load images for the selected batch
  */
 export async function handleBatchSelection(batchId) {
-    if (!batchId) return;
+    console.log(`[DEBUG] Batch selection initiated for: ${batchId}`);
     
-    const AppState = getAppState();
+    if (!batchId) {
+        console.warn('[DEBUG] No batch ID provided');
+        clearImageDisplay();
+        return;
+    }
     
     try {
-        console.log(`[DEBUG] Batch selected: ${batchId}`);
+        // Update UI to show loading state
+        showLoadingState();
         
-        // Clear image cache when switching batches
-        if (AppState.imagePreloader) {
-            AppState.imagePreloader.clearCache();
+        // Store selected batch in app state
+        const appState = getAppState();
+        appState.selectedBatch = batchId;
+        appState.currentImageIndex = 0;
+        
+        // Clear any existing images
+        clearImageDisplay();
+        
+        // Fetch images for the selected batch
+        console.log(`[DEBUG] Fetching images for batch: ${batchId}`);
+        const images = await fetchBatchImages(batchId);
+        
+        if (!images || images.length === 0) {
+            console.warn(`[DEBUG] No images found for batch: ${batchId}`);
+            showMessage(`No images found in batch: ${batchId}`, 'warning');
+            showNoImagesState();
+            return;
         }
         
-        // Save current batch ID in application state
-        AppState.currentBatch = batchId;
+        console.log(`[DEBUG] Found ${images.length} images in batch: ${batchId}`);
         
-        // Show loading indicator
-        const imageList = document.getElementById('image-list');
-        if (imageList) {
-            imageList.innerHTML = '<li class="loading">Loading images...</li>';
+        // Store images in app state
+        appState.currentBatch = {
+            id: batchId,
+            images: images,
+            currentIndex: 0
+        };
+        
+        // Update image list in UI
+        await updateImageList(images);
+        
+        // Load the first image
+        if (images.length > 0) {
+            await loadFirstImage(images[0], batchId);
         }
         
-        // Initialize filter state with default values (hide deleted images)
-        import('../filter.js').then(module => {
-            if (module.resetFilters) {
-                // Reset filters and initialize default filter state
-                module.resetFilters();
-            }
-        }).catch(error => {
-            console.warn("[DEBUG] Could not reset filters:", error);
-        });
+        // Update UI state
+        hideLoadingState();
         
-        // Fetch images for this batch using filter API
-        try {
-            const filterPayload = {
-                batchId: batchId,
-                showDeleted: false, // Default to hiding deleted images
-                hasAnnotations: true, // Default to showing images with annotations
-                unlabelledOnly: false // Default to showing all images
-            };
-
-            const endpoint = '/api/filtered-images';
-            console.log(`[DEBUG] Fetching images from ${endpoint}`);
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(filterPayload)
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error loading filtered images: ${response.statusText} (Status: ${response.status})`);
-            }
-
-            const filteredImages = await response.json();
-            displayBatchImages(filteredImages, batchId);
-
-        } catch (filterError) {
-            console.error("Error using filter API, falling back to direct batch API:", filterError);
-            
-            // Fallback to direct batch API if filter API fails
-            const response = await fetch(`/api/batch/${batchId}/images`);
-            if (!response.ok) {
-                throw new Error(`Error loading images: ${response.statusText} (Status: ${response.status})`);
-            }
-            
-            const data = await response.json();
-            const images = data.images || [];
-            
-            // Process images with client-side filtering
-            displayBatchImages(images, batchId);
-        }
-        
-        addLogEntry(`Loaded batch: ${batchId}`);
+        addLogEntry(`Loaded batch: ${batchId} (${images.length} images)`);
+        showMessage(`Loaded ${images.length} images from batch: ${batchId}`, 'success');
         
     } catch (error) {
-        console.error("Error loading batch:", error);
-        const imageList = document.getElementById('image-list');
-        if (imageList) {
-            imageList.innerHTML = '<li class="error">Error loading images</li>';
-        }
-        showMessage(`Error loading batch: ${error.message}`, "error");
+        console.error(`[ERROR] Failed to load batch ${batchId}:`, error);
+        showMessage(`Failed to load batch: ${error.message}`, 'error');
+        hideLoadingState();
+        showErrorState(error.message);
     }
 }
 

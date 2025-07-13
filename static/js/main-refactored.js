@@ -8,6 +8,106 @@ import { initCanvas } from './modules/canvas-manager.js';
 import { showMessage } from './modules/utilities.js';
 import { setupEventHandlers, setupNotesDialogHandlers, setupFilterDialogHandlers } from './modules/event-handlers.js';
 
+// Initialize the application
+async function initApp() {
+    try {
+        console.log("[DEBUG] Starting application initialization");
+        
+        // Initialize application state
+        initAppState();
+        
+        // Set up user role information
+        initUserRole();
+        
+        // Initialize user roles from API
+        await initializeUserRoles();
+        
+        // Setup UI based on user role
+        await setupBasedOnRole();
+        
+        // Load batches from CosmosDB for selection
+        try {
+            await loadBatches();
+        } catch (error) {
+            console.error("[ERROR] Failed to load batches:", error);
+            showMessage("Failed to load batches. Check console for details.", "error");
+        }
+        
+        // Load available classes
+        try {
+            await loadClasses();
+        } catch (error) {
+            console.error("[ERROR] Failed to load classes:", error);
+            showMessage("Failed to load classes. Check console for details.", "error");
+        }
+        
+        // Setup event handlers
+        setupEventHandlers();
+        setupNotesDialogHandlers();
+        setupFilterDialogHandlers();
+        
+        // Initialize canvas with error handling
+        try {
+            initCanvas();
+        } catch (error) {
+            console.error("[ERROR] Failed to initialize canvas:", error);
+        }
+        
+        // Flag to track the first image load
+        window.AppState.isFirstImageLoad = true;
+        
+        // Initialize validation module
+        import('./validation.js').then(({ initValidation }) => {
+            if (initValidation) {
+                initValidation();
+                console.log("[DEBUG] Legacy validation module initialized");
+            }
+        }).catch(error => {
+            console.warn("[DEBUG] Legacy validation module not found, using modular version");
+        });
+        
+        // Initialize UI manager
+        if (window.modules?.uiManager?.initializeUI) {
+            window.modules.uiManager.initializeUI();
+        }
+        
+        // Initialize theme
+        if (window.modules?.uiDisplay?.initializeTheme) {
+            window.modules.uiDisplay.initializeTheme();
+        }
+        
+        // Initialize filters module (only once)
+        let filterModulePromise = import('./filter.js');
+        window.filterModulePromise = filterModulePromise; // Store for reuse
+        
+        filterModulePromise.then(module => {
+            if (module.initFilters) {
+                module.initFilters();
+                console.log("[DEBUG] Filters module initialized");
+                
+                // Store filter functions globally
+                window.filterModule = {
+                    initFilters: module.initFilters,
+                    openFilterDialog: module.openFilterDialog,
+                    closeFilterDialog: module.closeFilterDialog,
+                    applyFilters: module.applyFilters,
+                    resetFilters: module.resetFilters
+                };
+            } else {
+                console.warn("[DEBUG] initFilters function not found in filter.js");
+            }
+        }).catch(error => {
+            console.error("[DEBUG] Error loading filters module:", error);
+        });
+        
+        console.log("[DEBUG] Application initialization completed successfully");
+        
+    } catch (error) {
+        console.error("Error initializing app:", error);
+        showMessage("Error initializing application. See console for details.", "error");
+    }
+}
+
 $(document).ready(function() {
     // Import image preloader
     import('./image-preloader.js').then(({ ImagePreloader }) => {
@@ -18,92 +118,6 @@ $(document).ready(function() {
     }).catch(error => {
         console.warn("Could not load image preloader:", error);
     });
-
-    // Initialize the application
-    async function initApp() {
-        try {
-            console.log("[DEBUG] Starting application initialization");
-            
-            // Initialize application state
-            initAppState();
-            
-            // Set up user role information
-            initUserRole();
-            
-            // Initialize user roles from API
-            await initializeUserRoles();
-            
-            // Setup UI based on user role
-            await setupBasedOnRole();
-            
-            // Load batches from CosmosDB for selection
-            await loadBatches();
-            
-            // Load available classes
-            await loadClasses();
-            
-            // Setup event handlers
-            setupEventHandlers();
-            setupNotesDialogHandlers();
-            setupFilterDialogHandlers();
-            
-            // Initialize canvas
-            initCanvas();
-            
-            // Flag to track the first image load
-            window.AppState.isFirstImageLoad = true;
-            
-            // Initialize validation module
-            import('./validation.js').then(({ initValidation }) => {
-                if (initValidation) {
-                    initValidation();
-                    console.log("[DEBUG] Legacy validation module initialized");
-                }
-            }).catch(error => {
-                console.warn("[DEBUG] Legacy validation module not found, using modular version");
-            });
-            
-            // Initialize UI manager
-            if (window.modules?.uiManager?.initializeUI) {
-                window.modules.uiManager.initializeUI();
-            }
-            
-            // Initialize theme
-            if (window.modules?.uiDisplay?.initializeTheme) {
-                window.modules.uiDisplay.initializeTheme();
-            }
-            
-            // Initialize filters module (only once)
-            let filterModulePromise = import('./filter.js');
-            window.filterModulePromise = filterModulePromise; // Store for reuse
-            
-            filterModulePromise.then(module => {
-                if (module.initFilters) {
-                    module.initFilters();
-                    console.log("[DEBUG] Filters module initialized");
-                    
-                    // Store filter functions globally
-                    window.filterModule = {
-                        initFilters: module.initFilters,
-                        openFilterDialog: module.openFilterDialog,
-                        closeFilterDialog: module.closeFilterDialog,
-                        applyFilters: module.applyFilters,
-                        resetFilters: module.resetFilters
-                    };
-                } else {
-                    console.warn("[DEBUG] initFilters function not found in filter.js");
-                }
-            }).catch(error => {
-                console.error("[DEBUG] Error loading filters module:", error);
-            });
-            
-            console.log("[DEBUG] Application initialization completed successfully");
-            
-        } catch (error) {
-            console.error("Error initializing app:", error);
-            showMessage("Error initializing application. See console for details.", "error");
-        }
-    }
 
     // Start the application
     initApp();
@@ -161,7 +175,7 @@ Promise.all([
     window.convertFabricToCoco = dataConverter.convertFabricToCoco;
     window.loadImage = dataLoader.loadImage;
     window.loadSensorData = dataLoader.loadSensorData;
-    window.handleBatchSelection = batchManager.handleBatchSelection;
+    window.handleBatchSelection = batchManager.handleBatchSelection; // This is the key fix!
     window.toggleValidationMode = validationManager.toggleValidationMode;
     window.rebuildAnnotationList = annotationManager.rebuildAnnotationList;
     window.showMessage = utilities.showMessage;
@@ -178,21 +192,50 @@ Promise.all([
     
     console.log("[DEBUG] All 15 modules loaded and available globally");
     console.log("[DEBUG] Labelling code refactoring complete - organized into modular structure");
+    
+    // Setup batch selection handler after modules are loaded
+    setupBatchSelectionHandler();
+    
 }).catch(error => {
     console.error("[DEBUG] Error loading modules:", error);
 });
 
-// Placeholder functions for functions that will be moved to modules later
-// These will be removed as we complete the refactoring
-
-async function handleBatchSelection(batchId) {
-    console.log(`[DEBUG] Batch selected: ${batchId}`);
-    // This function will be moved to batch-manager.js module
-    // For now, keep the existing functionality
-    if (window.handleBatchSelection) {
-        return window.handleBatchSelection(batchId);
+/**
+ * Setup the batch selection dropdown handler
+ */
+function setupBatchSelectionHandler() {
+    const batchSelect = document.getElementById('batch-selector');
+    if (batchSelect) {
+        console.log('[DEBUG] Setting up batch selection handler');
+        
+        batchSelect.addEventListener('change', async function(event) {
+            const selectedBatchId = event.target.value;
+            console.log(`[DEBUG] Batch selection changed to: ${selectedBatchId}`);
+            
+            if (selectedBatchId && window.modules?.batchManager?.handleBatchSelection) {
+                try {
+                    await window.modules.batchManager.handleBatchSelection(selectedBatchId);
+                } catch (error) {
+                    console.error('[ERROR] Batch selection failed:', error);
+                    showMessage(`Failed to load batch: ${error.message}`, 'error');
+                }
+            } else if (selectedBatchId && window.handleBatchSelection) {
+                // Fallback to global function
+                try {
+                    await window.handleBatchSelection(selectedBatchId);
+                } catch (error) {
+                    console.error('[ERROR] Batch selection failed (fallback):', error);
+                    showMessage(`Failed to load batch: ${error.message}`, 'error');
+                }
+            }
+        });
+        
+        console.log('[DEBUG] Batch selection handler setup complete');
+    } else {
+        console.warn('[DEBUG] Batch selector element not found, retrying in 1 second...');
+        setTimeout(setupBatchSelectionHandler, 1000);
     }
 }
 
-// Additional placeholder functions will be added here as needed
-// during the refactoring process
+// Remove the placeholder function since we now have proper implementation
+// The real handleBatchSelection is now available from batchManager module

@@ -289,57 +289,7 @@ function updateActivePolygon(pointer) {
     canvas.renderAll();
 }
 
-/**
- * Complete polygon drawing
- */
-export function completePolygon() {
-    const AppState = getAppState();
-    const canvas = AppState.fabricCanvas;
-    
-    if (!AppState.isDrawing || AppState.polyPoints.length < 3) {
-        showMessage("Need at least 3 points to create a polygon", "warning");
-        return;
-    }
-    
-    // Remove temporary line
-    if (AppState.activeLine) {
-        canvas.remove(AppState.activeLine);
-        AppState.activeLine = null;
-    }
-    
-    // Create final polygon
-    const polygon = new fabric.Polygon(AppState.polyPoints, {
-        strokeWidth: 2,
-        stroke: getCategoryColorByName(AppState.currentClass),
-        fill: getCategoryColorByName(AppState.currentClass, true),
-        selectable: true,
-        evented: true
-    });
-    
-    // Add custom data
-    polygon.customData = {
-        class: AppState.currentClass,
-        objectId: generateObjectId(AppState.currentClass),
-        created: new Date().toISOString()
-    };
-    
-    // Add to canvas and annotations
-    canvas.add(polygon);
-    AppState.annotations.push(polygon);
-    
-    // Reset drawing state
-    AppState.isDrawing = false;
-    AppState.polyPoints = [];
-    AppState.linePoints = [];
-    
-    // Update annotation list
-    if (window.rebuildAnnotationList) {
-        window.rebuildAnnotationList();
-    }
-    
-    canvas.renderAll();
-    console.log("[DEBUG] Polygon completed");
-}
+
 
 /**
  * Cancel polygon drawing
