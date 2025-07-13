@@ -352,9 +352,16 @@
     <!-- Include jQuery before other scripts -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', path='/js/fabric.min.js') }}"></script>
-    <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script>
+    
+    <!-- Refactored modular JavaScript files -->
+    <script type="module" src="{{ url_for('static', path='/js/main-refactored.js') }}"></script>
+    
+    <!-- Keep original files for backward compatibility during transition -->
     <script src="{{ url_for('static', path='/js/user-info.js') }}"></script>
     <script src="{{ url_for('static', path='/js/label.js') }}"></script>
+    
+    <!-- Original main.js commented out for testing -->
+    <!-- <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script> -->
     
     <!-- Theme Manager for Dark Mode Toggle -->
     <script src="{{ url_for('static', path='/updated_ui/core/theme-manager.js') }}"></script>
