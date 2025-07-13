@@ -57,11 +57,21 @@ $(document).ready(function() {
             import('./validation.js').then(({ initValidation }) => {
                 if (initValidation) {
                     initValidation();
-                    console.log("[DEBUG] Validation module initialized");
+                    console.log("[DEBUG] Legacy validation module initialized");
                 }
             }).catch(error => {
-                console.error("[DEBUG] Error loading validation module:", error);
+                console.warn("[DEBUG] Legacy validation module not found, using modular version");
             });
+            
+            // Initialize UI manager
+            if (window.modules?.uiManager?.initializeUI) {
+                window.modules.uiManager.initializeUI();
+            }
+            
+            // Initialize theme
+            if (window.modules?.uiDisplay?.initializeTheme) {
+                window.modules.uiDisplay.initializeTheme();
+            }
             
             // Initialize filters module (only once)
             let filterModulePromise = import('./filter.js');
@@ -122,8 +132,14 @@ Promise.all([
     import('./modules/batch-manager.js'),
     import('./modules/annotation-manager.js'),
     import('./modules/data-converter.js'),
-    import('./modules/event-handlers.js')
-]).then(([appState, userRoles, dataLoader, canvasManager, utilities, batchManager, annotationManager, dataConverter, eventHandlers]) => {
+    import('./modules/event-handlers.js'),
+    import('./modules/navigation.js'),
+    import('./modules/ui-manager.js'),
+    import('./modules/save-manager.js'),
+    import('./modules/validation-manager.js'),
+    import('./modules/ui-display.js'),
+    import('./modules/event-processor.js')
+]).then(([appState, userRoles, dataLoader, canvasManager, utilities, batchManager, annotationManager, dataConverter, eventHandlers, navigation, uiManager, saveManager, validationManager, uiDisplay, eventProcessor]) => {
     window.modules.appState = appState;
     window.modules.userRoles = userRoles;
     window.modules.dataLoader = dataLoader;
@@ -133,8 +149,34 @@ Promise.all([
     window.modules.annotationManager = annotationManager;
     window.modules.dataConverter = dataConverter;
     window.modules.eventHandlers = eventHandlers;
+    window.modules.navigation = navigation;
+    window.modules.uiManager = uiManager;
+    window.modules.saveManager = saveManager;
+    window.modules.validationManager = validationManager;
+    window.modules.uiDisplay = uiDisplay;
+    window.modules.eventProcessor = eventProcessor;
     
-    console.log("[DEBUG] All modules loaded and available globally");
+    // Make key functions globally available for backward compatibility
+    window.parseCocoAnnotations = dataConverter.parseCocoAnnotations;
+    window.convertFabricToCoco = dataConverter.convertFabricToCoco;
+    window.loadImage = dataLoader.loadImage;
+    window.loadSensorData = dataLoader.loadSensorData;
+    window.handleBatchSelection = batchManager.handleBatchSelection;
+    window.toggleValidationMode = validationManager.toggleValidationMode;
+    window.rebuildAnnotationList = annotationManager.rebuildAnnotationList;
+    window.showMessage = utilities.showMessage;
+    window.addLogEntry = utilities.addLogEntry;
+    window.getCategoryColorByName = utilities.getCategoryColorByName;
+    window.generateObjectId = utilities.generateObjectId;
+    
+    // Setup global event processors
+    eventProcessor.setupEventProcessors();
+    
+    // Enable auto-save
+    saveManager.enableAutoSave(5); // Auto-save every 5 minutes
+    
+    console.log("[DEBUG] All 15 modules loaded and available globally");
+    console.log("[DEBUG] Labelling code refactoring complete - organized into modular structure");
 }).catch(error => {
     console.error("[DEBUG] Error loading modules:", error);
 });
