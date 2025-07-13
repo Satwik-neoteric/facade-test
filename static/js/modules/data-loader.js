@@ -62,6 +62,20 @@ export async function loadClasses() {
         const AppState = getAppState();
         AppState.classes = data.classes;
         
+        // Display classes in the UI
+        if (window.modules?.uiDisplay?.displayClassSelection) {
+            window.modules.uiDisplay.displayClassSelection(data.classes);
+        } else {
+            // Fallback - try to import and call directly
+            import('./ui-display.js').then(module => {
+                if (module.displayClassSelection) {
+                    module.displayClassSelection(data.classes);
+                }
+            }).catch(error => {
+                console.warn("[DEBUG] Could not display classes:", error);
+            });
+        }
+        
         addLogEntry(`Loaded ${data.classes.length} annotation classes`);
         return data.classes;
         

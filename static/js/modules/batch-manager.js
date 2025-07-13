@@ -188,6 +188,17 @@ export function displayBatchImages(imagesData, batchId) {
     });
 
     console.log(`[DEBUG] Image list updated with ${standardizedImages.length} images`);
+    
+    // Automatically select the first image if available
+    if (imageItems.length > 0) {
+        const firstImage = imageItems[0];
+        const imageId = firstImage.dataset.imageId;
+        const imagePath = firstImage.dataset.imagePath;
+        const batchId = firstImage.dataset.batchId;
+        
+        console.log(`[DEBUG] Auto-selecting first image: ${imageId}`);
+        handleImageSelection(imageId, imagePath, batchId);
+    }
 }
 
 /**

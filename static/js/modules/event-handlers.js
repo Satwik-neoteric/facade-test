@@ -479,6 +479,23 @@ function setupKeyboardShortcuts() {
                 toggleAnnotationVisibility();
                 break;
                 
+            case 'x':
+                // X: Toggle annotations visibility (same as H)
+                event.preventDefault();
+                toggleAnnotationVisibility();
+                break;
+                
+            case 'y':
+                // Y: Toggle zoom mode or reset zoom
+                event.preventDefault();
+                if (window.modules?.canvasManager?.resetZoom) {
+                    window.modules.canvasManager.resetZoom();
+                } else if (AppState.fabricCanvas) {
+                    AppState.fabricCanvas.setZoom(1);
+                    AppState.fabricCanvas.renderAll();
+                }
+                break;
+                
             case 'r':
                 // R: Reset zoom
                 event.preventDefault();
