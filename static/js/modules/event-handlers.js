@@ -72,10 +72,9 @@ async function handleSubmitAnnotations() {
             return;
         }
 
-        if (!AppState.annotations || AppState.annotations.length === 0) {
-            showMessage("No annotations to submit", "warning");
-            return;
-        }
+        // Allow empty annotations - save with empty array if no annotations exist
+        const annotationCount = AppState.annotations ? AppState.annotations.length : 0;
+        console.log(`[DEBUG] Submitting ${annotationCount} annotations`);
 
         // Convert annotations to COCO format
         const cocoPayload = convertFabricToCoco(AppState.annotations);
@@ -87,7 +86,7 @@ async function handleSubmitAnnotations() {
         // Prepare the payload for submission
         const payload = {
             coco: cocoPayload,
-            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
+            log: [`Submitted ${annotationCount} annotations at ${new Date().toISOString()}`]
         };
 
         const apiUrl = `/api/annotations/${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;

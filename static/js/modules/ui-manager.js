@@ -105,9 +105,9 @@ export function updateButtonStates() {
     // Check if something is selected
     const hasSelection = AppState.activePolygon !== null;
     
-    // Update submit button
+    // Update submit button - allow submission even with no annotations
     if (submitBtn) {
-        submitBtn.disabled = !hasImage || !hasAnnotations;
+        submitBtn.disabled = !hasImage; // Only require an image to be loaded
         if (submitBtn.disabled) {
             submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
