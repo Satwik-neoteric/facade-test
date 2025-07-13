@@ -4,7 +4,7 @@
 import { getAppState } from './app-state.js';
 import { addLogEntry } from './utilities.js';
 import { selectPolygon } from './annotation-manager.js';
-import { updateSelectedObjectDisplay, updateCoordinatesDisplay } from './ui-display.js';
+import { updateSelectedObjectDisplay, updateCoordinatesDisplay } from './ui-manager.js';
 
 /**
  * Handle canvas selection events

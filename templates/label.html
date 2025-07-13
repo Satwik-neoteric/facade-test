@@ -364,8 +364,8 @@
     <!-- Original main.js commented out for testing -->
     <!-- <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script> -->
     
-    <!-- Theme Manager for Dark Mode Toggle -->
-    <script src="{{ url_for('static', path='/updated_ui/core/theme-manager.js') }}"></script>
+    <!-- Theme Manager for Dark Mode Toggle - handled by basic.html -->
+    <!-- <script src="{{ url_for('static', path='/updated_ui/core/theme-manager.js') }}"></script> -->
     
     <!-- Theme Manager Initialization -->
     <script>
@@ -1191,16 +1191,20 @@
         const expandClassBtn = document.getElementById('expand-class-selection');
         const classTable = document.getElementById('class-selection-table');
         // --- Fix: Use CSS classes and transitions only, avoid inline style overrides except for expand button ---
-        collapseClassBtn.addEventListener('click', function() {
-            classPanel.classList.add('collapsed');
-            collapseClassBtn.style.display = 'none';
-            expandClassBtn.style.display = 'flex';
-        });
-        expandClassBtn.addEventListener('click', function() {
-            classPanel.classList.remove('collapsed');
-            collapseClassBtn.style.display = '';
-            expandClassBtn.style.display = 'none';
-        });
+        if (collapseClassBtn) {
+            collapseClassBtn.addEventListener('click', function() {
+                classPanel.classList.add('collapsed');
+                collapseClassBtn.style.display = 'none';
+                expandClassBtn.style.display = 'flex';
+            });
+        }
+        if (expandClassBtn) {
+            expandClassBtn.addEventListener('click', function() {
+                classPanel.classList.remove('collapsed');
+                collapseClassBtn.style.display = '';
+                expandClassBtn.style.display = 'none';
+            });
+        }
 
         // --- Left sidebar collapse/expand logic ---
         const leftSidebar = document.getElementById('left-sidebar');

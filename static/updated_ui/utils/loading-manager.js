@@ -20,7 +20,13 @@ class LoadingManager {
      * Create spinner HTML
      */
     static createSpinner(size = 'medium', text = 'Loading...', showText = true) {
-        const sizeClass = LoadingManager.prototype.config.spinnerSize[size] || LoadingManager.prototype.config.spinnerSize.medium;
+        const sizeConfig = {
+            small: 'h-4 w-4',
+            medium: 'h-6 w-6',
+            large: 'h-8 w-8',
+            xlarge: 'h-12 w-12'
+        };
+        const sizeClass = sizeConfig[size] || sizeConfig.medium;
         
         return `
             <div class="inline-flex items-center justify-center">

@@ -3,6 +3,7 @@
 
 import { getAppState } from './app-state.js';
 import { showMessage, addLogEntry, generateObjectId, getCategoryColorByName } from './utilities.js';
+import { updateSelectedObjectDisplay } from './ui-manager.js';
 
 /**
  * Select a polygon for editing
@@ -365,17 +366,6 @@ function updateModeDisplay() {
     const modeStatus = document.getElementById('mode-status');
     if (modeStatus) {
         modeStatus.textContent = AppState.currentMode;
-    }
-}
-
-/**
- * Update selected object display
- */
-function updateSelectedObjectDisplay(obj) {
-    const selectedStatus = document.getElementById('selected-object-status');
-    if (selectedStatus && obj) {
-        const objectId = obj.customData?.objectId || 'Unknown';
-        selectedStatus.textContent = objectId;
     }
 }
 
