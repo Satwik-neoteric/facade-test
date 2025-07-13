@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Path, Body, Query
 from typing import List, Dict, Any, Optional
 import logging
-
+from pydantic import ValidationError
 # Models for COCO document level operations
 from app.models.coco import AnnotationGetResponse, AnnotationSaveRequest, AnnotationSaveResponse
 from app.services.annotation_service import AnnotationService
@@ -64,10 +64,32 @@ async def save_annotations_for_image(
 ):
     """
     Handle saving annotations for a specific image.
-    Example: `POST /api/annotations/B2/cam/cam1_1742977845.jpg?batch_id=B2&image_id=cam1_1742977845`
-    with AnnotationSaveRequest in body.
+    Enhanced with detailed logging for debugging.
     """
     logger.info(f"POST /annotations/{filename} called with batch_id: {batch_id}, image_id: {image_id}")
+    
+    # Enhanced request logging
+    logger.info(f"Request details: filename={filename}, batch_id={batch_id}, image_id={image_id}")
+    logger.info(f"Request data structure: has_coco={hasattr(data, 'coco')}, has_log={hasattr(data, 'log')}")
+    
+    if hasattr(data, 'coco') and data.coco:
+        coco_data = data.coco
+        logger.info(f"COCO data validation: "
+                   f"has_annotations={hasattr(coco_data, 'annotations')}, "
+                   f"annotation_count={len(coco_data.annotations) if hasattr(coco_data, 'annotations') and coco_data.annotations else 0}, "
+                   f"has_categories={hasattr(coco_data, 'categories')}, "
+                   f"category_count={len(coco_data.categories) if hasattr(coco_data, 'categories') and coco_data.categories else 0}, "
+                   f"has_images={hasattr(coco_data, 'images')}, "
+                   f"image_count={len(coco_data.images) if hasattr(coco_data, 'images') and coco_data.images else 0}")
+        
+        # Log each annotation for debugging
+        if hasattr(coco_data, 'annotations') and coco_data.annotations:
+            for i, annotation in enumerate(coco_data.annotations):
+                logger.info(f"Annotation {i}: id={getattr(annotation, 'id', 'missing')}, "
+                           f"category_id={getattr(annotation, 'category_id', 'missing')}, "
+                           f"has_segmentation={hasattr(annotation, 'segmentation')}, "
+                           f"segmentation_len={len(annotation.segmentation) if hasattr(annotation, 'segmentation') and annotation.segmentation else 0}")
+    
     try:
         response = await annotation_service.save_annotations_document(
             filename=filename, 
@@ -75,15 +97,18 @@ async def save_annotations_for_image(
             image_id=image_id, 
             data=data
         )
-        # If there was a CosmosDB error but local save might have worked, 
-        # it's still a success from the API perspective, error is in the response body.
+        logger.info(f"Annotation service completed successfully: {response}")
         return response
-    except HTTPException as http_exc: # Re-raise HTTPExceptions directly
+    except ValidationError as ve:
+        logger.error(f"Pydantic validation error in POST /annotations/{filename}: {str(ve)}")
+        logger.error(f"Validation details: {ve.errors()}")
+        raise HTTPException(status_code=422, detail=f"Validation error: {ve.errors()}")
+    except HTTPException as http_exc:
+        logger.error(f"HTTP exception in POST /annotations/{filename}: {http_exc.detail}")
         raise http_exc
     except Exception as e:
-        logger.error(f"Error in POST /annotations/{filename}: {str(e)}", exc_info=True)
+        logger.error(f"Unexpected error in POST /annotations/{filename}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to save annotations: {str(e)}")
-
 
 @router.post(
     "/clear",

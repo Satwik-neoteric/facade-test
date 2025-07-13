@@ -65,36 +65,93 @@ async function handleSubmitAnnotations() {
     const AppState = getAppState();
 
     try {
+        console.group("[DEBUG] Annotation Submission Process");
         console.log("[DEBUG] Submit button clicked");
+        console.log("[DEBUG] Current AppState:", {
+            currentBatch: AppState.currentBatch,
+            currentImageId: AppState.currentImageId,
+            annotationsCount: AppState.annotations?.length || 0,
+            currentImagePath: AppState.currentImagePath
+        });
 
         if (!AppState.currentBatch || !AppState.currentImageId) {
+            console.error("[DEBUG] Missing required identifiers");
             showMessage("No image loaded to submit annotations for", "warning");
             return;
         }
 
         if (!AppState.annotations || AppState.annotations.length === 0) {
+            console.warn("[DEBUG] No annotations to submit");
             showMessage("No annotations to submit", "warning");
             return;
         }
 
+        // Log each annotation before conversion
+        console.log("[DEBUG] Raw annotations before conversion:");
+        AppState.annotations.forEach((annotation, index) => {
+            console.log(`[DEBUG] Annotation ${index}:`, {
+                type: annotation.type,
+                points: annotation.points?.length || 0,
+                customData: annotation.customData,
+                stroke: annotation.stroke,
+                fill: annotation.fill
+            });
+        });
+
         // Convert annotations to COCO format
+        console.log("[DEBUG] Converting to COCO format...");
         const cocoPayload = convertFabricToCoco(AppState.annotations);
+        console.log("[DEBUG] COCO conversion result:", cocoPayload);
 
         if (!cocoPayload) {
             throw new Error("Failed to convert annotations to COCO format");
         }
 
+        // Validate COCO structure
+        console.log("[DEBUG] COCO validation:", {
+            hasAnnotations: Array.isArray(cocoPayload.annotations),
+            annotationCount: cocoPayload.annotations?.length || 0,
+            hasCategories: Array.isArray(cocoPayload.categories),
+            categoryCount: cocoPayload.categories?.length || 0,
+            hasImages: Array.isArray(cocoPayload.images),
+            imageCount: cocoPayload.images?.length || 0
+        });
+
         // Prepare the payload for submission
         const payload = {
-            coco: cocoPayload,
+            coco: {
+                ...cocoPayload,
+                // Ensure required fields exist
+                info: cocoPayload.info || {
+                    description: "Facade AI Studio Annotations",
+                    date_created: new Date().toISOString()
+                },
+                images: cocoPayload.images || [{
+                    id: 1,
+                    file_name: AppState.currentImagePath || "unknown.jpg",
+                    width: 1920,
+                    height: 1080
+                }],
+                annotations: cocoPayload.annotations || [],
+                categories: cocoPayload.categories || []
+            },
             log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
         };
 
-        const apiUrl = `/api/annotations/${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
+        console.log("[DEBUG] Final payload structure:", {
+            hasCoco: 'coco' in payload,
+            hasLog: 'log' in payload,
+            cocoType: typeof payload.coco,
+            logType: typeof payload.log,
+            payloadSize: JSON.stringify(payload).length
+        });
 
-        console.log("[DEBUG] Submitting annotations to:", apiUrl, payload);
+        // Build API URL
+        const apiUrl = `/api/annotations/${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
+        console.log("[DEBUG] Submitting to URL:", apiUrl);
 
         // Submit to server
+        console.log("[DEBUG] Making POST request...");
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -103,9 +160,25 @@ async function handleSubmitAnnotations() {
             body: JSON.stringify(payload)
         });
 
+        console.log("[DEBUG] Response received:", {
+            status: response.status,
+            statusText: response.statusText,
+            ok: response.ok,
+            headers: Object.fromEntries(response.headers.entries())
+        });
+
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Server error: ${response.status}`);
+            const errorText = await response.text();
+            console.error("[DEBUG] Error response body:", errorText);
+            
+            try {
+                const errorData = JSON.parse(errorText);
+                console.error("[DEBUG] Parsed error data:", errorData);
+                throw new Error(errorData.detail || `Server error: ${response.status}`);
+            } catch (parseError) {
+                console.error("[DEBUG] Could not parse error response as JSON");
+                throw new Error(`Server error: ${response.status} - ${errorText}`);
+            }
         }
 
         const result = await response.json();
@@ -117,12 +190,14 @@ async function handleSubmitAnnotations() {
         // Auto-navigate to next image after successful submission
         setTimeout(() => {
             navigateToNextImage();
-        }, 1000);
+        }, 500);
 
     } catch (error) {
         console.error("[DEBUG] Error submitting annotations:", error);
+        console.error("[DEBUG] Error stack:", error.stack);
         showMessage(`Error submitting annotations: ${error.message}`, "error");
     } finally {
+        console.groupEnd();
         // Reset button state
         const submitBtn = document.getElementById('submit-btn');
         if (submitBtn) {
