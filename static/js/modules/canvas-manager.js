@@ -640,19 +640,19 @@ function updateZoomDisplay(zoom) {
 /**
  * Helper function to get category color
  */
-function getCategoryColorByName(className, asTransparentFill = false) {
-    if (window.getCategoryColorByName) {
-        return window.getCategoryColorByName(className, asTransparentFill);
-    }
-    return asTransparentFill ? 'rgba(0, 123, 255, 0.3)' : '#007bff';
-}
+// function getCategoryColorByName(className, asTransparentFill = false) {
+//     if (window.getCategoryColorByName) {
+//         return window.getCategoryColorByName(className, asTransparentFill);
+//     }
+//     return asTransparentFill ? 'rgba(0, 123, 255, 0.3)' : '#007bff';
+// }
 
 /**
  * Helper function to generate object ID
  */
-function generateObjectId(className) {
-    if (window.generateObjectId) {
-        return window.generateObjectId(className);
-    }
-    return `${className}_001`;
-}
+// function generateObjectId(className) {
+//     if (window.generateObjectId) {
+//         return window.generateObjectId(className);
+//     }
+//     return `${className}_001`;
+// }
