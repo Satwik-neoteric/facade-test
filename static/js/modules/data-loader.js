@@ -158,6 +158,11 @@ export async function loadImage(imagePath, loadId = null) {
                         canvas.clear();
                         AppState.annotations = []; // Clear annotations array
                         
+                        // Clear annotations from sidebar
+                        if (window.rebuildAnnotationList) {
+                            window.rebuildAnnotationList();
+                        }
+                        
                         // Get container dimensions for responsive sizing
                         const canvasContainer = document.getElementById('canvas-container');
                         
@@ -229,6 +234,13 @@ export async function loadImage(imagePath, loadId = null) {
                         
                         // Load metadata
                         await loadMetadata(imagePath);
+                        
+                        // Load sensor data
+                        const batchId = AppState.currentBatch;
+                        const imageId = AppState.currentImageId;
+                        if (batchId && imageId) {
+                            await loadSensorData(batchId, imageId);
+                        }
                         
                         // Update status
                         const imageNameStatus = document.getElementById('image-name-status');
