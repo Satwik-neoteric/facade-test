@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotation Fixes Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.2.4/fabric.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #test-results { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        #canvas-container { margin: 20px 0; }
+        canvas { border: 1px solid #ccc; }
+        #annotation-list { margin-top: 20px; }
+        .annotation-item { padding: 5px; margin: 5px 0; border: 1px solid #ddd; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>Annotation Loading & Parsing Test</h1>
+    <p>This test validates the fixes made to annotation loading, coordinate scaling, and category mapping.</p>
+    
+    <div id="canvas-container">
+        <canvas id="test-canvas" width="800" height="600"></canvas>
+    </div>
+    
+    <div id="annotation-list"></div>
+    
+    <div id="test-results"></div>
+
+    <script type="module">
+        // Mock AppState
+        const mockAppState = {
+            fabricCanvas: null,
+            annotations: [],
+            classes: [
+                { id: 1, name: "Crack", color: "#FF0000" },
+                { id: 2, name: "Spalling", color: "#00FF00" },
+                { id: 3, name: "Corrosion", color: "#0000FF" }
+            ],
+            currentScale: 0.5,
+            currentImageId: "test_image_001",
+            currentImagePath: "test/path/image.jpg",
+            annotationsHidden: false
+        };
+
+        // Mock utilities
+        function getCategoryColorByName(className, asTransparentFill = false) {
+            if (!mockAppState.classes || !Array.isArray(mockAppState.classes)) {
+                console.warn(`AppState.classes is not available, returning default color for ${className}`);
+                return asTransparentFill ? 'rgba(255, 0, 0, 0.3)' : '#FF0000';
+            }
+            
+            const category = mockAppState.classes.find(cls => cls.name === className);
+            if (category) {
+                if (asTransparentFill) {
+                    const color = category.color;
+                    if (color.startsWith('#')) {
+                        const r = parseInt(color.slice(1, 3), 16);
+                        const g = parseInt(color.slice(3, 5), 16);
+                        const b = parseInt(color.slice(5, 7), 16);
+                        return `rgba(${r}, ${g}, ${b}, 0.3)`;
+                    }
+                    return color.replace('rgb', 'rgba').replace(')', ', 0.3)');
+                }
+                return category.color;
+            }
+            return asTransparentFill ? 'rgba(128, 128, 128, 0.3)' : '#808080';
+        }
+
+        function getAppState() {
+            return mockAppState;
+        }
+
+        function addLogEntry(message) {
+            console.log(`[LOG] ${message}`);
+        }
+
+        function showMessage(message, type) {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // The actual parseCocoAnnotations function (fixed version)
+        function parseCocoAnnotations(cocoData) {
+            const AppState = getAppState();
+            
+            console.log("[DEBUG] Parsing COCO annotations:", cocoData);
+            
+            if (!cocoData || !cocoData.annotations || !Array.isArray(cocoData.annotations)) {
+                console.warn("[DEBUG] No valid annotations found in COCO data");
+                return;
+            }
+            
+            // Clear existing annotations
+            AppState.annotations.forEach(annotation => {
+                AppState.fabricCanvas.remove(annotation);
+            });
+            AppState.annotations = [];
+            
+            try {
+                cocoData.annotations.forEach((annotation, index) => {
+                    console.log(`[DEBUG] Processing annotation ${index}:`, annotation);
+                    
+                    // Get category information - try from cocoData first, then from AppState.classes
+                    let category = cocoData.categories?.find(cat => cat.id === annotation.category_id);
+                    
+                    // If not found in cocoData.categories, try AppState.classes
+                    if (!category && AppState.classes) {
+                        category = AppState.classes.find(cat => cat.id === annotation.category_id);
+                    }
+                    
+                    const className = category?.name || `Category ${annotation.category_id}` || 'unknown';
+                    console.log(`[DEBUG] Category mapping: id=${annotation.category_id} -> name=${className}`);
+                    
+                    // Handle segmentation data
+                    if (annotation.segmentation && annotation.segmentation.length > 0) {
+                        const segmentation = annotation.segmentation[0]; // Take first segmentation
+                        
+                        if (Array.isArray(segmentation) && segmentation.length >= 6) {
+                            // Convert flat array to points array with proper scaling
+                            const points = [];
+                            for (let i = 0; i < segmentation.length; i += 2) {
+                                if (i + 1 < segmentation.length) {
+                                    // Apply scaling during conversion like original main.js
+                                    const canvasX = segmentation[i] * (AppState.currentScale || 1);
+                                    const canvasY = segmentation[i + 1] * (AppState.currentScale || 1);
+                                    
+                                    points.push({
+                                        x: canvasX,
+                                        y: canvasY
+                                    });
+                                }
+                            }
+                            
+                            console.log(`[DEBUG] Converted ${points.length} points for ${className} with scale ${AppState.currentScale}`);
+                            
+                            if (points.length >= 3) {
+                                // Get proper colors
+                                const strokeColor = getCategoryColorByName(className);
+                                const fillColor = getCategoryColorByName(className, true);
+                                
+                                console.log(`[DEBUG] Colors for ${className}: stroke=${strokeColor}, fill=${fillColor}`);
+                                
+                                // Create Fabric.js polygon with same settings as original main.js
+                                const polygon = new fabric.Polygon(points, {
+                                    stroke: strokeColor,
+                                    strokeWidth: 2,
+                                    fill: fillColor,
+                                    objectCaching: false,
+                                    transparentCorners: false,
+                                    cornerColor: 'transparent',
+                                    borderColor: 'transparent',
+                                    selectable: true,
+                                    hasControls: false,
+                                    hasBorders: false,
+                                    perPixelTargetFind: true,
+                                    padding: 0,
+                                    lockMovementX: false,
+                                    lockMovementY: false,
+                                    id: annotation.id
+                                });
+                                
+                                // Store class and category information like original
+                                polygon.class = className;
+                                polygon.category_id = annotation.category_id;
+                                
+                                // Add custom data with image points (original coordinates)
+                                polygon.customData = {
+                                    class: className,
+                                    objectId: annotation.objectId || `obj-${Date.now()}-${index}`,
+                                    created: new Date().toISOString(),
+                                    imagePoints: segmentation.reduce((arr, val, i) => {
+                                        if (i % 2 === 0) {
+                                            arr.push({ x: segmentation[i], y: segmentation[i + 1] });
+                                        }
+                                        return arr;
+                                    }, []),
+                                    cocoId: annotation.id,
+                                    categoryId: annotation.category_id,
+                                    area: annotation.area,
+                                    bbox: annotation.bbox
+                                };
+                                
+                                // Add to canvas and annotations array
+                                AppState.fabricCanvas.add(polygon);
+                                AppState.annotations.push(polygon);
+                                
+                                // Respect current annotation visibility state
+                                if (AppState.annotationsHidden) {
+                                    polygon.set({ visible: false });
+                                }
+                                
+                                console.log(`[DEBUG] Created polygon for ${className} with ${points.length} points`);
+                            } else {
+                                console.warn(`[DEBUG] Not enough points for polygon: ${points.length}`);
+                            }
+                        } else {
+                            console.warn("[DEBUG] Invalid segmentation format:", segmentation);
+                        }
+                    } else {
+                        console.warn("[DEBUG] No segmentation data found for annotation:", annotation);
+                    }
+                });
+                
+                // Render canvas
+                AppState.fabricCanvas.renderAll();
+                
+                addLogEntry(`Loaded ${AppState.annotations.length} annotations from COCO data`);
+                console.log(`[DEBUG] Successfully parsed ${AppState.annotations.length} annotations`);
+                
+                // Update annotation list display
+                updateAnnotationList();
+                
+            } catch (error) {
+                console.error("[DEBUG] Error parsing COCO annotations:", error);
+                showMessage("Error parsing annotations", "error");
+            }
+        }
+
+        function updateAnnotationList() {
+            const annotationList = document.getElementById('annotation-list');
+            annotationList.innerHTML = '<h3>Loaded Annotations:</h3>';
+            
+            mockAppState.annotations.forEach((annotation, index) => {
+                const item = document.createElement('div');
+                item.className = 'annotation-item';
+                item.innerHTML = `
+                    <strong>Annotation ${index + 1}:</strong> ${annotation.customData.class} 
+                    (ID: ${annotation.customData.objectId})
+                    <br><small>Points: ${annotation.points.length}, Color: ${annotation.stroke}</small>
+                `;
+                annotationList.appendChild(item);
+            });
+        }
+
+        // Test data
+        const testCocoData = {
+            categories: [
+                { id: 1, name: "Crack" },
+                { id: 2, name: "Spalling" }
+            ],
+            annotations: [
+                {
+                    id: 1,
+                    category_id: 1,
+                    segmentation: [[100, 100, 200, 100, 200, 200, 100, 200]], // Square
+                    area: 10000,
+                    bbox: [100, 100, 100, 100],
+                    objectId: "crack_001"
+                },
+                {
+                    id: 2,
+                    category_id: 2,
+                    segmentation: [[300, 150, 400, 150, 350, 250]], // Triangle
+                    area: 5000,
+                    bbox: [300, 150, 100, 100],
+                    objectId: "spall_001"
+                },
+                {
+                    id: 3,
+                    category_id: 99, // Unknown category
+                    segmentation: [[500, 200, 600, 200, 600, 300, 500, 300]], // Another square
+                    area: 10000,
+                    bbox: [500, 200, 100, 100],
+                    objectId: "unknown_001"
+                }
+            ]
+        };
+
+        // Run tests
+        function runTests() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<h3>Test Results:</h3>';
+            
+            // Initialize canvas
+            const canvas = new fabric.Canvas('test-canvas');
+            mockAppState.fabricCanvas = canvas;
+            
+            try {
+                // Test 1: Parse COCO data
+                parseCocoAnnotations(testCocoData);
+                
+                const testResults = [];
+                
+                // Verify annotations were created
+                if (mockAppState.annotations.length === 3) {
+                    testResults.push(`✓ Created ${mockAppState.annotations.length} annotations`);
+                } else {
+                    testResults.push(`✗ Expected 3 annotations, got ${mockAppState.annotations.length}`);
+                }
+                
+                // Verify coordinate scaling
+                const firstAnnotation = mockAppState.annotations[0];
+                if (firstAnnotation && firstAnnotation.points[0].x === 50) { // 100 * 0.5 scale
+                    testResults.push('✓ Coordinate scaling working correctly');
+                } else {
+                    testResults.push(`✗ Coordinate scaling failed. Expected 50, got ${firstAnnotation?.points[0]?.x}`);
+                }
+                
+                // Verify category mapping
+                const crackAnnotation = mockAppState.annotations.find(ann => ann.customData.class === 'Crack');
+                if (crackAnnotation && crackAnnotation.stroke === '#FF0000') {
+                    testResults.push('✓ Category color mapping working correctly');
+                } else {
+                    testResults.push('✗ Category color mapping failed');
+                }
+                
+                // Verify unknown category handling
+                const unknownAnnotation = mockAppState.annotations.find(ann => ann.customData.class.includes('Category 99'));
+                if (unknownAnnotation) {
+                    testResults.push('✓ Unknown category handling working correctly');
+                } else {
+                    testResults.push('✗ Unknown category handling failed');
+                }
+                
+                // Verify fill colors
+                const hasTransparentFill = mockAppState.annotations.some(ann => 
+                    ann.fill.includes('rgba') && ann.fill.includes('0.3')
+                );
+                if (hasTransparentFill) {
+                    testResults.push('✓ Transparent fill colors working correctly');
+                } else {
+                    testResults.push('✗ Transparent fill colors not working');
+                }
+                
+                // Display results
+                testResults.forEach(result => {
+                    const div = document.createElement('div');
+                    div.className = result.startsWith('✓') ? 'success' : 'error';
+                    div.textContent = result;
+                    results.appendChild(div);
+                });
+                
+            } catch (error) {
+                const div = document.createElement('div');
+                div.className = 'error';
+                div.textContent = `✗ Test failed with error: ${error.message}`;
+                results.appendChild(div);
+                console.error('Test error:', error);
+            }
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', runTests);
+    </script>
+</body>
+</html>
