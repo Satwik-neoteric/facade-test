@@ -219,7 +219,7 @@ export async function loadImage(imagePath, loadId = null) {
             };
             
             // Start loading
-            img.src = imagePath;
+            img.src = `/api/image/${imagePath}`;
         });
         
     } catch (error) {
