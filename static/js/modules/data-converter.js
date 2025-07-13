@@ -249,8 +249,10 @@ export function convertFabricToCoco(annotations) {
             
             if (obj.customData?.imagePoints) {
                 // Use stored image points if available
+                console.log('lolu')
                 imagePoints = obj.customData.imagePoints;
             } else {
+                console.log('lolu1')
                 // Convert current polygon points to image coordinates
                 if (obj.points && Array.isArray(obj.points)) {
                     imagePoints = obj.points.map(point => {
@@ -260,8 +262,8 @@ export function convertFabricToCoco(annotations) {
                         
                         // Convert to image coordinates if scale is available
                         return {
-                            x: AppState.currentScale ? canvasX / AppState.currentScale : canvasX,
-                            y: AppState.currentScale ? canvasY / AppState.currentScale : canvasY
+                            x:  canvasX,
+                            y:  canvasY
                         };
                     });
                 }

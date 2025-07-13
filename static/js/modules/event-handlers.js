@@ -97,9 +97,6 @@ async function handleSubmitAnnotations() {
                 fill: annotation.fill
             });
         });
-        // Allow empty annotations - save with empty array if no annotations exist
-        const annotationCount = AppState.annotations ? AppState.annotations.length : 0;
-        console.log(`[DEBUG] Submitting ${annotationCount} annotations`);
 
         // Convert annotations to COCO format
         console.log("[DEBUG] Converting to COCO format...");
@@ -122,25 +119,8 @@ async function handleSubmitAnnotations() {
 
         // Prepare the payload for submission
         const payload = {
-            coco: {
-                ...cocoPayload,
-                // Ensure required fields exist
-                info: cocoPayload.info || {
-                    description: "Facade AI Studio Annotations",
-                    date_created: new Date().toISOString()
-                },
-                images: cocoPayload.images || [{
-                    id: 1,
-                    file_name: AppState.currentImagePath || "unknown.jpg",
-                    width: 1920,
-                    height: 1080
-                }],
-                annotations: cocoPayload.annotations || [],
-                categories: cocoPayload.categories || []
-            },
-            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
             coco: cocoPayload,
-            log: [`Submitted ${annotationCount} annotations at ${new Date().toISOString()}`]
+            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
         };
 
         console.log("[DEBUG] Final payload structure:", {
