@@ -10,64 +10,71 @@ import { initializePolygon } from './annotation-manager.js';
  */
 export function parseCocoAnnotations(cocoData) {
     const AppState = getAppState();
-    
+
     console.log("[DEBUG] Parsing COCO annotations:", cocoData);
-    
+
     if (!cocoData || !cocoData.annotations || !Array.isArray(cocoData.annotations)) {
         console.warn("[DEBUG] No valid annotations found in COCO data");
         return;
     }
-    
+
     // Clear existing annotations
     AppState.annotations.forEach(annotation => {
         AppState.fabricCanvas.remove(annotation);
     });
     AppState.annotations = [];
-    
+
     try {
+        // Get image scale and offset for correct placement
+        const imageObj = AppState.currentImage;
+        const scaleX = imageObj?.scaleX || 1;
+        const scaleY = imageObj?.scaleY || 1;
+        const imageLeft = imageObj?.left || 0;
+        const imageTop = imageObj?.top || 0;
+
         cocoData.annotations.forEach((annotation, index) => {
             console.log(`[DEBUG] Processing annotation ${index}:`, annotation);
-            
+
             // Get category information - try from cocoData first, then from AppState.classes
             let category = cocoData.categories?.find(cat => cat.id === annotation.category_id);
-            
+
             // If not found in cocoData.categories, try AppState.classes
             if (!category && AppState.classes) {
                 category = AppState.classes.find(cat => cat.id === annotation.category_id);
             }
-            
+
             const className = category?.name || `Category ${annotation.category_id}` || 'unknown';
             console.log(`[DEBUG] Category mapping: id=${annotation.category_id} -> name=${className}`);
-            
+
             // Handle segmentation data
             if (annotation.segmentation && annotation.segmentation.length > 0) {
                 const segmentation = annotation.segmentation[0]; // Take first segmentation
-                
+
                 if (Array.isArray(segmentation) && segmentation.length >= 6) {
-                    // Convert flat array to points array with proper scaling
+                    // Convert flat array to points array with proper scaling and offset
                     const points = [];
                     for (let i = 0; i < segmentation.length; i += 2) {
                         if (i + 1 < segmentation.length) {
-                            // Apply scaling during conversion like original main.js
-                            const canvasX = segmentation[i] * (AppState.currentScale || 1);
-                            const canvasY = segmentation[i + 1] * (AppState.currentScale || 1);
-                            
+                            // Convert image coordinates to canvas coordinates
+                            const canvasX = imageLeft + segmentation[i] * scaleX;
+                            const canvasY = imageTop + segmentation[i + 1] * scaleY;
+
                             points.push({
                                 x: canvasX,
                                 y: canvasY
                             });
                         }
                     }
-                    
-                    console.log(`[DEBUG] Converted ${points.length} points for ${className} with scale ${AppState.currentScale}`);
-                    
+
+                    console.log(`[DEBUG] Converted ${points.length} points for ${className} with scaleX ${scaleX}, scaleY ${scaleY}, left ${imageLeft}, top ${imageTop}`);
+
                     if (points.length >= 3) {
                         // Get proper colors
                         const strokeColor = getCategoryColorByName(className);
-                        const fillColor = getCategoryColorByName(className, true);
-                        
+                        const fillColor = getCategoryColorByName(className);
+
                         console.log(`[DEBUG] Colors for ${className}: stroke=${strokeColor}, fill=${fillColor}`);
-                        
+
                         // Create Fabric.js polygon with same settings as original main.js
                         const polygon = new fabric.Polygon(points, {
                             stroke: strokeColor,
@@ -86,19 +93,14 @@ export function parseCocoAnnotations(cocoData) {
                             lockMovementY: false,
                             id: annotation.id
                         });
-                        
+
                         // Override the containsPoint method like the original main.js
                         polygon._containsOriginal = polygon.containsPoint;
                         polygon.containsPoint = function(point, lines, absolute) {
-                            // First check if the point is on the polygon border with a tolerance
                             if (window.isPointOnPolygonPath && window.isPointOnPolygonPath(this, point, 5)) {
                                 return true;
                             }
-                            
-                            // For clicks inside the polygon, use the original containsPoint method 
                             const isInsidePolygon = this._containsOriginal(point, lines, absolute);
-                            
-                            // Check if the current action is "selecting a polygon" versus "drawing a new polygon"
                             if (isInsidePolygon) {
                                 const AppState = getAppState();
                                 if (AppState.isDrawing || AppState.currentMode === 'create') {
@@ -106,14 +108,13 @@ export function parseCocoAnnotations(cocoData) {
                                 }
                                 return true;
                             }
-                            
                             return false;
                         };
-                        
+
                         // Store class and category information like original
                         polygon.class = className;
                         polygon.category_id = annotation.category_id;
-                        
+
                         // Add custom data with image points (original coordinates)
                         polygon.customData = {
                             class: className,
@@ -130,16 +131,16 @@ export function parseCocoAnnotations(cocoData) {
                             area: annotation.area,
                             bbox: annotation.bbox
                         };
-                        
+
                         // Add to canvas and annotations array
                         AppState.fabricCanvas.add(polygon);
                         AppState.annotations.push(polygon);
-                        
+
                         // Respect current annotation visibility state
                         if (AppState.annotationsHidden) {
                             polygon.set({ visible: false });
                         }
-                        
+
                         console.log(`[DEBUG] Created polygon for ${className} with ${points.length} points`);
                     } else {
                         console.warn(`[DEBUG] Not enough points for polygon: ${points.length}`);
@@ -151,23 +152,23 @@ export function parseCocoAnnotations(cocoData) {
                 console.warn("[DEBUG] No segmentation data found for annotation:", annotation);
             }
         });
-        
+
         // Rebuild annotation list
         if (window.rebuildAnnotationList) {
             window.rebuildAnnotationList();
         }
-        
+
         // Update button states after loading annotations
         if (window.modules?.uiManager?.updateButtonStates) {
             window.modules.uiManager.updateButtonStates();
         }
-        
+
         // Render canvas
         AppState.fabricCanvas.renderAll();
-        
+
         addLogEntry(`Loaded ${AppState.annotations.length} annotations from COCO data`);
         console.log(`[DEBUG] Successfully parsed ${AppState.annotations.length} annotations`);
-        
+
     } catch (error) {
         console.error("[DEBUG] Error parsing COCO annotations:", error);
         showMessage("Error parsing annotations", "error");

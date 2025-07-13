@@ -26,9 +26,16 @@ export async function saveAnnotations(options = {}) {
         
         // Convert annotations to COCO format
         const cocoPayload = convertFabricToCoco(AppState.annotations);
-        
-        if (!cocoPayload) {
-            throw new Error("Failed to convert annotations to COCO format");
+
+        // Validate cocoPayload structure before submission
+        if (
+            !cocoPayload ||
+            typeof cocoPayload !== 'object' ||
+            !Array.isArray(cocoPayload.images) ||
+            !Array.isArray(cocoPayload.annotations) ||
+            !Array.isArray(cocoPayload.categories)
+        ) {
+            throw new Error("COCO payload is missing required keys or is malformed");
         }
         
         // Prepare the payload for saving
