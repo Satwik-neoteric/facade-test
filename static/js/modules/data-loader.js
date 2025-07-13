@@ -87,7 +87,12 @@ export async function loadClasses() {
         const AppState = getAppState();
         AppState.classes = data.classes;
         
-       
+        // Populate class selection buttons
+        if (window.modules?.eventHandlers?.populateClassButtons) {
+            window.modules.eventHandlers.populateClassButtons(data.classes);
+        } else if (window.populateClassButtons) {
+            window.populateClassButtons(data.classes);
+        }
         
         addLogEntry(`Loaded ${data.classes.length} annotation classes`);
         return data.classes;
@@ -283,9 +288,14 @@ export async function loadAnnotations(imagePath) {
             console.log(`[DEBUG] Loaded ${data.annotations?.length || 0} annotations`);
             
             if (data.annotations && data.annotations.length > 0) {
-                // Parse and display annotations
+                // Parse and display annotations - pass the full data structure
                 if (window.parseCocoAnnotations) {
-                    window.parseCocoAnnotations(data.annotations);
+                    // Create the full COCO structure that parseCocoAnnotations expects
+                    const cocoData = {
+                        annotations: data.annotations,
+                        categories: data.categories || AppState.classes || []
+                    };
+                    window.parseCocoAnnotations(cocoData);
                 }
                 addLogEntry(`Loaded ${data.annotations.length} annotations`);
                 return data.annotations;

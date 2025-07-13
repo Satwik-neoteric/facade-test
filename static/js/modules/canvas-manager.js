@@ -2,7 +2,7 @@
 // Handles Fabric.js canvas initialization and operations
 
 import { getAppState } from './app-state.js';
-import { showMessage } from './utilities.js';
+import { showMessage, addLogEntry, getCategoryColorByName, generateObjectId } from './utilities.js';
 
 /**
  * Initialize Fabric.js canvas for annotation
