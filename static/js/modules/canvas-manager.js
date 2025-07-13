@@ -3,6 +3,8 @@
 
 import { getAppState } from './app-state.js';
 import { showMessage, addLogEntry, getCategoryColorByName, generateObjectId } from './utilities.js';
+import { selectPolygon, deselectActivePolygon } from './annotation-manager.js';
+import { updateSelectedObjectDisplay, updateCoordinatesDisplay, updateZoomDisplay } from './ui-manager.js';
 
 /**
  * Initialize Fabric.js canvas for annotation
@@ -29,6 +31,7 @@ export function initCanvas() {
         
         // Setup canvas events
         setupCanvasEvents(canvas);
+        setupGlobalEventHandlers();
         
         // Initial canvas sizing - use resizeCanvas which calls centerCanvas
         setTimeout(() => {
@@ -50,17 +53,12 @@ export function initCanvas() {
 export function setupCanvasEvents(canvas) {
     if (!canvas) return;
     
-    // Mouse down event
+    // Mouse events
     canvas.on('mouse:down', handleMouseDown);
-    
-    // Mouse move event
     canvas.on('mouse:move', handleMouseMove);
-    
-    // Mouse up event
     canvas.on('mouse:up', handleMouseUp);
-    
-    // Double click to complete polygon
     canvas.on('mouse:dblclick', handleDoubleClick);
+    canvas.on('mouse:wheel', handleMouseWheel);
     
     // Selection events
     canvas.on('selection:created', handleSelectionEvent);
@@ -71,10 +69,23 @@ export function setupCanvasEvents(canvas) {
     canvas.on('object:moving', handleObjectMoving);
     canvas.on('object:modified', handleObjectModified);
     
-    // Zoom and pan events
-    canvas.on('mouse:wheel', handleMouseWheel);
-    
     console.log("[DEBUG] Canvas events setup complete");
+}
+
+/**
+ * Setup global event handlers
+ */
+function setupGlobalEventHandlers() {
+    // Keyboard events
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    
+    // Window events
+    window.addEventListener('resize', handleWindowResize);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    console.log("[DEBUG] Global event handlers setup complete");
 }
 
 /**
@@ -96,6 +107,9 @@ function handleMouseDown(options) {
         case 'select':
             // Selection handling is done by Fabric.js
             break;
+        case 'pan':
+            handlePanStart(pointer, options.e);
+            break;
         default:
             console.log(`[DEBUG] Unhandled mode: ${AppState.currentMode}`);
     }
@@ -113,10 +127,7 @@ function handleMouseMove(options) {
     const pointer = canvas.getPointer(options.e);
     
     // Update coordinates display
-    const coordsStatus = document.getElementById('coords-status');
-    if (coordsStatus) {
-        coordsStatus.textContent = `(${Math.round(pointer.x)}, ${Math.round(pointer.y)})`;
-    }
+    updateCoordinatesDisplay(pointer.x, pointer.y);
     
     // Handle active drawing
     if (AppState.isDrawing && AppState.currentMode === 'polygon') {
@@ -134,6 +145,11 @@ function handleMouseUp(options) {
         // Continue polygon drawing
         return;
     }
+    
+    // Handle pan end
+    if (AppState.isPanning) {
+        handlePanEnd();
+    }
 }
 
 /**
@@ -145,6 +161,75 @@ function handleDoubleClick(options) {
     if (AppState.currentMode === 'polygon' && AppState.isDrawing && AppState.polyPoints && AppState.polyPoints.length >= 3) {
         console.log("[DEBUG] Double click - completing polygon");
         completePolygon();
+    }
+}
+
+/**
+ * Handle key down events
+ */
+function handleKeyDown(event) {
+    const AppState = getAppState();
+    
+    // Ignore if user is typing in input fields
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    switch (event.key.toLowerCase()) {
+        case 'enter':
+            // Enter: Complete polygon if drawing
+            if (AppState.isDrawing && AppState.currentMode === 'polygon' && AppState.polyPoints?.length >= 3) {
+                event.preventDefault();
+                completePolygon();
+            }
+            break;
+            
+        case 'escape':
+            // Escape: Cancel current action
+            event.preventDefault();
+            handleEscapeKey();
+            break;
+            
+        case 'shift':
+            // Shift: Enable pan mode temporarily
+            if (!AppState.isPanning && AppState.fabricCanvas) {
+                AppState.fabricCanvas.defaultCursor = 'grab';
+                AppState.fabricCanvas.hoverCursor = 'grab';
+            }
+            break;
+    }
+}
+
+/**
+ * Handle key up events
+ */
+function handleKeyUp(event) {
+    const AppState = getAppState();
+    
+    switch (event.key.toLowerCase()) {
+        case 'shift':
+            // Shift released: Disable pan mode
+            if (!AppState.isPanning && AppState.fabricCanvas) {
+                AppState.fabricCanvas.defaultCursor = 'default';
+                AppState.fabricCanvas.hoverCursor = 'move';
+            }
+            break;
+    }
+}
+
+/**
+ * Handle escape key
+ */
+function handleEscapeKey() {
+    const AppState = getAppState();
+    
+    if (AppState.isDrawing) {
+        // Cancel current drawing
+        cancelPolygon();
+        addLogEntry("Cancelled polygon drawing");
+    } else if (AppState.activePolygon) {
+        // Deselect active polygon
+        deselectActivePolygon();
     }
 }
 
@@ -166,7 +251,44 @@ export function completePolygon() {
             AppState.activeLine = null;
         }
         
-        // Create final polygon with proper positioning
+        console.log("[DEBUG] Completing polygon with canvas points:", AppState.polyPoints);
+        console.log("[DEBUG] Current scale factor:", AppState.currentScale);
+        console.log("[DEBUG] Original image dimensions:", {
+            width: AppState.originalImageWidth,
+            height: AppState.originalImageHeight
+        });
+        
+        // Convert canvas coordinates to image coordinates for COCO format
+        let imagePoints;
+        
+        if (AppState.currentScale && AppState.currentScale !== 1) {
+            // Convert canvas coordinates to image coordinates using scale factor
+            imagePoints = AppState.polyPoints.map(point => ({
+                x: Math.round(point.x / AppState.currentScale),
+                y: Math.round(point.y / AppState.currentScale)
+            }));
+            console.log("[DEBUG] Converted to image coordinates using scale", AppState.currentScale);
+        } else {
+            // No scaling applied - use canvas coordinates as image coordinates
+            imagePoints = AppState.polyPoints.map(point => ({
+                x: Math.round(point.x),
+                y: Math.round(point.y)
+            }));
+            console.log("[DEBUG] No scaling applied - using canvas coordinates");
+        }
+        
+        // Validate image coordinates are within bounds
+        if (AppState.originalImageWidth && AppState.originalImageHeight) {
+            imagePoints = imagePoints.map(point => ({
+                x: Math.max(0, Math.min(point.x, AppState.originalImageWidth)),
+                y: Math.max(0, Math.min(point.y, AppState.originalImageHeight))
+            }));
+            console.log("[DEBUG] Clamped coordinates to image bounds");
+        }
+        
+        console.log("[DEBUG] Final image points for COCO format:", imagePoints);
+        
+        // Create final polygon with canvas coordinates (for display)
         const polygon = new fabric.Polygon(AppState.polyPoints, {
             fill: getCategoryColorByName(AppState.currentClass),
             stroke: getCategoryColorByName(AppState.currentClass),
@@ -182,9 +304,10 @@ export function completePolygon() {
         // Add class and metadata
         polygon.class = AppState.currentClass;
         polygon.customData = {
-            class: AppState.currentClass, // Add class to customData for data converter
+            class: AppState.currentClass,
             objectId: generateObjectId(AppState.currentClass),
-            imagePoints: [...AppState.polyPoints], // Copy the points
+            imagePoints: imagePoints, // Store image coordinates for COCO export
+            canvasPoints: [...AppState.polyPoints], // Store canvas coordinates for editing
             created: new Date().toISOString()
         };
         
@@ -244,13 +367,29 @@ function handlePolygonDrawing(pointer) {
         // Create temporary line to show progress
         AppState.activeLine = new fabric.Line(AppState.linePoints, {
             strokeWidth: 2,
-            stroke: '#ff0000',
+            stroke: getCategoryColorByName(AppState.currentClass),
             selectable: false,
             evented: false
         });
         
         canvas.add(AppState.activeLine);
+        addLogEntry(`Started drawing ${AppState.currentClass} polygon`);
     } else {
+        // Check if clicking near first point to close polygon
+        if (AppState.polyPoints.length >= 3) {
+            const firstPoint = AppState.polyPoints[0];
+            const distance = Math.sqrt(
+                Math.pow(pointer.x - firstPoint.x, 2) + 
+                Math.pow(pointer.y - firstPoint.y, 2)
+            );
+            
+            // If clicked near first point (within 10 pixels), complete the polygon
+            if (distance < 10) {
+                completePolygon();
+                return;
+            }
+        }
+        
         // Add point to existing polygon
         AppState.polyPoints.push(pointer);
         AppState.linePoints.push(pointer.x, pointer.y);
@@ -259,7 +398,7 @@ function handlePolygonDrawing(pointer) {
         canvas.remove(AppState.activeLine);
         AppState.activeLine = new fabric.Polyline(AppState.polyPoints, {
             strokeWidth: 2,
-            stroke: '#ff0000',
+            stroke: getCategoryColorByName(AppState.currentClass),
             fill: 'transparent',
             selectable: false,
             evented: false
@@ -297,8 +436,6 @@ function updateActivePolygon(pointer) {
     canvas.renderAll();
 }
 
-
-
 /**
  * Cancel polygon drawing
  */
@@ -318,6 +455,13 @@ export function cancelPolygon() {
     AppState.isDrawing = false;
     AppState.polyPoints = [];
     AppState.linePoints = [];
+    AppState.currentMode = 'select';
+    
+    // Update mode display
+    const modeStatus = document.getElementById('mode-status');
+    if (modeStatus) {
+        modeStatus.textContent = 'Select';
+    }
     
     canvas.renderAll();
     console.log("[DEBUG] Polygon drawing cancelled");
@@ -329,21 +473,21 @@ export function cancelPolygon() {
 function handleSelectionEvent(options) {
     const AppState = getAppState();
     
-    if (options.selected && options.selected.length > 0) {
-        const obj = options.selected[0];
-        AppState.activePolygon = obj;
+    console.log("[DEBUG] Selection event:", options);
+    
+    if (!options.selected || options.selected.length === 0) {
+        return;
+    }
+    
+    const selectedObject = options.selected[0];
+    
+    // Check if this is an annotation object
+    if (AppState.annotations && AppState.annotations.includes(selectedObject)) {
+        selectPolygon(selectedObject);
+        highlightAnnotationInList(selectedObject);
+        updateSelectedObjectDisplay(selectedObject);
         
-        // Update selected object display
-        const selectedStatus = document.getElementById('selected-object-status');
-        if (selectedStatus) {
-            const objectId = obj.customData?.objectId || 'Unknown';
-            selectedStatus.textContent = objectId;
-        }
-        
-        // Highlight in annotation list
-        if (window.highlightAnnotationInList) {
-            window.highlightAnnotationInList(obj);
-        }
+        addLogEntry(`Selected ${selectedObject.customData?.class || 'object'}: ${selectedObject.customData?.objectId || 'unknown'}`);
     }
 }
 
@@ -352,11 +496,38 @@ function handleSelectionEvent(options) {
  */
 function handleSelectionCleared() {
     const AppState = getAppState();
-    AppState.activePolygon = null;
     
-    const selectedStatus = document.getElementById('selected-object-status');
-    if (selectedStatus) {
-        selectedStatus.textContent = 'None';
+    if (AppState.activePolygon) {
+        AppState.activePolygon = null;
+        updateSelectedObjectDisplay(null);
+        
+        // Clear highlights in annotation list
+        const annotationItems = document.querySelectorAll('.annotation-item');
+        annotationItems.forEach(item => {
+            item.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'selected');
+        });
+    }
+}
+
+/**
+ * Highlight annotation in the list
+ */
+function highlightAnnotationInList(polygon) {
+    if (!polygon || !polygon.customData) return;
+    
+    const objectId = polygon.customData.objectId;
+    const annotationItems = document.querySelectorAll('.annotation-item');
+    
+    // Remove highlight from all items
+    annotationItems.forEach(item => {
+        item.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'selected');
+    });
+    
+    // Highlight the selected item
+    const targetItem = document.querySelector(`[data-object-id="${objectId}"]`);
+    if (targetItem) {
+        targetItem.classList.add('bg-blue-100', 'dark:bg-blue-900', 'selected');
+        targetItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
@@ -365,8 +536,19 @@ function handleSelectionCleared() {
  */
 function handleObjectMoving(options) {
     const obj = options.target;
-    if (obj && obj.customData) {
-        // Update last modified timestamp
+    
+    if (!obj || !obj.customData) return;
+    
+    // Update coordinates display
+    updateCoordinatesDisplay(obj.left, obj.top);
+    
+    // If this is an edit handle, update the parent polygon
+    if (obj.customData.isEditHandle) {
+        updatePolygonFromHandle(obj);
+    }
+    
+    // Mark object as modified
+    if (obj.customData) {
         obj.customData.modified = new Date().toISOString();
     }
 }
@@ -376,14 +558,81 @@ function handleObjectMoving(options) {
  */
 function handleObjectModified(options) {
     const obj = options.target;
-    if (obj && obj.customData) {
-        // Update last modified timestamp
-        obj.customData.modified = new Date().toISOString();
+    
+    if (!obj || !obj.customData) return;
+    
+    console.log(`[DEBUG] Object modified: ${obj.customData.objectId || 'unknown'}`);
+    
+    // Update coordinates
+    obj.setCoords();
+    
+    // Mark as modified
+    obj.customData.modified = new Date().toISOString();
+    
+    // Update annotation list
+    if (window.modules?.annotationManager?.rebuildAnnotationList) {
+        window.modules.annotationManager.rebuildAnnotationList();
+    }
+    
+    addLogEntry(`Modified ${obj.customData.class || 'object'}: ${obj.customData.objectId || 'unknown'}`);
+}
+
+/**
+ * Update polygon from edit handle movement
+ */
+function updatePolygonFromHandle(handle) {
+    if (!handle.customData?.isEditHandle) return;
+    
+    const polygon = handle.customData.polygon;
+    const pointIndex = handle.customData.pointIndex;
+    
+    if (!polygon || !polygon.points || pointIndex === undefined) return;
+    
+    // Calculate relative position within the polygon
+    const relativeX = handle.left - polygon.left;
+    const relativeY = handle.top - polygon.top;
+    
+    // Update the polygon point
+    if (polygon.points[pointIndex]) {
+        polygon.points[pointIndex].x = relativeX;
+        polygon.points[pointIndex].y = relativeY;
         
-        // Update annotation list
-        if (window.rebuildAnnotationList) {
-            window.rebuildAnnotationList();
-        }
+        // Mark polygon as dirty for re-rendering
+        polygon.dirty = true;
+        polygon.setCoords();
+    }
+}
+
+/**
+ * Handle pan start
+ */
+function handlePanStart(pointer, event) {
+    const AppState = getAppState();
+    
+    AppState.isPanning = true;
+    AppState.panStartX = pointer.x;
+    AppState.panStartY = pointer.y;
+    
+    // Store initial viewport transform
+    AppState.panStartTransform = AppState.fabricCanvas.viewportTransform.slice();
+    
+    // Change cursor
+    AppState.fabricCanvas.defaultCursor = 'grabbing';
+    AppState.fabricCanvas.hoverCursor = 'grabbing';
+}
+
+/**
+ * Handle pan end
+ */
+function handlePanEnd() {
+    const AppState = getAppState();
+    
+    AppState.isPanning = false;
+    
+    // Reset cursor
+    if (AppState.fabricCanvas) {
+        AppState.fabricCanvas.defaultCursor = 'default';
+        AppState.fabricCanvas.hoverCursor = 'move';
     }
 }
 
@@ -391,14 +640,19 @@ function handleObjectModified(options) {
  * Handle mouse wheel for zoom
  */
 function handleMouseWheel(opt) {
+    const AppState = getAppState();
+    const canvas = AppState.fabricCanvas;
+    
+    if (!canvas) return;
+    
     const delta = opt.e.deltaY;
-    let zoom = AppState.fabricCanvas.getZoom();
+    let zoom = canvas.getZoom();
     zoom *= 0.999 ** delta;
     
     if (zoom > 20) zoom = 20;
     if (zoom < 0.01) zoom = 0.01;
     
-    AppState.fabricCanvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+    canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
     
     // Update zoom display
     updateZoomDisplay(zoom);
@@ -406,6 +660,58 @@ function handleMouseWheel(opt) {
     opt.e.preventDefault();
     opt.e.stopPropagation();
 }
+
+/**
+ * Handle window resize events
+ */
+function handleWindowResize() {
+    // Debounce resize events
+    clearTimeout(window.canvasResizeTimeout);
+    window.canvasResizeTimeout = setTimeout(() => {
+        resizeCanvas();
+    }, 250);
+    
+    console.log("[DEBUG] Window resized, canvas will be resized");
+}
+
+/**
+ * Handle before unload (page refresh/close)
+ */
+function handleBeforeUnload(event) {
+    // Save session state
+    if (window.modules?.saveManager?.saveSessionState) {
+        window.modules.saveManager.saveSessionState();
+    }
+    
+    // Check for unsaved changes
+    if (window.modules?.saveManager?.hasUnsavedChanges && 
+        window.modules.saveManager.hasUnsavedChanges()) {
+        const message = 'You have unsaved changes. Are you sure you want to leave?';
+        event.returnValue = message;
+        return message;
+    }
+}
+
+/**
+ * Handle visibility change (tab focus/blur)
+ */
+function handleVisibilityChange() {
+    if (document.hidden) {
+        // Tab lost focus - save session state
+        if (window.modules?.saveManager?.saveSessionState) {
+            window.modules.saveManager.saveSessionState();
+        }
+        console.log("[DEBUG] Tab hidden, session state saved");
+    } else {
+        // Tab gained focus - update button states
+        if (window.modules?.uiManager?.updateButtonStates) {
+            window.modules.uiManager.updateButtonStates();
+        }
+        console.log("[DEBUG] Tab visible");
+    }
+}
+
+// ... (keep all existing canvas management functions: centerCanvas, resizeCanvas, etc.)
 
 /**
  * Center canvas in container
@@ -514,15 +820,6 @@ export function setupCanvasResize() {
     // Initial resize
     setTimeout(resizeCanvas, 100);
     
-    // Setup resize listener
-    window.addEventListener('resize', () => {
-        // Debounce resize events
-        clearTimeout(window.canvasResizeTimeout);
-        window.canvasResizeTimeout = setTimeout(() => {
-            resizeCanvas();
-        }, 250);
-    });
-    
     // Sidebar collapse handlers
     setupSidebarResizeHandlers();
     
@@ -583,14 +880,11 @@ export function clearCanvas() {
     AppState.currentImage = null;
     
     // Update displays
-    if (window.rebuildAnnotationList) {
-        window.rebuildAnnotationList();
+    if (window.modules?.annotationManager?.rebuildAnnotationList) {
+        window.modules.annotationManager.rebuildAnnotationList();
     }
     
-    const selectedStatus = document.getElementById('selected-object-status');
-    if (selectedStatus) {
-        selectedStatus.textContent = 'None';
-    }
+    updateSelectedObjectDisplay(null);
     
     console.log("[DEBUG] Canvas cleared");
 }
@@ -633,31 +927,14 @@ export function panCanvas(deltaX, deltaY) {
 }
 
 /**
- * Update zoom display
+ * Cleanup event handlers
  */
-function updateZoomDisplay(zoom) {
-    const zoomStatus = document.getElementById('zoom-status');
-    if (zoomStatus) {
-        zoomStatus.textContent = `${Math.round(zoom * 100)}%`;
-    }
+export function cleanupCanvasEvents() {
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('keyup', handleKeyUp);
+    window.removeEventListener('resize', handleWindowResize);
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    
+    console.log("[DEBUG] Canvas event handlers cleaned up");
 }
-
-/**
- * Helper function to get category color
- */
-// function getCategoryColorByName(className, asTransparentFill = false) {
-//     if (window.getCategoryColorByName) {
-//         return window.getCategoryColorByName(className, asTransparentFill);
-//     }
-//     return asTransparentFill ? 'rgba(0, 123, 255, 0.3)' : '#007bff';
-// }
-
-/**
- * Helper function to generate object ID
- */
-// function generateObjectId(className) {
-//     if (window.generateObjectId) {
-//         return window.generateObjectId(className);
-//     }
-//     return `${className}_001`;
-// }

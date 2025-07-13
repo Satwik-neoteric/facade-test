@@ -226,8 +226,8 @@ export function convertFabricToCoco(annotations) {
             coco.images.push({
                 id: AppState.currentImageId,
                 file_name: AppState.currentImagePath,
-                width: AppState.currentImage?.width || 0,
-                height: AppState.currentImage?.height || 0
+                width: AppState.originalImageWidth || AppState.currentImage?.width || 0,
+                height: AppState.originalImageHeight || AppState.currentImage?.height || 0
             });
         }
         
@@ -238,35 +238,37 @@ export function convertFabricToCoco(annotations) {
                 return;
             }
             
-            const className = obj.customData?.class || 'unknown';
+            const className = obj.customData?.class || obj.class || 'unknown';
             
             // Find category ID
             const category = AppState.classes?.find(cat => cat.name === className);
             const categoryId = category?.id || 1;
             
-            // Get polygon points
+            // Get polygon points - PRIORITY: Use stored imagePoints if available
             let imagePoints = [];
             
-            if (obj.customData?.imagePoints) {
-                // Use stored image points if available
-                console.log('lolu')
+            if (obj.customData?.imagePoints && Array.isArray(obj.customData.imagePoints)) {
+                // Use stored image points directly (already in image coordinates)
                 imagePoints = obj.customData.imagePoints;
+                console.log(`[DEBUG] Using stored imagePoints for ${className}:`, imagePoints);
+            } else if (obj.points && Array.isArray(obj.points)) {
+                // Fallback: Convert current polygon points to image coordinates
+                console.log(`[DEBUG] Converting canvas points to image coordinates for ${className}`);
+                imagePoints = obj.points.map(point => {
+                    // Calculate absolute canvas coordinates
+                    const canvasX = obj.left + point.x;
+                    const canvasY = obj.top + point.y;
+                    
+                    // Convert to image coordinates using current scale
+                    return {
+                        x: AppState.currentScale ? canvasX / AppState.currentScale : canvasX,
+                        y: AppState.currentScale ? canvasY / AppState.currentScale : canvasY
+                    };
+                });
+                console.log(`[DEBUG] Converted canvas points to image points:`, imagePoints);
             } else {
-                console.log('lolu1')
-                // Convert current polygon points to image coordinates
-                if (obj.points && Array.isArray(obj.points)) {
-                    imagePoints = obj.points.map(point => {
-                        // Calculate canvas coordinates
-                        const canvasX = obj.left + point.x;
-                        const canvasY = obj.top + point.y;
-                        
-                        // Convert to image coordinates if scale is available
-                        return {
-                            x:  canvasX,
-                            y:  canvasY
-                        };
-                    });
-                }
+                console.warn(`[DEBUG] No valid points found for annotation ${index}`);
+                return;
             }
             
             if (imagePoints.length < 3) {
@@ -296,7 +298,7 @@ export function convertFabricToCoco(annotations) {
             
             // Create annotation object
             const annotation = {
-                id: obj.customData?.cocoId || index + 1,
+                id: obj.customData?.cocoId || obj.id || index + 1,
                 image_id: AppState.currentImageId || 1,
                 category_id: categoryId,
                 segmentation: segmentation,
@@ -307,6 +309,12 @@ export function convertFabricToCoco(annotations) {
                 created: obj.customData?.created || new Date().toISOString(),
                 modified: obj.customData?.modified || new Date().toISOString()
             };
+            
+            console.log(`[DEBUG] Created COCO annotation for ${className}:`, {
+                points: imagePoints.length,
+                bbox: bbox,
+                area: area
+            });
             
             // Add to annotations array
             coco.annotations.push(annotation);

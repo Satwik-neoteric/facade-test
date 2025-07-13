@@ -161,7 +161,7 @@ export function createEditHandles(polygon) {
         const handle = new fabric.Circle({
             radius: 6,
             fill: getCategoryColorByName(polygon.class, false),
-            stroke: '#fff',
+            stroke: getCategoryColorByName(polygon.class, false),
             strokeWidth: 2,
             left: absoluteX,
             top: absoluteY,
@@ -389,7 +389,8 @@ export function createPolygonAnnotation(points, className) {
         showMessage("Please select a class before creating annotation", "warning");
         return null;
     }
-    
+    console.log(`[DEBUG] Creating polygon annotation for class: ${className}`);
+    console.log('lolu')
     // Create fabric polygon
     const polygon = new fabric.Polygon(points, {
         strokeWidth: 2,
