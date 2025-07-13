@@ -152,19 +152,22 @@ export async function loadImage(imagePath, loadId = null) {
                         // Clear canvas
                         canvas.clear();
                         
-                        // Calculate canvas size to fit image
-                        const containerWidth = canvas.getElement().parentElement.clientWidth;
-                        const containerHeight = canvas.getElement().parentElement.clientHeight;
+                        // Get container dimensions for responsive sizing
+                        const canvasContainer = document.getElementById('canvas-container');
+                        const containerWidth = canvasContainer ? canvasContainer.offsetWidth : 1200;
+                        const containerHeight = canvasContainer ? canvasContainer.offsetHeight : 800;
                         
-                        const maxWidth = Math.min(containerWidth * 0.9, img.naturalWidth);
-                        const maxHeight = Math.min(containerHeight * 0.9, img.naturalHeight);
+                        // Calculate optimal canvas size to fill screen space
+                        const maxWidth = Math.max(800, containerWidth - 60); // Leave some margin
+                        const maxHeight = Math.max(600, containerHeight - 60); // Leave some margin
                         
+                        // Calculate scale to fit image in available space
                         const scale = Math.min(maxWidth / img.naturalWidth, maxHeight / img.naturalHeight, 1);
                         
                         const canvasWidth = img.naturalWidth * scale;
                         const canvasHeight = img.naturalHeight * scale;
                         
-                        // Set canvas dimensions
+                        // Set canvas dimensions to be larger and more responsive
                         canvas.setDimensions({
                             width: canvasWidth,
                             height: canvasHeight
@@ -185,6 +188,11 @@ export async function loadImage(imagePath, loadId = null) {
                         // Update state
                         AppState.currentImage = fabricImg;
                         AppState.currentImagePath = imagePath;
+                        
+                        // Center canvas in container
+                        if (window.modules?.canvasManager?.centerCanvas) {
+                            window.modules.canvasManager.centerCanvas();
+                        }
                         
                         // Load annotations for this image
                         await loadAnnotations(imagePath);

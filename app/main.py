@@ -35,6 +35,7 @@ from app.api.routes.batch_management import router as batch_management_router
 from app.api.routes import buildings
 from app.api.routes.buildings import router as buildings_router
 from app.api.routes.admin import router as admin_router # Import the correct admin router
+from app.api.routes.metadata import router as metadata_router
 
 from app.services.graph_service import GraphService
 from app.services.cosmos_service import CosmosDbService # Changed from CosmosService
@@ -212,6 +213,7 @@ app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(annotations.router, prefix="/api/annotations", tags=["annotations"])
 app.include_router(classes.router, prefix="/api", tags=["classes"])
 app.include_router(images.router, prefix="/api", tags=["images"])
+app.include_router(metadata_router, prefix="/api", tags=["metadata"])
 app.include_router(statistics.router, prefix="/api", tags=["statistics"])
 app.include_router(statistics_fixed_router, prefix="/api", tags=["statistics_fixed"])
 app.include_router(fallback_router, prefix="/api", tags=["fallback"])

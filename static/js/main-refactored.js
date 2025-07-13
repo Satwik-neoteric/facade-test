@@ -183,6 +183,12 @@ Promise.all([
     window.getCategoryColorByName = utilities.getCategoryColorByName;
     window.generateObjectId = utilities.generateObjectId;
     window.completePolygon = canvasManager.completePolygon;
+    window.createPolygonAnnotation = annotationManager.createPolygonAnnotation;
+    window.selectPolygon = annotationManager.selectPolygon;
+    window.deleteSelectedPolygon = annotationManager.deleteSelectedPolygon;
+    window.centerCanvas = canvasManager.centerCanvas;
+    window.resizeCanvas = canvasManager.resizeCanvas;
+    window.setupCanvasResize = canvasManager.setupCanvasResize;
     
     // Setup global event processors
     eventProcessor.setupEventProcessors();

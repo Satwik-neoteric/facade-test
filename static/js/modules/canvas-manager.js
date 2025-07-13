@@ -30,8 +30,11 @@ export function initCanvas() {
         // Setup canvas events
         setupCanvasEvents(canvas);
         
-        // Initial canvas sizing
-        centerCanvas();
+        // Initial canvas sizing - use resizeCanvas which calls centerCanvas
+        setTimeout(() => {
+            resizeCanvas();
+            setupCanvasResize();
+        }, 100);
         
         console.log("[DEBUG] Canvas initialized successfully");
         
@@ -408,17 +411,94 @@ export function centerCanvas() {
     
     if (!canvas) return;
     
-    const container = canvas.getElement().parentElement;
-    if (!container) return;
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    const canvasEl = document.getElementById('annotation-canvas');
     
-    const containerRect = container.getBoundingClientRect();
-    const canvasElement = canvas.getElement();
+    if (!canvasWrapper || !canvasEl) return;
     
-    // Center the canvas element
-    canvasElement.style.position = 'absolute';
-    canvasElement.style.left = '50%';
-    canvasElement.style.top = '50%';
-    canvasElement.style.transform = 'translate(-50%, -50%)';
+    const wrapperWidth = canvasWrapper.offsetWidth;
+    const wrapperHeight = canvasWrapper.offsetHeight;
+    const canvasWidth = canvas.getWidth();
+    const canvasHeight = canvas.getHeight();
+    
+    // Calculate centering offsets
+    const leftOffset = Math.max(0, (wrapperWidth - canvasWidth) / 2);
+    const topOffset = Math.max(0, (wrapperHeight - canvasHeight) / 2);
+    
+    // Apply centering
+    canvasEl.style.marginLeft = `${leftOffset}px`;
+    canvasEl.style.marginTop = `${topOffset}px`;
+    canvasEl.style.position = 'relative';
+    
+    console.log(`[DEBUG] Canvas centered: offset(${leftOffset}, ${topOffset})`);
+}
+
+/**
+ * Resize canvas to fill available space dynamically
+ */
+export function resizeCanvas() {
+    const AppState = getAppState();
+    const canvas = AppState.fabricCanvas;
+    
+    if (!canvas) return;
+    
+    const canvasContainer = document.getElementById('canvas-container');
+    if (!canvasContainer) return;
+    
+    // Get container dimensions
+    const containerWidth = canvasContainer.offsetWidth;
+    const containerHeight = canvasContainer.offsetHeight;
+    
+    // Calculate optimal canvas size (taking up most of the available space)
+    const maxWidth = Math.max(800, containerWidth - 60); // Leave some margin
+    const maxHeight = Math.max(600, containerHeight - 60); // Leave some margin
+    
+    // If there's a current image, maintain its aspect ratio
+    if (AppState.currentImage) {
+        const imageWidth = AppState.currentImage.width * AppState.currentImage.scaleX;
+        const imageHeight = AppState.currentImage.height * AppState.currentImage.scaleY;
+        
+        // Scale to fit container while maintaining aspect ratio
+        const scale = Math.min(maxWidth / imageWidth, maxHeight / imageHeight, 1);
+        
+        const canvasWidth = imageWidth * scale;
+        const canvasHeight = imageHeight * scale;
+        
+        canvas.setDimensions({
+            width: canvasWidth,
+            height: canvasHeight
+        });
+    } else {
+        // No image loaded, use default size
+        canvas.setDimensions({
+            width: Math.min(maxWidth, 1200),
+            height: Math.min(maxHeight, 800)
+        });
+    }
+    
+    // Center the canvas
+    centerCanvas();
+    
+    console.log(`[DEBUG] Canvas resized to: ${canvas.getWidth()}x${canvas.getHeight()}`);
+}
+
+/**
+ * Setup window resize handler
+ */
+export function setupCanvasResize() {
+    // Initial resize
+    setTimeout(resizeCanvas, 100);
+    
+    // Setup resize listener
+    window.addEventListener('resize', () => {
+        // Debounce resize events
+        clearTimeout(window.canvasResizeTimeout);
+        window.canvasResizeTimeout = setTimeout(() => {
+            resizeCanvas();
+        }, 250);
+    });
+    
+    console.log("[DEBUG] Canvas resize handler setup complete");
 }
 
 /**
