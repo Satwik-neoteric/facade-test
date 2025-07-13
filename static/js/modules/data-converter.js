@@ -51,14 +51,16 @@ export function parseCocoAnnotations(cocoData) {
                     console.log(`[DEBUG] Converted ${points.length} points for ${className}`);
                     
                     if (points.length >= 3) {
-                        // Create Fabric.js polygon
+                        // Create Fabric.js polygon with proper positioning
                         const polygon = new fabric.Polygon(points, {
                             strokeWidth: 2,
                             stroke: getCategoryColorByName(className),
                             fill: getCategoryColorByName(className, true),
                             selectable: true,
                             evented: true,
-                            objectCaching: false
+                            objectCaching: false,
+                            hasControls: false,
+                            hasBorders: false
                         });
                         
                         // Add custom data
@@ -101,6 +103,11 @@ export function parseCocoAnnotations(cocoData) {
         // Rebuild annotation list
         if (window.rebuildAnnotationList) {
             window.rebuildAnnotationList();
+        }
+        
+        // Update button states after loading annotations
+        if (window.modules?.uiManager?.updateButtonStates) {
+            window.modules.uiManager.updateButtonStates();
         }
         
         // Render canvas

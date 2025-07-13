@@ -315,6 +315,11 @@ export function deleteSelectedPolygon() {
         window.rebuildAnnotationList();
     }
     
+    // Update button states
+    if (window.modules?.uiManager?.updateButtonStates) {
+        window.modules.uiManager.updateButtonStates();
+    }
+    
     const selectedStatus = document.getElementById('selected-object-status');
     if (selectedStatus) {
         selectedStatus.textContent = 'None';
@@ -403,6 +408,11 @@ export function createPolygonAnnotation(points, className) {
     // Update annotation list
     if (window.rebuildAnnotationList) {
         window.rebuildAnnotationList();
+    }
+    
+    // Update button states
+    if (window.modules?.uiManager?.updateButtonStates) {
+        window.modules.uiManager.updateButtonStates();
     }
     
     AppState.fabricCanvas.renderAll();
@@ -517,6 +527,11 @@ export function clearAllAnnotations() {
     
     // Update displays
     rebuildAnnotationList();
+    
+    // Update button states
+    if (window.modules?.uiManager?.updateButtonStates) {
+        window.modules.uiManager.updateButtonStates();
+    }
     
     const selectedStatus = document.getElementById('selected-object-status');
     if (selectedStatus) {

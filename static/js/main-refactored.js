@@ -190,6 +190,7 @@ Promise.all([
     window.resizeCanvas = canvasManager.resizeCanvas;
     window.setupCanvasResize = canvasManager.setupCanvasResize;
     window.populateClassButtons = eventHandlers.populateClassButtons;
+    window.updateButtonStates = uiManager.updateButtonStates;
     
     // Setup global event processors
     eventProcessor.setupEventProcessors();

@@ -166,10 +166,8 @@ export function completePolygon() {
             AppState.activeLine = null;
         }
         
-        // Create final polygon
+        // Create final polygon with proper positioning
         const polygon = new fabric.Polygon(AppState.polyPoints, {
-            left: 0,
-            top: 0,
             fill: getCategoryColorByName(AppState.currentClass, true),
             stroke: getCategoryColorByName(AppState.currentClass),
             strokeWidth: 2,
@@ -207,6 +205,11 @@ export function completePolygon() {
         // Update annotation list
         if (window.modules?.annotationManager?.rebuildAnnotationList) {
             window.modules.annotationManager.rebuildAnnotationList();
+        }
+        
+        // Update button states
+        if (window.modules?.uiManager?.updateButtonStates) {
+            window.modules.uiManager.updateButtonStates();
         }
         
         canvas.renderAll();
