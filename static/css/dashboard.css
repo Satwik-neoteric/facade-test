@@ -1,0 +1,257 @@
+/* static/css/dashboard.css */
+/* Modal and Chart-specific styles only - Tailwind handles layout */
+
+/* Dashboard Stats Card Animations */
+.dashboard-stats-card {
+    transition: all 0.3s ease;
+}
+
+.dashboard-stats-card.highlight-update {
+    animation: cardHighlight 1.5s ease-in-out;
+}
+
+@keyframes cardHighlight {
+    0% {
+        transform: translateY(-2px) scale(1.02);
+    }
+    50% {
+        transform: translateY(-3px) scale(1.03);
+    }
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Light theme highlight */
+.dashboard-stats-card.highlight-update:not(.dark *) {
+    box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+}
+
+/* Dark theme highlight */
+.dark .dashboard-stats-card.highlight-update {
+    box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.4), 0 4px 6px -2px rgba(59, 130, 246, 0.15);
+}
+
+/* Stat number animation */
+.stat-updated {
+    animation: numberPulse 1.5s ease-in-out;
+}
+
+@keyframes numberPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+        color: #3b82f6;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Dark theme stat number animation */
+.dark .stat-updated {
+    animation: numberPulseDark 1.5s ease-in-out;
+}
+
+@keyframes numberPulseDark {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+        color: #60a5fa;
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Loading spinner theme-aware styles */
+.dashboard-stats-card [id*="loading"] i {
+    transition: color 0.3s ease;
+}
+
+.dark .dashboard-stats-card [id*="loading"] i {
+    color: #60a5fa;
+}
+
+/* Chart Modal Styles - Not covered by Tailwind */
+.chart-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.chart-card .expand-icon {
+    transition: transform 0.2s ease;
+}
+
+.chart-card:hover .expand-icon {
+    transform: scale(1.1);
+}
+
+#chart-modal {
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+#chart-modal .bg-white {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Dashboard Statistics Cards */
+.dashboard-stats-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-stats-card:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-stats-card:active {
+    transform: translateY(0) scale(0.98);
+    transition: transform 0.1s;
+}
+
+.dashboard-stats-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    border-radius: 0.5rem;
+}
+
+.dashboard-stats-card:hover::before {
+    opacity: 1;
+}
+
+/* Statistics animations */
+@keyframes stat-updated {
+    0% { transform: scale(1); color: inherit; }
+    30% { transform: scale(1.2); color: #2563eb; }
+    100% { transform: scale(1); color: inherit; }
+}
+
+@keyframes highlight-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+.stat-updated {
+    animation: stat-updated 1.5s ease-out;
+}
+
+.highlight-update {
+    animation: highlight-pulse 1.5s ease-out;
+}
+
+/* Chart Loading States */
+.chart-loading {
+    backdrop-filter: blur(2px);
+    background-color: rgba(255, 255, 255, 0.95);
+    transition: opacity 0.3s ease;
+}
+
+.dark .chart-loading {
+    background-color: rgba(31, 41, 55, 0.95);
+}
+
+.chart-loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.chart-loading p {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Chart Error States */
+.chart-error {
+    backdrop-filter: blur(2px);
+    transition: opacity 0.3s ease;
+}
+
+.chart-error i {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Refresh button states */
+#refresh-dashboard:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+#refresh-dashboard:disabled:hover {
+    background-color: #2563eb;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dark #refresh-dashboard:disabled:hover {
+    background-color: #1d4ed8;
+}

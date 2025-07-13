@@ -1,0 +1,68 @@
+<div id="upload-images-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl">
+            <div class="modal-header bg-gradient-to-r from-cyan-600 to-cyan-700 text-white border-0 rounded-t-xl">
+                <h4 class="modal-title font-bold text-lg">Upload Images to Batch</h4>
+                <button type="button" class="btn-close btn-close-white modal-close opacity-75 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="upload-images-form" class="space-y-4">
+                    <div class="form-group">
+                        <label for="upload-batch-id" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-layer-group mr-2 text-cyan-500"></i>Target Batch <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <select class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                id="upload-batch-id" 
+                                required>
+                            <option value="">Select a batch...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="image-files" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-images mr-2 text-green-500"></i>Select Images <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="file" 
+                                   class="form-control w-full px-4 py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100" 
+                                   id="image-files" 
+                                   multiple 
+                                   required 
+                                   accept="image/*">
+                        </div>
+                        <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>Supported formats: JPG, PNG, GIF, WEBP. Maximum 10MB per file.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="flex items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <input class="form-check-input w-5 h-5 text-cyan-600 bg-gray-100 border-gray-300 rounded focus:ring-cyan-500 dark:focus:ring-cyan-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" 
+                                   type="checkbox" 
+                                   id="override-existing">
+                            <label class="form-check-label ml-3 text-sm font-medium text-gray-700 dark:text-gray-300" for="override-existing">
+                                <i class="fas fa-sync-alt mr-2 text-orange-500"></i>Override Existing Files
+                            </label>
+                        </div>
+                        <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>Check this option to replace existing files with the same name
+                        </div>
+                    </div>
+                    <div id="upload-progress" class="progress bg-gray-200 dark:bg-gray-700 rounded-full h-3 mt-3" style="display: none;">
+                        <div class="progress-bar bg-gradient-to-r from-cyan-500 to-cyan-600 progress-bar-striped progress-bar-animated h-3 rounded-full transition-all duration-300" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div id="upload-images-error" class="alert alert-danger bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 p-4 rounded-xl" style="display: none;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span class="font-medium"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-gray-50 dark:bg-gray-800 border-0 rounded-b-xl p-6 flex space-x-3">
+                <button type="button" class="btn btn-secondary modal-close px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 border-0 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-200" data-bs-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button type="submit" form="upload-images-form" class="btn btn-primary px-6 py-2 bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white border-0 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i>Upload Images
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,253 @@
+{
+  "Header": {
+    "title": " ",
+    "paragraph": "Step into the future of building care with Facade AI Studio! Our platform brings together cutting-edge AI and intuitive tools to make facade inspections smarter, faster, and more reliable than ever. "
+  },
+  "About": {
+    "paragraph": " At FacadeAI Studio, we are redefining facade inspection and maintenance through advanced artificial intelligence. Our platform delivers consistent, predictive, and actionable insights, helping building owners and managers maintain safer, smarter, and more efficient properties.",
+    "Why": [
+      "Consistent Benchmarking for all inspections",
+      "Self-Improving Smart Inspections",
+      "Predictive Maintenance & Fault Recognition",
+      "Automated Remedial Maintenance Programs"
+    ],
+    "Why2": [
+      "Reduced Human Error",
+      "Time & Cost Savings",
+      "Actionable Insights"
+    ]
+  },
+  "Gallery": [
+    {
+      "title": "Stonework-Fracture Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025005.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025005.png"
+    },
+    {
+      "title": "Stonework-Fracture Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025006.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025006.png"
+    },
+    {
+      "title": "Mechanical Fault Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025008.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025008.png"
+    },
+    {
+      "title": "Stonework-Fracture Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025007.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025007.png"
+    },
+    {
+      "title": "Steelwork Corrosion Item Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025010.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025010.png"
+    },
+    {
+      "title": "Mech Corrosion Item Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025011.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025011.png"
+    },
+    {
+      "title": "Mechanical Fault Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025009.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025009.png"
+    },
+    {
+      "title": "Glass Fracture Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025012.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025012.png"
+    },
+    {
+      "title": "Glass Shell Fracture Detection",
+      "largeImage": "img/portfolio/ABI Facade AI 2025013.png",
+      "smallImage": "img/portfolio/ABI Facade AI 2025013.png"
+    }
+  ],
+  "Services": [
+    {
+      "icon": "fas fa-cloud",
+      "name": "Encrypted Cloud Storage",
+      "text": "All images are stored in the cloud with encryption at rest, ensuring your data remains protected at all times.",
+      "moreInfo": "Images are securely transmitted to the cloud via encrypted channels, protecting data during transit. Images are deleted from the device once sent. This end-to-end encryption ensures your data is protected both in transit and at rest."
+    },
+    {
+      "icon": "fas fa-user-shield",
+      "name": "Enhanced Access Control",
+      "text": "Access is fortified with Microsoft multi-factor authentication (MFA), requiring multiple forms of verification and significantly reducing the risk of security breaches.",
+      "moreInfo": "Enhanced access control uses rigorous security protocols, including MFA, to minimize the risk of unauthorized access and security breaches."
+    },
+    {
+      "icon": "fas fa-user-secret",
+      "name": "GDPR Automation",
+      "text": "Our glass unit redaction is performed automatically before any human review or intervention. This ensures that no one can see inside the building, fully safeguarding privacy and supporting GDPR compliance.",
+      "moreInfo": "Advanced AI ensures robust privacy protection for all building data and images. Proactive privacy measures, including glass unit redaction, safeguard personal privacy and ensure compliance with PII standards. All images are processed and protected before any human review, supporting GDPR and privacy compliance."
+    },
+    {
+      "icon": "fas fa-wrench",
+      "name": "Device & Camera Installation",
+      "text": "Our system includes device and camera installation designed to last 5 years, permanently attached to the BMU and serviced every 6 months.",
+      "moreInfo": "Devices are engineered for durability and reliability, with regular servicing every 6 months to ensure optimal performance and continuous data collection."
+    },
+    {
+      "icon": "fas fa-clock",
+      "name": "24/7 Reporting Access",
+      "text": "Enjoy 24-hour access to the reporting platform for real-time insights and updates.",
+      "moreInfo": "Access your inspection reports and analytics anytime, anywhere, for up-to-date information and decision-making."
+    },
+    {
+      "icon": "fas fa-bolt",
+      "name": "Efficient Power Usage",
+      "text": "Requires a maximum of 20 Watts from the BMU power source to operate the 4G LTE connection, GPS system, dual cameras, and onboard computer.",
+      "moreInfo": "The system is designed for energy efficiency, ensuring all components operate reliably with minimal power consumption from the building's BMU."
+    },
+    {
+      "icon": "fas fa-images",
+      "name": "High-Volume Image Review",
+      "text": "Up to 691,200 images are reviewed per building, per day, enabling comprehensive and continuous monitoring.",
+      "moreInfo": "Our AI and engineering team analyze hundreds of thousands of images daily, providing thorough and continuous facade monitoring for every building."
+    },
+    {
+      "icon": "fas fa-user-check",
+      "name": "Expert Fault Review",
+      "text": "Engineers review and flag urgent faults, ensuring critical issues are addressed promptly.",
+      "moreInfo": "Our expert engineers analyze thousands of images daily to identify and prioritize faults, ensuring your building remains safe and compliant with minimal disruption."
+    }
+  ],
+  "Testimonials": [
+    {
+      "img": "img/testimonials/01.jpg",
+      "text": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sed dapibus leo nec ornare diam sedasd commodo nibh ante facilisis bibendum dolor feugiat at.\"",
+      "name": "John Doe"
+    },
+    {
+      "img": "img/testimonials/02.jpg",
+      "text": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sed dapibus leo nec ornare diam sedasd commodo nibh ante facilisis bibendum dolor feugiat at.\"",
+      "name": "Johnathan Doe"
+    },
+    {
+      "img": "img/testimonials/03.jpg",
+      "text": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sed dapibus leo nec ornare diam sedasd commodo nibh ante facilisis bibendum dolor feugiat at.\"",
+      "name": "John Doe"
+    },
+    {
+      "img": "img/testimonials/04.jpg",
+      "text": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sed dapibus leo nec ornare diam sedasd commodo nibh ante facilisis bibendum dolor feugiat at.\"",
+      "name": "Johnathan Doe"
+    },
+    {
+      "img": "img/testimonials/05.jpg",
+      "text": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sed dapibus leo nec ornare diam sedasd commodo nibh ante facilisis bibendum dolor feugiat at.\"",
+      "name": "John Doe"
+    },
+    {
+      "img": "img/testimonials/06.jpg",
+      "text": "\"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis sed dapibus leo nec ornare diam sedasd commodo nibh ante facilisis bibendum dolor feugiat at.\"",
+      "name": "Johnathan Doe"
+    }
+  ],
+  "Workflow": [
+    {
+      "icon": "fas fa-cogs",
+      "title": "System Deployment",
+      "desc": "Attach 1 IP66 device with 2 cameras permanently to the BMU prior to window cleaning projects. Total weight is less than 5KG, using a maximum of 20W from the BMU power source."
+    },
+    {
+      "icon": "fas fa-camera-retro",
+      "title": "Automated Data Capture",
+      "desc": "Images are captured every 5 seconds, encrypted, then streamed via a secure pipeline, and immediately deleted from the device."
+    },
+    {
+      "icon": "fas fa-mask",
+      "title": "Privacy Redaction",
+      "desc": "Inference automatically removes glass units from the images, ensuring no data of the internal areas of the building is retained."
+    },
+    {
+      "icon": "fas fa-microchip",
+      "title": "AI Fault Detection & Prioritization",
+      "desc": "Our Facade AI model runs on the Microsoft Azure platform to flag faults and categorize them by priority and location."
+    },
+    {
+      "icon": "fas fa-users",
+      "title": "Human Review & AI Refinement",
+      "desc": "Remote engineers review flagged items for false positives and urgent defects. Human-in-the-loop feedback makes the algorithm even stronger."
+    },
+    {
+      "icon": "fas fa-chart-line",
+      "title": "Interactive Reporting & Action",
+      "desc": "Clients gain access to a living report on a digital twin virtual world via an authenticated login. They can then automate a scope of works and invite contractors to quote directly."
+    }
+  ],
+  "Team": [
+    {
+      "img": "img/team/01.jpg",
+      "name": "John Doe",
+      "job": "Director"
+    },
+    {
+      "img": "img/team/02.jpg",
+      "name": "Mike Doe",
+      "job": "Senior Designer"
+    },
+    {
+      "img": "img/team/03.jpg",
+      "name": "Jane Doe",
+      "job": "Senior Designer"
+    },
+    {
+      "img": "img/team/04.jpg",
+      "name": "Karen Doe",
+      "job": "Project Manager"
+    }
+  ],
+  "Contact": {
+    "address": " ",
+    "phone": "",
+    "email": "Lewis@facadeai.com",
+    "facebook": "https://facebook.com",
+    "twitter": "https://twitter.com",
+    "youtube": "https://youtube.com"
+  },
+  "Features": [
+    {
+      "icon": "fas fa-search",
+      "title": "Crack Detection",
+      "text": "Automatically identifies and classifies cracks in facade surfaces, including hairline and structural cracks."
+    },
+    {
+      "icon": "fas fa-bolt",
+      "title": "Spalling Resolution",
+      "text": "Detects spalling (surface flaking or chipping) and suggests targeted repair strategies."
+    },
+    {
+      "icon": "fas fa-tint",
+      "title": "Water Ingress Analysis",
+      "text": "Finds signs of water ingress and moisture-related fractures, helping prevent long-term damage."
+    },
+    {
+      "icon": "fas fa-cubes",
+      "title": "Material Separation",
+      "text": "Identifies delamination or separation between facade layers and recommends remediation."
+    },
+    {
+      "icon": "fas fa-wrench",
+      "title": "Automated Repair Guidance",
+      "text": "Provides Step-by-step repair instructions for detected fractures."
+    },
+    {
+      "icon": "fas fa-cogs",
+      "title": "AI-Powered Analysis",
+      "text": "Leverage advanced AI algorithms to analyze building facades for safety, efficiency, and compliance."
+    },
+    {
+      "icon": "fas fa-leaf",
+      "title": "Sustainability Scoring",
+      "text": "Automatically assess and score your building’s sustainability and environmental impact."
+    },
+    {
+      "icon": "fas fa-shield-alt",
+      "title": "Compliance Checker",
+      "text": "Instantly check your designs against the latest building codes and safety regulations."
+    }
+  ]
+}

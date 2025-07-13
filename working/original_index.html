@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facade AI Studio</title>
+    <link rel="stylesheet" href="/static/css/dark-theme.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header/Navigation -->
+        <header class="header">
+            <div class="header-left">
+                <img src="/static/images/Facade-Logo.png" alt="Facade AI Logo" class="logo">
+                <h1 class="header-title">- Facade AI Studio</h1>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/label" class="nav-link">Label</a>
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar">U</div>
+                <div class="user-details">
+                    <span class="user-name">User1</span>
+                    <span class="user-role">Default Admin</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Section -->
+            <section class="welcome-section">
+                <h1>Welcome to Facade AI Studio</h1>
+                <p>A comprehensive platform for labeling, analyzing, and managing facade elements in architectural images. Our powerful tools enable efficient identification and classification of building features to support architectural analysis and maintenance planning.</p>
+            </section>
+            
+            <!-- Feature Cards -->
+            <div class="feature-cards">
+                <!-- Image Labeling Card -->
+                <div class="feature-card">
+                    <h2>
+                        <i class="fas fa-tags feature-card-icon"></i>
+                        Image Labeling
+                    </h2>
+                    <p>Label architectural elements in images with precision tools. Categorize different facade components, identify structural issues, and create comprehensive annotations for your datasets.</p>
+                    <a href="/label" class="feature-card-button">Go to Label Studio</a>
+                </div>
+                
+                <!-- Analytics Dashboard Card -->
+                <div class="feature-card">
+                    <h2>
+                        <i class="fas fa-chart-pie feature-card-icon"></i>
+                        Analytics Dashboard
+                    </h2>
+                    <p>View detailed statistics and insights about your labeled data. Track progress, analyze distribution of facade elements, and generate comprehensive reports to guide maintenance decisions.</p>
+                    <a href="/dashboard" class="feature-card-button">View Dashboard</a>
+                </div>
+                
+                <!-- Batch Management Card -->
+                <div class="feature-card">
+                    <h2>
+                        <i class="fas fa-layer-group feature-card-icon"></i>
+                        Batch Management
+                    </h2>
+                    <p>Organize your facade images into batches for systematic labeling and analysis. Manage multiple projects simultaneously and ensure comprehensive coverage of your architectural datasets.</p>
+                    <a href="/batches" class="feature-card-button">Manage Batches</a>
+                </div>
+            </div>
+            
+            <!-- Feature Highlights -->
+            <div class="feature-highlights">
+                <!-- Fast & Efficient -->
+                <div class="feature-highlight">
+                    <i class="fas fa-bolt feature-highlight-icon"></i>
+                    <h3>Fast & Efficient</h3>
+                    <p>Optimized tools for quick and accurate labeling</p>
+                </div>
+                
+                <!-- Secure Storage -->
+                <div class="feature-highlight">
+                    <i class="fas fa-shield-alt feature-highlight-icon"></i>
+                    <h3>Secure Storage</h3>
+                    <p>All data is securely stored and backed up</p>
+                </div>
+                
+                <!-- Exportable Data -->
+                <div class="feature-highlight">
+                    <i class="fas fa-file-export feature-highlight-icon"></i>
+                    <h3>Exportable Data</h3>
+                    <p>Export annotations in various formats</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to set active navigation link
+            const setActiveNavLink = () => {
+                const path = window.location.pathname;
+                const navLinks = document.querySelectorAll('.nav-link');
+                
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    
+                    if (link.getAttribute('href') === path) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            
+            setActiveNavLink();
+        });
+    </script>
+</body>
+</html>

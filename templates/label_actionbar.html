@@ -1,0 +1,1062 @@
+{% extends "basic.html" %}
+
+{% block title %}Facade AI Studio - Label{% endblock %}
+
+{% block head_extra %}
+<style>
+/* Custom styles for label studio components that work with existing JS */
+.panel { 
+  background-color: white;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+.dark .panel {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+.left-panel { 
+  width: 20rem;
+  min-width: 20rem;
+  max-width: 20rem;
+  padding: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.right-panel { 
+  width: 20rem;
+  min-width: 20rem;
+  max-width: 20rem;
+  padding: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.center-panel { 
+  flex: 1;
+  min-width: 0;
+  padding: 1rem;
+  overflow: hidden;
+  position: relative;
+}
+.bottom-panel { 
+  height: 8rem;
+  max-height: 8rem;
+  padding: 1rem;
+  overflow: hidden;
+  transition: height 0.3s ease;
+}
+.action-panel { 
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  min-width: 200px;
+  max-width: 250px;
+  width: 250px;
+  user-select: none;
+  pointer-events: auto;
+  z-index: 50;
+}
+.dark .action-panel {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+.drag-handle {
+  cursor: move;
+  user-select: none;
+  color: #9ca3af;
+  text-align: center;
+  padding: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.dark .drag-handle {
+  border-color: #374151;
+}
+.drag-handle:hover {
+  color: #6b7280;
+}
+.class-button { 
+  padding: 0.5rem 0.75rem;
+  margin: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  transition: all 0.15s ease-in-out;
+  cursor: pointer;
+}
+.class-button.active { 
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  transform: scale(1.02);
+}
+.class-button:not(.active) { 
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+.class-button:not(.active):hover { 
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+.dark .class-button:not(.active) {
+  background-color: #374151;
+  color: #d1d5db;
+  border-color: #4b5563;
+}
+.dark .class-button:not(.active):hover {
+  background-color: #4b5563;
+}
+.collapse-toggle {
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+.collapse-toggle:hover {
+  transform: scale(1.1);
+}
+.panel.collapsed {
+  overflow: hidden;
+}
+.panel.collapsed .collapse-toggle {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+.panel.collapsed h2,
+.panel.collapsed h3 {
+  display: none;
+}
+.panel.collapsed .panel-header {
+  justify-content: center !important;
+}
+.collapsed-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Image list specific styles */
+#image-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 200px);
+  padding-right: 8px;
+  margin-bottom: 0;
+}
+
+.image-item {
+  display: block;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dark .image-item {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #d1d5db;
+}
+
+.image-item:hover {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.dark .image-item:hover {
+  background-color: #4b5563;
+  border-color: #6b7280;
+}
+
+.image-item.selected {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+  color: #1e40af;
+}
+
+.dark .image-item.selected {
+  background-color: #1e3a8a;
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+
+.image-filename {
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.image-path {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.dark .image-path {
+  color: #9ca3af;
+}
+
+/* Canvas and annotation styles */
+#canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+}
+
+.dark #canvas-container {
+  background-color: #111827;
+}
+
+#canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#annotation-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  background-color: white;
+  cursor: crosshair;
+}
+
+.dark #annotation-canvas {
+  border-color: #374151;
+  background-color: #1f2937;
+}
+
+/* Ensure proper layout without overflow */
+.main-layout {
+  height: calc(100vh - 8rem); /* Account for bottom panel */
+  overflow: hidden;
+}
+
+.center-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.canvas-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Status bar fixed height */
+#status-bar {
+  height: 3rem;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Prevent any overflow issues */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  overflow: hidden; /* Prevent scrollbars on main body */
+}
+
+/* Ensure class selection doesn't overflow */
+.bottom-panel.collapsed {
+  height: 50px !important;
+  min-height: 50px !important;
+}
+
+#class-selection-table {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: 100%;
+  padding-bottom: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .left-panel, .right-panel {
+    width: 16rem;
+    min-width: 16rem;
+    max-width: 16rem;
+  }
+  
+  .action-panel {
+    max-width: 200px;
+    width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .left-panel, .right-panel {
+    width: 14rem;
+    min-width: 14rem;
+    max-width: 14rem;
+  }
+  
+  .action-panel {
+    max-width: 180px;
+    width: 180px;
+    font-size: 0.75rem;
+  }
+  
+  .main-layout {
+    height: calc(100vh - 6rem); /* Smaller bottom panel on mobile */
+  }
+  
+  .bottom-panel {
+    height: 6rem;
+    max-height: 6rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+  <div class="flex h-full">
+    <!-- Left Panel: Image Browser -->
+    <aside class="panel left-panel" id="left-panel" role="complementary" aria-label="Image Browser">
+      <div class="flex items-center justify-between mb-4 flex-shrink-0">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Images</h2>
+        <button class="collapse-toggle p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Toggle Image Browser" title="Toggle Image Browser">«</button>
+      </div>
+      <nav aria-label="Image List" class="flex-1 min-h-0">
+        <ul id="image-list" role="listbox" aria-label="Available Images" class="space-y-2">
+          <li class="loading text-gray-500 dark:text-gray-400" role="option">Loading images...</li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 center-content">
+      <!-- Draggable Action Panel -->
+      <div id="action-panel" class="absolute top-20 right-6 action-panel z-50">
+        <div class="drag-handle text-gray-400 text-center mb-2" title="Drag to move panel" aria-label="Drag to move panel">☰</div>
+        <div class="space-y-3">
+          <div id="batch-selection-container">
+            <label for="batch-selector" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Batch:</label>
+            <select id="batch-selector" class="w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm">
+              <option value="">Loading batches...</option>
+            </select>
+          </div>
+          <button id="open-filter-dialog" class="w-full flex items-center justify-center px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm hover:bg-gray-200 dark:hover:bg-gray-600">
+            <span class="mr-2">🔍</span> Filter
+          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="submit-btn" class="flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
+              <span class="mr-1">✓</span> Submit
+            </button>
+            <button id="skip-btn" class="flex items-center justify-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm">
+              <span class="mr-1">➡</span> Skip
+            </button>
+            <button id="delete-btn" class="flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm">
+              <span class="mr-1">✗</span> Delete
+            </button>
+            <button id="accept-btn" class="validation-btn hidden flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
+              <span class="mr-1">✓</span> Accept
+            </button>
+            <button id="reject-btn" class="validation-btn hidden flex items-center justify-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm">
+              <span class="mr-1">✗</span> Reject
+            </button>
+          </div>
+          <div class="flex items-center justify-between py-2">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Label</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="mode-toggle-switch" class="sr-only peer">
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+            </label>
+            <span class="text-sm text-gray-600 dark:text-gray-400">Validate</span>
+          </div>
+            <span class="mr-1">✗</span> Reject
+          </button>
+        </div>
+      </div>
+
+      <!-- Canvas Area -->
+      <main class="canvas-area panel" role="main" aria-label="Annotation Canvas">
+        <div id="canvas-container">
+          <div id="canvas-wrapper">
+            <canvas id="annotation-canvas" aria-label="Image Annotation Area"></canvas>
+          </div>
+        </div>
+        <footer id="status-bar" class="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm text-gray-600 dark:text-gray-400" role="status" aria-live="polite">
+          Mode: <span id="mode-status" class="font-medium">Select</span> |
+          Zoom: <span id="zoom-status" class="font-medium">Full</span> |
+          Image: <span id="image-name-status" class="font-medium">None</span> |
+          Selected: <span id="selected-object-status" class="font-medium">None</span> |
+          Coords: <span id="coords-status" class="font-medium">(0, 0)</span>
+        </footer>
+      </main>
+    </div>
+
+    <!-- Right Panel: Details -->
+    <aside class="panel right-panel" id="right-panel" role="complementary" aria-label="Details Panel">
+      <div class="flex items-center justify-between mb-4 flex-shrink-0">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Details</h2>
+        <button class="collapse-toggle p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Toggle Details Panel" title="Toggle Details Panel">»</button>
+      </div>
+      
+      <div class="space-y-6 flex-1 overflow-y-auto">
+        <!-- Annotations Section -->
+        <section aria-labelledby="annotations-title">
+          <h3 id="annotations-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Annotations</h3>
+          <ul id="annotation-list" role="list" aria-label="Current Annotations" class="space-y-1"></ul>
+        </section>
+        
+        <!-- Image Metadata Section -->
+        <section aria-labelledby="metadata-title">
+          <h3 id="metadata-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Image Metadata</h3>
+          <div id="metadata-box" role="region" aria-label="Image metadata information" class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="no-data">No image loaded</p>
+          </div>
+        </section>
+        
+        <!-- Sensor Data Section -->
+        <section aria-labelledby="sensor-title">
+          <h3 id="sensor-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Sensor Data</h3>
+          <div id="sensor-data-container" role="region" aria-label="Sensor data information">
+            <table id="sensor-data-table" role="table" class="w-full text-sm"></table>
+          </div>
+        </section>
+        
+        <!-- Log Section -->
+        <section aria-labelledby="log-title">
+          <h3 id="log-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Log</h3>
+          <div id="log-box" role="log" aria-label="Activity log" class="text-sm text-gray-600 dark:text-gray-400"></div>
+        </section>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Bottom Panel: Class Selection -->
+<nav class="panel bottom-panel fixed bottom-0 left-0 right-0 z-40" role="navigation" aria-label="Class Selection">
+  <div class="flex items-center justify-between mb-2">
+    <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Select Class</h3>
+    <button class="collapse-toggle p-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Toggle Class Panel" title="Toggle Class Panel">^^</button>
+  </div>
+  <div id="class-selection-table" role="grid" aria-label="Available Classes" class="flex flex-wrap gap-2"></div>
+</nav>
+
+<!-- Filter Modal -->
+<div id="filter-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-2xl mx-4" role="dialog" aria-labelledby="filter-dialog-title">
+    <div class="flex justify-between items-center mb-4">
+      <h2 id="filter-dialog-title" class="text-xl font-semibold text-gray-900 dark:text-gray-100">Image Filters</h2>
+      <button id="close-filter-dialog" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Close">&times;</button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="date-start">Date Range:</label>
+        <div class="flex items-center space-x-2">
+          <input type="date" id="date-start" name="date-start" class="bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2">
+          <span class="text-gray-500">to</span>
+          <input type="date" id="date-end" name="date-end" class="bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" for="name-filter">Filename Pattern:</label>
+        <input type="text" id="name-filter" name="name-filter" placeholder="e.g., img_*.jpg" class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Image Status:</label>
+        <div class="space-y-2">
+          <label class="flex items-center">
+            <input type="radio" id="filter-all" name="annotation-status" value="all" checked class="mr-2">
+            <span class="text-gray-700 dark:text-gray-300">All Images</span>
+          </label>
+          <label class="flex items-center">
+            <input type="radio" id="filter-unlabelled" name="annotation-status" value="unlabelled" class="mr-2">
+            <span class="text-gray-700 dark:text-gray-300">Unlabelled Only</span>
+          </label>
+          <label class="flex items-center">
+            <input type="checkbox" id="show-deleted" name="show-deleted" class="mr-2">
+            <span class="text-gray-700 dark:text-gray-300">Show Deleted Images</span>
+          </label>
+        </div>
+      </div>
+      <div id="has-annotations-container">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Has Annotations:</label>
+        <label class="flex items-center">
+          <input type="checkbox" id="has-annotations" name="has-annotations" checked class="mr-2">
+          <span class="text-gray-700 dark:text-gray-300">Show images with annotations</span>
+        </label>
+      </div>
+      <div id="class-filter-container">
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Object Classes:</label>
+        <div id="class-filter-group" class="space-y-2">
+          <!-- Class checkboxes will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+    <div class="flex justify-end space-x-2 mt-6">
+      <button type="button" id="reset-filters-btn" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500">Reset</button>
+      <button type="button" id="apply-filters-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">Apply Filters</button>
+    </div>
+  </div>
+</div>
+
+<!-- Notes Dialog for Rejection -->
+<div id="notes-dialog" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg mx-4">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Rejection Notes</h3>
+    <p class="text-gray-700 dark:text-gray-300 mb-4">Please provide a reason for rejecting this annotation:</p>
+    <textarea id="notes-text" placeholder="Enter your notes here..." class="w-full h-32 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2 mb-4"></textarea>
+    <div class="flex justify-end space-x-2">
+      <button id="notes-cancel-btn" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded hover:bg-gray-400 dark:hover:bg-gray-500">Cancel</button>
+      <button id="notes-submit-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">Submit Rejection</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+// Panel collapse functionality
+function initializePanelCollapse() {
+  const collapseButtons = document.querySelectorAll('.collapse-toggle');
+  
+  collapseButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const panel = this.closest('.panel, nav');
+      
+      if (panel.id === 'left-panel') {
+        panel.classList.toggle('collapsed');
+        const headerDiv = panel.querySelector('.flex.items-center.justify-between');
+        const content = panel.querySelector('nav[aria-label="Image List"]');
+        
+        if (panel.classList.contains('collapsed')) {
+          panel.style.width = '50px';
+          panel.style.minWidth = '50px';
+          panel.style.maxWidth = '50px';
+          this.textContent = '»';
+          if (content) content.style.display = 'none';
+          // Hide the title but keep the button
+          const title = headerDiv.querySelector('h2');
+          if (title) title.style.display = 'none';
+          headerDiv.style.justifyContent = 'center';
+        } else {
+          panel.style.width = '20rem';
+          panel.style.minWidth = '20rem';
+          panel.style.maxWidth = '20rem';
+          this.textContent = '«';
+          if (content) content.style.display = 'block';
+          // Show the title
+          const title = headerDiv.querySelector('h2');
+          if (title) title.style.display = 'block';
+          headerDiv.style.justifyContent = 'space-between';
+        }
+      } else if (panel.id === 'right-panel') {
+        panel.classList.toggle('collapsed');
+        const headerDiv = panel.querySelector('.flex.items-center.justify-between');
+        const content = panel.querySelector('.space-y-6');
+        
+        if (panel.classList.contains('collapsed')) {
+          panel.style.width = '50px';
+          panel.style.minWidth = '50px';
+          panel.style.maxWidth = '50px';
+          this.textContent = '«';
+          if (content) content.style.display = 'none';
+          // Hide the title but keep the button
+          const title = headerDiv.querySelector('h2');
+          if (title) title.style.display = 'none';
+          headerDiv.style.justifyContent = 'center';
+        } else {
+          panel.style.width = '20rem';
+          panel.style.minWidth = '20rem';
+          panel.style.maxWidth = '20rem';
+          this.textContent = '»';
+          if (content) content.style.display = 'block';
+          // Show the title
+          const title = headerDiv.querySelector('h2');
+          if (title) title.style.display = 'block';
+          headerDiv.style.justifyContent = 'space-between';
+        }
+      } else if (panel.classList.contains('bottom-panel')) {
+        panel.classList.toggle('collapsed');
+        const headerDiv = panel.querySelector('.flex.items-center.justify-between');
+        const content = panel.querySelector('#class-selection-table');
+        
+        if (panel.classList.contains('collapsed')) {
+          panel.style.height = '50px';
+          panel.style.minHeight = '50px';
+          panel.style.maxHeight = '50px';
+          this.textContent = 'vv';
+          if (content) content.style.display = 'none';
+          // Hide the title but keep the button
+          const title = headerDiv.querySelector('h3');
+          if (title) title.style.display = 'none';
+          headerDiv.style.justifyContent = 'center';
+        } else {
+          panel.style.height = '8rem';
+          panel.style.minHeight = '8rem';
+          panel.style.maxHeight = '8rem';
+          this.textContent = '^^';
+          if (content) content.style.display = 'flex';
+          // Show the title
+          const title = headerDiv.querySelector('h3');
+          if (title) title.style.display = 'block';
+          headerDiv.style.justifyContent = 'space-between';
+        }
+      }
+    });
+  });
+}
+
+// Draggable action panel functionality
+function initializeDraggablePanel() {
+  const actionPanel = document.getElementById('action-panel');
+  const dragHandle = actionPanel.querySelector('.drag-handle');
+  let isDragging = false;
+  let dragOffset = { x: 0, y: 0 };
+
+  dragHandle.addEventListener('mousedown', function(e) {
+    isDragging = true;
+    const rect = actionPanel.getBoundingClientRect();
+    dragOffset.x = e.clientX - rect.left;
+    dragOffset.y = e.clientY - rect.top;
+    
+    actionPanel.style.position = 'fixed';
+    actionPanel.style.zIndex = '1000';
+    
+    document.addEventListener('mousemove', handleDrag);
+    document.addEventListener('mouseup', stopDrag);
+    
+    e.preventDefault();
+  });
+
+  function handleDrag(e) {
+    if (!isDragging) return;
+    
+    const x = e.clientX - dragOffset.x;
+    const y = e.clientY - dragOffset.y;
+    
+    // Constrain to viewport bounds more strictly
+    const panelWidth = actionPanel.offsetWidth;
+    const panelHeight = actionPanel.offsetHeight;
+    const maxX = window.innerWidth - panelWidth - 10; // 10px margin from edge
+    const maxY = window.innerHeight - panelHeight - 10;
+    const minX = 10; // 10px margin from edge
+    const minY = 60; // Account for header height
+    
+    // Ensure panel stays within bounds and doesn't overlap with main content
+    const constrainedX = Math.max(minX, Math.min(x, maxX));
+    const constrainedY = Math.max(minY, Math.min(y, maxY));
+    
+    actionPanel.style.left = constrainedX + 'px';
+    actionPanel.style.top = constrainedY + 'px';
+    actionPanel.style.right = 'auto';
+    actionPanel.style.bottom = 'auto';
+  }
+
+  function stopDrag() {
+    isDragging = false;
+    document.removeEventListener('mousemove', handleDrag);
+    document.removeEventListener('mouseup', stopDrag);
+  }
+}
+
+// Modal functionality
+function initializeModals() {
+  // Filter modal
+  const filterModal = document.getElementById('filter-modal');
+  const openFilterBtn = document.getElementById('open-filter-dialog');
+  const closeFilterBtn = document.getElementById('close-filter-dialog');
+  
+  openFilterBtn.addEventListener('click', () => {
+    filterModal.classList.remove('hidden');
+  });
+  
+  closeFilterBtn.addEventListener('click', () => {
+    filterModal.classList.add('hidden');
+  });
+  
+  // Close modal when clicking outside
+  filterModal.addEventListener('click', (e) => {
+    if (e.target === filterModal) {
+      filterModal.classList.add('hidden');
+    }
+  });
+
+  // Notes modal
+  const notesModal = document.getElementById('notes-dialog');
+  const rejectBtn = document.getElementById('reject-btn');
+  const notesCancelBtn = document.getElementById('notes-cancel-btn');
+  const notesSubmitBtn = document.getElementById('notes-submit-btn');
+  
+  if (rejectBtn) {
+    rejectBtn.addEventListener('click', () => {
+      notesModal.classList.remove('hidden');
+    });
+  }
+  
+  if (notesCancelBtn) {
+    notesCancelBtn.addEventListener('click', () => {
+      notesModal.classList.add('hidden');
+    });
+  }
+  
+  if (notesSubmitBtn) {
+    notesSubmitBtn.addEventListener('click', () => {
+      // Handle rejection submission here
+      notesModal.classList.add('hidden');
+    });
+  }
+  
+  // Close modal when clicking outside
+  notesModal.addEventListener('click', (e) => {
+    if (e.target === notesModal) {
+      notesModal.classList.add('hidden');
+    }
+  });
+}
+
+// Mode toggle functionality
+function initializeModeToggle() {
+  const modeToggle = document.getElementById('mode-toggle-switch');
+  const validationButtons = document.querySelectorAll('.validation-btn');
+  const labelButtons = document.querySelectorAll('#submit-btn, #skip-btn, #delete-btn');
+  
+  modeToggle.addEventListener('change', function() {
+    if (this.checked) {
+      // Validation mode
+      validationButtons.forEach(btn => btn.classList.remove('hidden'));
+      labelButtons.forEach(btn => btn.classList.add('hidden'));
+    } else {
+      // Label mode
+      validationButtons.forEach(btn => btn.classList.add('hidden'));
+      labelButtons.forEach(btn => btn.classList.remove('hidden'));
+    }
+  });
+}
+
+// Image loading functionality
+async function loadImages(batchId = null, page = 1) {
+  try {
+    let url = '/api/images';
+    const params = new URLSearchParams({
+      page: page.toString(),
+      prefixes_only: 'false'
+    });
+    
+    // If a batch is selected, use the batch-specific endpoint
+    if (batchId) {
+      url = `/api/batch/${batchId}/images`;
+    }
+    
+    url += '?' + params.toString();
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const imageList = document.getElementById('image-list');
+    
+    // Clear the loading message
+    imageList.innerHTML = '';
+    
+    if (data.images && data.images.length > 0) {
+      data.images.forEach((imageName, index) => {
+        const listItem = document.createElement('li');
+        listItem.className = 'image-item cursor-pointer p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors';
+        listItem.role = 'option';
+        listItem.tabIndex = 0;
+        
+        // Create image thumbnail container
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'flex items-center space-x-2';
+        
+        // Create thumbnail
+        const thumbnail = document.createElement('img');
+        thumbnail.className = 'w-12 h-12 object-cover rounded border border-gray-200 dark:border-gray-600';
+        thumbnail.src = `/api/image/${imageName}`;
+        thumbnail.alt = imageName;
+        thumbnail.loading = 'lazy';
+        
+        // Handle thumbnail load error
+        thumbnail.onerror = function() {
+          this.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyNEwyOCAxNkwzNiAyNEgzNlYzMkgyMFYyNFoiIGZpbGw9IiM5Q0EzQUYiLz4KPGNpcmNsZSBjeD0iMjIiIGN5PSIyMCIgcj0iMiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4K';
+          this.className += ' opacity-50';
+        };
+        
+        // Create text content
+        const textContent = document.createElement('div');
+        textContent.className = 'flex-1 min-w-0';
+        
+        const imageName_display = document.createElement('div');
+        imageName_display.className = 'text-sm font-medium text-gray-900 dark:text-gray-100 truncate';
+        imageName_display.textContent = imageName.split('/').pop(); // Show just filename
+        
+        const imagePath = document.createElement('div');
+        imagePath.className = 'text-xs text-gray-500 dark:text-gray-400 truncate';
+        imagePath.textContent = imageName;
+        
+        textContent.appendChild(imageName_display);
+        textContent.appendChild(imagePath);
+        
+        imageContainer.appendChild(thumbnail);
+        imageContainer.appendChild(textContent);
+        listItem.appendChild(imageContainer);
+        
+        // Add click event to load image
+        listItem.addEventListener('click', () => {
+          loadImageInCanvas(imageName);
+          // Remove selection from other items
+          imageList.querySelectorAll('.image-item').forEach(item => {
+            item.classList.remove('bg-blue-100', 'dark:bg-blue-900');
+          });
+          // Add selection to clicked item
+          listItem.classList.add('bg-blue-100', 'dark:bg-blue-900');
+        });
+        
+        // Add keyboard support
+        listItem.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            listItem.click();
+          }
+        });
+        
+        imageList.appendChild(listItem);
+      });
+      
+      console.log(`Loaded ${data.images.length} images successfully`);
+    } else {
+      // No images found
+      const noImagesItem = document.createElement('li');
+      noImagesItem.className = 'text-gray-500 dark:text-gray-400 text-center py-4';
+      noImagesItem.textContent = batchId ? `No images found for batch: ${batchId}` : 'No images available';
+      imageList.appendChild(noImagesItem);
+    }
+  } catch (error) {
+    console.error('Failed to load images:', error);
+    const imageList = document.getElementById('image-list');
+    imageList.innerHTML = '';
+    const errorItem = document.createElement('li');
+    errorItem.className = 'text-red-500 dark:text-red-400 text-center py-4';
+    errorItem.textContent = 'Failed to load images';
+    imageList.appendChild(errorItem);
+  }
+}
+
+// Load image in canvas
+function loadImageInCanvas(imageName) {
+  console.log('Loading image in canvas:', imageName);
+  
+  // Update status bar
+  const imageNameStatus = document.getElementById('image-name-status');
+  if (imageNameStatus) {
+    imageNameStatus.textContent = imageName.split('/').pop();
+  }
+  
+  // Here you would load the image into the actual canvas
+  // For now, we'll just update the UI elements
+  const canvas = document.getElementById('annotation-canvas');
+  if (canvas) {
+    // Store current image name for resize handling
+    canvas.dataset.currentImage = imageName;
+    
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Get the actual container size (accounting for borders and padding)
+      const canvasContainer = document.getElementById('canvas-container');
+      const containerRect = canvasContainer.getBoundingClientRect();
+      
+      // Set canvas size to fit container with some margin
+      const margin = 40; // Total margin (20px each side)
+      canvas.width = Math.max(200, containerRect.width - margin);
+      canvas.height = Math.max(200, containerRect.height - margin);
+      
+      // Calculate scaling to fit canvas while maintaining aspect ratio
+      const scaleX = canvas.width / img.width;
+      const scaleY = canvas.height / img.height;
+      const scale = Math.min(scaleX, scaleY);
+      
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+      
+      const x = (canvas.width - scaledWidth) / 2;
+      const y = (canvas.height - scaledHeight) / 2;
+      
+      // Draw image
+      ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+    };
+    
+    img.onerror = function() {
+      console.error('Failed to load image:', imageName);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Failed to load image', canvas.width / 2, canvas.height / 2);
+    };
+    
+    img.src = `/api/image/${imageName}`;
+  }
+}
+
+// Batch selection functionality
+function initializeBatchSelection() {
+  const batchSelector = document.getElementById('batch-selector');
+  
+  batchSelector.addEventListener('change', function() {
+    const selectedBatch = this.value;
+    console.log('Selected batch:', selectedBatch);
+    
+    if (selectedBatch) {
+      // Load images for selected batch
+      loadImages(selectedBatch);
+      console.log(`Loading images for batch: ${selectedBatch}`);
+    } else {
+      // Load all images when no batch is selected
+      loadImages();
+      console.log('Loading all images (no batch filter)');
+    }
+  });
+}
+
+// Batch loading functionality
+async function loadBatches() {
+  try {
+    const response = await fetch('/api/batches');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const batchSelector = document.getElementById('batch-selector');
+    const batchContainer = document.getElementById('batch-selection-container');
+    
+    if (data.batches && data.batches.length > 0) {
+      // Clear existing options
+      batchSelector.innerHTML = '<option value="">Select Batch</option>';
+      
+      // Add batch options
+      data.batches.forEach((batchId) => {
+        const option = document.createElement('option');
+        option.value = batchId;
+        option.textContent = batchId;
+        batchSelector.appendChild(option);
+      });
+      
+      // Show the batch container
+      batchContainer.classList.remove('hidden');
+      console.log(`Loaded ${data.batches.length} batches successfully`);
+    } else {
+      // Hide batch container if no batches available
+      batchContainer.classList.add('hidden');
+      console.log('No batches available');
+    }
+  } catch (error) {
+    console.error('Failed to load batches:', error);
+    // On error, show a fallback message and hide the container
+    const batchSelector = document.getElementById('batch-selector');
+    const batchContainer = document.getElementById('batch-selection-container');
+    
+    batchSelector.innerHTML = '<option value="">No batches available</option>';
+    batchContainer.classList.add('hidden');
+  }
+}
+
+// Class selection functionality
+async function loadClasses() {
+  try {
+    const response = await fetch('/api/classes');
+    const data = await response.json();
+    const container = document.getElementById('class-selection-table');
+    
+    data.classes.forEach((cls) => {
+      const button = document.createElement('button');
+      button.className = 'class-button';
+      button.dataset.class = cls.name;
+      button.style.backgroundColor = cls.color;
+      button.textContent = cls.name.replace(/-/g, ' ');
+      
+      // Add click event for class selection
+      button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        container.querySelectorAll('.class-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        // Add active class to clicked button
+        this.classList.add('active');
+      });
+      
+      container.appendChild(button);
+    });
+  } catch (error) {
+    console.error('Failed to load classes:', error);
+  }
+}
+
+// Initialize all functionality when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  loadClasses();
+  loadBatches();
+  initializeBatchSelection();
+  initializePanelCollapse();
+  initializeDraggablePanel();
+  initializeModals();
+  initializeModeToggle();
+  
+  // Handle window resize to adjust canvas
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      const canvas = document.getElementById('annotation-canvas');
+      const canvasContainer = document.getElementById('canvas-container');
+      if (canvas && canvasContainer) {
+        // Trigger canvas resize if there's an image loaded
+        const currentImage = canvas.dataset.currentImage;
+        if (currentImage) {
+          loadImageInCanvas(currentImage);
+        }
+      }
+    }, 250);
+  });
+});
+</script>
+{% endblock %}

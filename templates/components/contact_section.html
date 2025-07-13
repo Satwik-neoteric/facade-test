@@ -1,0 +1,60 @@
+<section id="contact" class="py-20 bg-gray-900 dark:bg-black text-white transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Contact Us</h2>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                Get in touch with our team for support, partnerships, or inquiries
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div class="text-center group">
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa fa-map-marker text-2xl text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Address</h3>
+                <p class="text-gray-300 leading-relaxed">{{ data.Contact.address | default("Address details coming soon") }}</p>
+            </div>
+            
+            <div class="text-center group">
+                <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa fa-envelope text-2xl text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Email</h3>
+                <p class="text-gray-300">
+                    <a href="mailto:{{ data.Contact.email }}" 
+                       class="text-blue-400 hover:text-blue-300 transition-colors duration-200 hover:underline">
+                        {{ data.Contact.email }}
+                    </a>
+                </p>
+            </div>
+            
+            <div class="text-center group">
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i class="fa fa-phone text-2xl text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-3">Phone</h3>
+                <p class="text-gray-300 leading-relaxed">{{ data.Contact.phone | default("Phone number coming soon") }}</p>
+            </div>
+        </div>
+        
+        <!-- Social Media Links -->
+        <div class="text-center">
+            <h3 class="text-2xl font-bold text-white mb-8">Follow Us</h3>
+            <div class="flex justify-center space-x-6">
+                <a href="{{ data.Contact.twitter }}" 
+                   class="w-12 h-12 bg-white/10 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg backdrop-blur-sm border border-white/20">
+                    <i class="fa-brands fa-twitter text-xl"></i>
+                </a>
+                <a href="{{ data.Contact.facebook }}" 
+                   class="w-12 h-12 bg-white/10 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg backdrop-blur-sm border border-white/20">
+                    <i class="fa-brands fa-facebook-f text-xl"></i>
+                </a>
+                <a href="{{ data.Contact.youtube }}" 
+                   class="w-12 h-12 bg-white/10 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:shadow-lg backdrop-blur-sm border border-white/20">
+                    <i class="fa-brands fa-youtube text-xl"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

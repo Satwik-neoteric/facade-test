@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facade Studio - Image Labeling</title>
+    <link rel="stylesheet" href="/static/css/original-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Panel -->
+        <div class="panel header-panel">
+            <div class="header-content">
+                <div class="header-logo-title">
+                    <h1>Facade Studio</h1>
+                </div>
+                <div class="navigation">
+                    <a href="/">Home</a>
+                    <a href="/dashboard">Dashboard</a>
+                    <a href="/admin">Admin</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Batches Panel -->
+        <div class="panel batches-panel">
+            <h2>Available Batches</h2>
+            <button class="refresh-button" id="refresh-batches">Refresh</button>
+            <div class="info-message" id="loading-batches">
+                Loading batches...
+            </div>
+            <select id="batch-select" style="display: none;">
+                <option value="">Select a batch</option>
+            </select>
+            <div id="batch-info" class="info-message" style="display: none; margin-top: 10px;">
+                <span id="batch-image-count">0</span> images in this batch
+            </div>
+        </div>
+        
+        <!-- Images Panel -->
+        <div class="panel images-panel">
+            <h2>Images in Selected Batch</h2>
+            <div class="info-message" id="select-batch-prompt">
+                Please select a batch to view images
+            </div>
+            <div class="info-message" id="loading-images" style="display: none;">
+                Loading images...
+            </div>
+            <select id="image-select" style="display: none;">
+                <option value="">Select an image</option>
+            </select>
+        </div>
+        
+        <!-- View Panel -->
+        <div class="panel view-panel">
+            <div class="panel-header">
+                <h2>Image View</h2>
+                <div class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="show-annotations">
+                        <span class="slider"></span>
+                    </label>
+                    <span>Show Annotations</span>
+                </div>
+            </div>
+            <div class="info-message" id="select-image-prompt">
+                Please select an image to view
+            </div>
+            <div id="image-container" class="image-container" style="display: none;">
+                <img id="main-image" alt="Selected image">
+                <canvas id="annotation-canvas"></canvas>
+            </div>
+        </div>
+        
+        <!-- Annotations Panel -->
+        <div class="panel annotations-panel">
+            <h2>Annotations</h2>
+            <div class="info-message" id="annotation-prompt">
+                Select an image to view or add annotations
+            </div>
+            <div id="annotation-controls" style="display: none;">
+                <div>
+                    <label for="category-select">Category</label>
+                    <select id="category-select">
+                        <option value="">Select category</option>
+                    </select>
+                </div>
+                <button id="start-annotation-btn">Start New Annotation</button>
+                <button id="cancel-annotation-btn" style="display: none; background-color: #dc3545;">Cancel</button>
+                <div id="annotation-instructions" class="info-message" style="display: none; margin-top: 10px;">
+                    Click on the image to create bounding box points. Click the first point again to complete the annotation.
+                </div>
+                
+                <h3 style="margin-top: 15px; color: #ddd;">Existing Annotations</h3>
+                <div id="annotation-list" class="annotation-list">
+                    <div class="info-message">No annotations yet</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sensor Data Panel -->
+        <div class="panel sensor-panel">
+            <div class="panel-header">
+                <h2>Sensor Data</h2>
+                <button class="toggle-button" id="toggle-sensor-data">▼</button>
+            </div>
+            <div id="sensor-data-body" style="display: none;">
+                <div class="info-message" id="select-image-for-sensor">Please select an image to view sensor data</div>
+                <div id="sensor-data-content" style="display: none;">
+                    <div class="sensor-data-grid">
+                        <div>
+                            <h3 style="margin-top: 0; color: #ddd;">Location</h3>
+                            <table class="sensor-table">
+                                <tr>
+                                    <th>Timestamp (UTC)</th>
+                                    <td id="sensor-timestamp"></td>
+                                </tr>
+                                <tr>
+                                    <th>Latitude</th>
+                                    <td id="sensor-latitude"></td>
+                                </tr>
+                                <tr>
+                                    <th>Longitude</th>
+                                    <td id="sensor-longitude"></td>
+                                </tr>
+                                <tr>
+                                    <th>Altitude</th>
+                                    <td id="sensor-altitude"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div>
+                            <h3 style="margin-top: 0; color: #ddd;">Details</h3>
+                            <table class="sensor-table">
+                                <tr>
+                                    <th>Fix Type</th>
+                                    <td id="sensor-fix-type"></td>
+                                </tr>
+                                <tr>
+                                    <th>Fix Status</th>
+                                    <td id="sensor-fix-status"></td>
+                                </tr>
+                                <tr>
+                                    <th>Satellites</th>
+                                    <td id="sensor-satellites"></td>
+                                </tr>
+                                <tr>
+                                    <th>Accuracy</th>
+                                    <td id="sensor-accuracy"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="map"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle sensor data visibility
+            document.getElementById('toggle-sensor-data').addEventListener('click', function() {
+                const body = document.getElementById('sensor-data-body');
+                const button = document.getElementById('toggle-sensor-data');
+                
+                if (body.style.display === 'none') {
+                    body.style.display = 'block';
+                    button.textContent = '▲';
+                } else {
+                    body.style.display = 'none';
+                    button.textContent = '▼';
+                }
+            });
+            
+            // Handle batch refresh button
+            document.getElementById('refresh-batches').addEventListener('click', function() {
+                console.log('Refreshing batches...');
+                // Simulating API call
+                document.getElementById('loading-batches').style.display = 'block';
+                document.getElementById('batch-select').style.display = 'none';
+                
+                setTimeout(() => {
+                    document.getElementById('loading-batches').style.display = 'none';
+                    document.getElementById('batch-select').style.display = 'block';
+                    populateBatchesForDemo();
+                }, 1000);
+            });
+            
+            // Auto-trigger refresh on load
+            document.getElementById('refresh-batches').click();
+            
+            // Handle batch selection
+            document.getElementById('batch-select').addEventListener('change', handleBatchSelection);
+            
+            // Handle image selection
+            document.getElementById('image-select').addEventListener('change', handleImageSelection);
+            
+            // Toggle annotations visibility
+            document.getElementById('show-annotations').addEventListener('change', toggleAnnotationVisibility);
+            
+            // Handle annotation buttons
+            document.getElementById('start-annotation-btn').addEventListener('click', startNewAnnotation);
+            document.getElementById('cancel-annotation-btn').addEventListener('click', cancelAnnotation);
+        });
+        
+        function populateBatchesForDemo() {
+            const batchSelect = document.getElementById('batch-select');
+            batchSelect.innerHTML = '<option value="">Select a batch</option>';
+            
+            // Add demo batches
+            const batches = [
+                { id: 'B1', name: 'Batch B1', imageCount: 5 },
+                { id: 'B2', name: 'Batch B2', imageCount: 8 },
+                { id: 'B3', name: 'Batch B3', imageCount: 12 }
+            ];
+            
+            batches.forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.id;
+                option.textContent = `${batch.name} (${batch.imageCount} images)`;
+                batchSelect.appendChild(option);
+            });
+        }
+        
+        function handleBatchSelection() {
+            const batchId = this.value;
+            
+            if (!batchId) {
+                document.getElementById('select-batch-prompt').style.display = 'block';
+                document.getElementById('image-select').style.display = 'none';
+                document.getElementById('batch-info').style.display = 'none';
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('select-batch-prompt').style.display = 'none';
+            document.getElementById('loading-images').style.display = 'block';
+            
+            // Update batch info
+            const batchInfo = {
+                'B1': { imageCount: 5 },
+                'B2': { imageCount: 8 },
+                'B3': { imageCount: 12 }
+            };
+            
+            document.getElementById('batch-image-count').textContent = batchInfo[batchId].imageCount;
+            document.getElementById('batch-info').style.display = 'block';
+            
+            // Simulate loading images
+            setTimeout(() => {
+                document.getElementById('loading-images').style.display = 'none';
+                document.getElementById('image-select').style.display = 'block';
+                
+                populateImagesForDemo(batchId);
+            }, 800);
+        }
+        
+        function populateImagesForDemo(batchId) {
+            const imageSelect = document.getElementById('image-select');
+            imageSelect.innerHTML = '<option value="">Select an image</option>';
+            
+            // Generate demo images based on batch
+            const imageCount = {
+                'B1': 5,
+                'B2': 8,
+                'B3': 12
+            }[batchId] || 0;
+            
+            for (let i = 1; i <= imageCount; i++) {
+                const option = document.createElement('option');
+                option.value = `${batchId}_img${i}`;
+                option.textContent = `Image ${i}`;
+                imageSelect.appendChild(option);
+            }
+        }
+        
+        function handleImageSelection() {
+            const imageId = this.value;
+            
+            if (!imageId) {
+                document.getElementById('select-image-prompt').style.display = 'block';
+                document.getElementById('image-container').style.display = 'none';
+                document.getElementById('annotation-prompt').style.display = 'block';
+                document.getElementById('annotation-controls').style.display = 'none';
+                document.getElementById('select-image-for-sensor').style.display = 'block';
+                document.getElementById('sensor-data-content').style.display = 'none';
+                return;
+            }
+            
+            // Simulate loading image
+            document.getElementById('select-image-prompt').style.display = 'none';
+            document.getElementById('image-container').style.display = 'block';
+            
+            // For demo, use a placeholder image
+            document.getElementById('main-image').src = 'https://via.placeholder.com/800x600?text=Facade+Image+Demo';
+            
+            // Show annotation controls
+            document.getElementById('annotation-prompt').style.display = 'none';
+            document.getElementById('annotation-controls').style.display = 'block';
+            
+            // Populate category dropdown for demo
+            populateCategoriesForDemo();
+            
+            // Show sensor data
+            document.getElementById('select-image-for-sensor').style.display = 'none';
+            document.getElementById('sensor-data-content').style.display = 'block';
+            
+            // Demo sensor data
+            document.getElementById('sensor-timestamp').textContent = '2025-05-09 10:30:14';
+            document.getElementById('sensor-latitude').textContent = '51.5049065';
+            document.getElementById('sensor-longitude').textContent = '-0.0241989';
+            document.getElementById('sensor-altitude').textContent = '51.138 m';
+            document.getElementById('sensor-fix-type').textContent = '3';
+            document.getElementById('sensor-fix-status').textContent = 'Fix Acquired';
+            document.getElementById('sensor-satellites').textContent = '9';
+            document.getElementById('sensor-accuracy').textContent = '13.714 m';
+            
+            // Initialize map
+            initMap(51.5049065, -0.0241989);
+            
+            // Load demo annotations
+            loadDemoAnnotations();
+        }
+        
+        function populateCategoriesForDemo() {
+            const categorySelect = document.getElementById('category-select');
+            categorySelect.innerHTML = '<option value="">Select category</option>';
+            
+            const categories = [
+                { id: 'window', name: 'Window', color: '#FF0000' },
+                { id: 'door', name: 'Door', color: '#00FF00' },
+                { id: 'balcony', name: 'Balcony', color: '#0000FF' },
+                { id: 'facade', name: 'Facade', color: '#FFFF00' }
+            ];
+            
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                option.dataset.color = cat.color;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        function loadDemoAnnotations() {
+            const annotations = [
+                { id: 1, categoryId: 'window', categoryName: 'Window', color: '#FF0000' },
+                { id: 2, categoryId: 'door', categoryName: 'Door', color: '#00FF00' }
+            ];
+            
+            const annotationList = document.getElementById('annotation-list');
+            
+            if (annotations.length === 0) {
+                annotationList.innerHTML = '<div class="info-message">No annotations yet</div>';
+                return;
+            }
+            
+            annotationList.innerHTML = '';
+            
+            annotations.forEach(anno => {
+                const item = document.createElement('div');
+                item.className = 'annotation-item';
+                
+                const category = document.createElement('span');
+                category.className = 'annotation-category';
+                category.textContent = anno.categoryName;
+                category.style.backgroundColor = anno.color;
+                
+                const actions = document.createElement('div');
+                actions.className = 'annotation-actions';
+                
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = () => alert('Edit annotation ' + anno.id);
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => alert('Delete annotation ' + anno.id);
+                
+                actions.appendChild(editBtn);
+                actions.appendChild(deleteBtn);
+                
+                item.appendChild(category);
+                item.appendChild(actions);
+                annotationList.appendChild(item);
+            });
+        }
+        
+        function toggleAnnotationVisibility() {
+            // Demo function - in a real app would show/hide annotations on canvas
+            console.log('Toggle annotations:', this.checked);
+        }
+        
+        function startNewAnnotation() {
+            const categoryId = document.getElementById('category-select').value;
+            
+            if (!categoryId) {
+                alert('Please select a category first');
+                return;
+            }
+            
+            document.getElementById('start-annotation-btn').style.display = 'none';
+            document.getElementById('cancel-annotation-btn').style.display = 'block';
+            document.getElementById('annotation-instructions').style.display = 'block';
+        }
+        
+        function cancelAnnotation() {
+            document.getElementById('start-annotation-btn').style.display = 'block';
+            document.getElementById('cancel-annotation-btn').style.display = 'none';
+            document.getElementById('annotation-instructions').style.display = 'none';
+        }
+        
+        function initMap(lat, lng) {
+            if (window.labelMap) {
+                window.labelMap.remove();
+            }
+            
+            window.labelMap = L.map('map').setView([lat, lng], 15);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(window.labelMap);
+            
+            L.marker([lat, lng]).addTo(window.labelMap);
+        }
+    </script>
+</body>
+</html>

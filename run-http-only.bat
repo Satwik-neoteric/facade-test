@@ -1,0 +1,3 @@
+@echo off
+echo Starting Facade Studio ASP.NET Core application...
+dotnet run --project facade-studio-asp.csproj --urls=http://localhost:5000

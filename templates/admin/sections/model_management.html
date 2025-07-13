@@ -1,0 +1,43 @@
+<div class="section-gradient rounded-2xl p-6" id="model-management-section">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-brain text-white text-xl"></i>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">AI Models Management</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-300">Configure and manage AI models</p>
+            </div>
+        </div>
+        <button id="openModelModalBtn" 
+                class="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 shadow-lg hover:shadow-xl"
+                data-loading="Opening...">
+            <i class="fas fa-plus mr-2"></i>Add Model
+        </button>
+    </div>
+    
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <div id="models-table-container">
+            <div id="loading-models" class="hidden p-8 text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
+                <p class="mt-4 text-gray-600 dark:text-gray-300 font-medium">Loading models...</p>
+            </div>
+            <div class="hidden p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg m-4" id="models-error">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-3 text-lg"></i>
+                    <span class="text-red-800 dark:text-red-200 font-medium"></span>
+                </div>
+            </div>
+            
+            <!-- Models Table Container -->
+            <div class="overflow-x-auto" id="models-table-view">
+                <!-- Models table will be populated here -->
+            </div>
+            
+            <!-- Models Cards Container (fallback) -->
+            <div id="models-cards-container" class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-transparent hidden">
+                <!-- Model cards will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>

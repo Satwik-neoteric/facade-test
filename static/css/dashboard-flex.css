@@ -1,0 +1,97 @@
+/* Flexbox layout for dashboard header and filter bar */
+
+.header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.header-title {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 1px;
+}
+.header-section {
+    color: #b0b0b0;
+    font-size: 1.1em;
+    font-weight: 400;
+    margin-left: 4px;
+}
+.header-center {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    flex: 1;
+}
+.nav-link {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.1em;
+    padding: 4px 12px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+.nav-link.active, .nav-link:hover {
+    background: #0078d4;
+    color: #fff;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-avatar {
+    background: #0078d4;
+    color: #fff;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 0.95em;
+    color: #b0b0b0;
+}
+.user-name {
+    color: #fff;
+    font-weight: 500;
+}
+.user-role {
+    font-size: 0.9em;
+    color: #b0b0b0;
+}
+
+.filter-flex {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .header-flex, .filter-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .header-center {
+        justify-content: flex-start;
+    }
+}

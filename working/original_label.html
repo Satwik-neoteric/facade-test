@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facade AI Studio</title>
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" type="text/css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="panel header-panel">
+            <div class="header-content">
+                <div class="header-logo-title">
+                    <h1>Facade AI Studio</h1>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">U</div>
+                    <div class="user-details">
+                        <span class="user-name">User1</span>
+                        <span class="user-role">Default Admin</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel left-panel">
+            <div id="batch-selection-container">
+                <h2>Select Batch</h2>
+                <select id="batch-selector" class="batch-dropdown">
+                    <option value="">Select Batch</option>
+                </select>
+            </div>
+            <button id="open-filter-dialog" class="filter-button">
+                <span class="filter-button-icon">🔍</span> Filter Images
+            </button>
+            <h2>Images</h2>
+            <ul id="image-list">
+                <li class="loading">Loading images...</li>
+            </ul>
+        </div>
+
+        <div class="panel action-panel">
+            <div class="action-buttons">
+                <button id="submit-btn"><span class="icon">✓</span> Submit</button>
+                <button id="accept-btn" class="validation-btn" style="display: none;"><span class="icon">✓</span> Accept</button>
+                <button id="skip-btn"><span class="icon">➡</span> Skip</button>
+                <button id="delete-btn"><span class="icon">✗</span> Delete</button>
+                <button id="reject-btn" class="validation-btn" style="display: none;"><span class="icon">✗</span> Reject</button>
+            </div>
+        </div>
+        
+        <div class="panel center-panel">
+            <h2>Image View</h2>
+            <div class="image-view-container">
+                <div id="loading-message" style="display: none;">Loading image...</div>
+                <div id="no-image-message">Please select an image from the list</div>
+                <img id="main-image" class="main-image" style="display: none;" />
+                <canvas id="annotation-canvas" class="annotation-canvas"></canvas>
+                
+                <div class="view-switcher">
+                    <button id="view-fit" class="view-mode-btn active" title="Fit to view">◰</button>
+                    <button id="view-1x" class="view-mode-btn" title="Original size">1:1</button>
+                    <button id="view-zoom" class="view-mode-btn" title="Zoom mode">🔍</button>
+                </div>
+                
+                <div class="task-count">
+                    Image <span id="current-index">0</span> of <span id="total-images">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel right-panel">
+            <h2>Annotation Controls</h2>
+            <div class="annotation-controls">
+                <label for="category-select">Category</label>
+                <select id="category-select" class="category-selector">
+                    <option value="">Select category</option>
+                </select>
+                <button id="start-annotation" class="annotation-button">Start Annotation</button>
+                <button id="cancel-annotation" class="annotation-button cancel" style="display: none;">Cancel</button>
+            </div>
+            
+            <div class="annotation-list">
+                <h3>Existing Annotations</h3>
+                <div id="annotations-container">
+                    <div class="annotation-item">
+                        <div class="annotation-header">
+                            <span class="annotation-category">Window</span>
+                            <div class="annotation-actions">
+                                <button class="annotation-edit">Edit</button>
+                                <button class="annotation-delete">Delete</button>
+                            </div>
+                        </div>
+                        <div class="annotation-points">4 points</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="notes-container">
+                <label for="notes">Notes:</label>
+                <textarea id="notes" class="notes-textarea" placeholder="Add notes here..."></textarea>
+            </div>
+        </div>
+        
+        <div class="panel bottom-panel">
+            <div class="sensor-data-header">
+                <h2>Sensor Data</h2>
+                <button id="toggle-sensor" class="sensor-toggle">▼</button>
+            </div>
+            <div id="sensor-data" style="display: none;">
+                <div class="sensor-data-grid">
+                    <div class="sensor-data-group">
+                        <h3>Position</h3>
+                        <table class="sensor-data-table">
+                            <tr>
+                                <th>Latitude:</th>
+                                <td id="sensor-latitude">0.000000</td>
+                            </tr>
+                            <tr>
+                                <th>Longitude:</th>
+                                <td id="sensor-longitude">0.000000</td>
+                            </tr>
+                            <tr>
+                                <th>Altitude:</th>
+                                <td id="sensor-altitude">0.00 m</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="sensor-data-group">
+                        <h3>Details</h3>
+                        <table class="sensor-data-table">
+                            <tr>
+                                <th>Timestamp:</th>
+                                <td id="sensor-timestamp">N/A</td>
+                            </tr>
+                            <tr>
+                                <th>Fix Type:</th>
+                                <td id="sensor-fix">N/A</td>
+                            </tr>
+                            <tr>
+                                <th>Satellites:</th>
+                                <td id="sensor-satellites">0</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div id="map" class="map-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Dialog (hidden by default) -->
+    <div id="filter-dialog" class="filter-dialog" style="display: none;">
+        <div class="filter-dialog-header">
+            <h2 class="filter-dialog-title">Filter Images</h2>
+            <button id="close-filter-dialog" class="filter-dialog-close">&times;</button>
+        </div>
+        <div class="filter-dialog-body">
+            <div class="filter-group">
+                <h3 class="filter-group-title">Categories</h3>
+                <div class="filter-checkbox-list">
+                    <div class="filter-checkbox-item">
+                        <input type="checkbox" id="category-window" class="category-filter" value="window">
+                        <label for="category-window">Window</label>
+                    </div>
+                    <div class="filter-checkbox-item">
+                        <input type="checkbox" id="category-door" class="category-filter" value="door">
+                        <label for="category-door">Door</label>
+                    </div>
+                    <div class="filter-checkbox-item">
+                        <input type="checkbox" id="category-balcony" class="category-filter" value="balcony">
+                        <label for="category-balcony">Balcony</label>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <h3 class="filter-group-title">Status</h3>
+                <div class="filter-checkbox-list">
+                    <div class="filter-checkbox-item">
+                        <input type="checkbox" id="status-complete" class="status-filter" value="complete">
+                        <label for="status-complete">Completed</label>
+                    </div>
+                    <div class="filter-checkbox-item">
+                        <input type="checkbox" id="status-pending" class="status-filter" value="pending">
+                        <label for="status-pending">Pending</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button id="reset-filters" class="filter-button-reset">Reset</button>
+            <button id="apply-filters" class="filter-button-apply">Apply Filters</button>
+        </div>
+    </div>
+    <div id="overlay" class="overlay" style="display: none;"></div>
+
+    <!-- JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle sensor data
+            document.getElementById('toggle-sensor').addEventListener('click', function() {
+                const sensorData = document.getElementById('sensor-data');
+                const toggleBtn = document.getElementById('toggle-sensor');
+                
+                if (sensorData.style.display === 'none') {
+                    sensorData.style.display = 'block';
+                    toggleBtn.textContent = '▲';
+                } else {
+                    sensorData.style.display = 'none';
+                    toggleBtn.textContent = '▼';
+                }
+            });
+            
+            // Filter dialog
+            document.getElementById('open-filter-dialog').addEventListener('click', function() {
+                document.getElementById('filter-dialog').style.display = 'block';
+                document.getElementById('overlay').style.display = 'block';
+            });
+            
+            document.getElementById('close-filter-dialog').addEventListener('click', function() {
+                document.getElementById('filter-dialog').style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+            });
+            
+            document.getElementById('overlay').addEventListener('click', function() {
+                document.getElementById('filter-dialog').style.display = 'none';
+                document.getElementById('overlay').style.display = 'none';
+            });
+            
+            // Sample data loading
+            loadBatchesData();
+            
+            document.getElementById('batch-selector').addEventListener('change', function() {
+                loadImagesForBatch(this.value);
+            });
+            
+            // Annotation controls
+            document.getElementById('start-annotation').addEventListener('click', function() {
+                const category = document.getElementById('category-select').value;
+                if (!category) {
+                    alert('Please select a category first');
+                    return;
+                }
+                
+                document.getElementById('start-annotation').style.display = 'none';
+                document.getElementById('cancel-annotation').style.display = 'block';
+            });
+            
+            document.getElementById('cancel-annotation').addEventListener('click', function() {
+                document.getElementById('start-annotation').style.display = 'block';
+                document.getElementById('cancel-annotation').style.display = 'none';
+            });
+            
+            // View mode buttons
+            const viewButtons = document.querySelectorAll('.view-mode-btn');
+            viewButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    viewButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+        
+        function loadBatchesData() {
+            // Sample data
+            const batches = [
+                { id: 'B1', name: 'Batch 1', imageCount: 5 },
+                { id: 'B2', name: 'Batch 2', imageCount: 12 },
+                { id: 'B3', name: 'Batch 3', imageCount: 8 }
+            ];
+            
+            const batchSelector = document.getElementById('batch-selector');
+            batchSelector.innerHTML = '<option value="">Select Batch</option>';
+            
+            batches.forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.id;
+                option.textContent = `${batch.name} (${batch.imageCount} images)`;
+                batchSelector.appendChild(option);
+            });
+        }
+        
+        function loadImagesForBatch(batchId) {
+            if (!batchId) return;
+            
+            const imageList = document.getElementById('image-list');
+            imageList.innerHTML = '<li class="loading">Loading images...</li>';
+            
+            setTimeout(() => {
+                // Sample data
+                const images = Array.from({length: 10}, (_, i) => ({
+                    id: `img_${i+1}`,
+                    name: `Image ${i+1}`
+                }));
+                
+                imageList.innerHTML = '';
+                images.forEach(img => {
+                    const li = document.createElement('li');
+                    li.textContent = img.name;
+                    li.dataset.id = img.id;
+                    li.addEventListener('click', function() {
+                        document.querySelectorAll('#image-list li').forEach(item => {
+                            item.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                        loadImage(img.id);
+                    });
+                    imageList.appendChild(li);
+                });
+                
+                document.getElementById('current-index').textContent = '0';
+                document.getElementById('total-images').textContent = images.length;
+            }, 500);
+        }
+        
+        function loadImage(imageId) {
+            const mainImage = document.getElementById('main-image');
+            const loadingMessage = document.getElementById('loading-message');
+            const noImageMessage = document.getElementById('no-image-message');
+            
+            // Hide current view
+            mainImage.style.display = 'none';
+            noImageMessage.style.display = 'none';
+            loadingMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                // In a real app, the image source would be dynamically set
+                mainImage.src = 'https://via.placeholder.com/800x600?text=Sample+Facade+Image';
+                
+                // Show image once loaded
+                mainImage.onload = function() {
+                    loadingMessage.style.display = 'none';
+                    mainImage.style.display = 'block';
+                    
+                    // Sample sensor data
+                    document.getElementById('sensor-latitude').textContent = '51.5074';
+                    document.getElementById('sensor-longitude').textContent = '-0.1278';
+                    document.getElementById('sensor-altitude').textContent = '35.4 m';
+                    document.getElementById('sensor-timestamp').textContent = '2025-05-09 10:30:00';
+                    document.getElementById('sensor-fix').textContent = '3D Fix';
+                    document.getElementById('sensor-satellites').textContent = '9';
+                    
+                    // Initialize map
+                    initMap(51.5074, -0.1278);
+                    
+                    // Update counts
+                    const index = parseInt(imageId.split('_')[1]);
+                    document.getElementById('current-index').textContent = index;
+                };
+                
+                mainImage.onerror = function() {
+                    loadingMessage.style.display = 'none';
+                    noImageMessage.style.display = 'block';
+                };
+                
+                // Sample categories
+                const categorySelect = document.getElementById('category-select');
+                categorySelect.innerHTML = '<option value="">Select category</option>';
+                
+                const categories = [
+                    { id: 'window', name: 'Window' },
+                    { id: 'door', name: 'Door' },
+                    { id: 'balcony', name: 'Balcony' },
+                    { id: 'facade', name: 'Facade' }
+                ];
+                
+                categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    categorySelect.appendChild(option);
+                });
+            }, 800);
+        }
+        
+        function initMap(lat, lng) {
+            // Check if map container exists and is visible
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer || window.getComputedStyle(mapContainer).display === 'none') {
+                return;
+            }
+            
+            // Remove existing map instance if it exists
+            if (window.map) {
+                window.map.remove();
+            }
+            
+            // Create new map instance
+            window.map = L.map('map').setView([lat, lng], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(window.map);
+            
+            // Add marker at the given coordinates
+            L.marker([lat, lng]).addTo(window.map);
+            
+            // Invalidate size to ensure proper rendering
+            setTimeout(() => {
+                window.map.invalidateSize();
+            }, 100);
+        }
+    </script>
+</body>
+</html>

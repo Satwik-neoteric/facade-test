@@ -1,0 +1,60 @@
+<div class="modal fade" id="pipelineModal" tabindex="-1" aria-labelledby="pipelineModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl">
+            <div class="modal-header bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-t-xl">
+                <h4 class="modal-title font-bold text-lg" id="pipelineModalTitle">Register Pipeline</h4>
+                <button type="button" class="btn-close btn-close-white opacity-75 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close" id="pipelineModalCloseBtn"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="pipelineForm" class="space-y-4">
+                    <input type="hidden" id="pipelineFormIdInput">
+                    <div class="form-group">
+                        <label for="pipelineFormName" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-tag mr-2 text-green-500"></i>Pipeline Name
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="pipelineFormName" 
+                               required 
+                               placeholder="e.g., Facade Defect Detection">
+                    </div>
+                    <div class="form-group">
+                        <label for="pipelineFormVersion" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-code-branch mr-2 text-blue-500"></i>Version
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="pipelineFormVersion" 
+                               required 
+                               placeholder="e.g., 1.0.0 or v1">
+                    </div>
+                    <div class="form-group">
+                        <label for="pipelineFormAmlId" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-cloud mr-2 text-purple-500"></i>AML ID
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="pipelineFormAmlId" 
+                               required 
+                               placeholder="Azure ML Pipeline ID">
+                        <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>The ID of the registered pipeline in Azure Machine Learning.
+                        </div>
+                    </div>
+                    <div id="pipelineModalError" class="alert alert-danger bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 p-4 rounded-xl" role="alert" style="margin-top: 10px; display: none;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span class="font-medium"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-gray-50 dark:bg-gray-800 border-0 rounded-b-xl p-6 flex space-x-3">
+                <button type="button" class="btn btn-secondary px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 border-0 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-200" data-bs-dismiss="modal" id="pipelineFormCancelBtn">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button type="submit" form="pipelineForm" class="btn btn-primary px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-0 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105" id="pipelineFormSaveBtn">
+                    <i class="fas fa-save mr-2"></i>Save Pipeline
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

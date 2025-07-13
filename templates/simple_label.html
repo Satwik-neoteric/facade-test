@@ -1,0 +1,394 @@
+{% extends "basic.html" %}
+
+{% block title %}Simple Label - Facade AI Studio{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-8">
+    <!-- Debug Notice -->
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300 px-4 py-3 rounded-lg mb-6">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-info-circle text-yellow-500 mt-0.5"></i>
+            <div>
+                <h4 class="font-medium">Simple Labeling Mode</h4>
+                <p class="text-sm mt-1">This is a simplified version of the labeling interface for testing and development purposes.</p>
+            </div>
+        </div>
+    </div>
+            This is a simplified version of the label page using direct CSS links.
+        </div>
+        
+        <!-- Batch Selection UI -->
+        <div class="row">
+            <div class="col-6">
+                <div class="section">
+                    <div class="section-header">
+                        Available Batches
+                        <button onclick="refreshBatches()" style="float: right; width: auto; padding: 2px 10px;">Refresh</button>
+                    </div>
+                    <div class="section-body">
+                        <div class="info-message" id="loading-batches">
+                    <!-- Batch and Image Selection -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Batch Selection -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-layer-group text-blue-600"></i>
+                    Select Batch
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="batch-loading" class="text-center py-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <span class="text-gray-600 dark:text-gray-400">Loading batches...</span>
+                </div>
+                <select id="batch-select" 
+                        class="hidden w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Select a batch</option>
+                </select>
+                <div id="batch-info" class="hidden mt-3 text-sm text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-images mr-2"></i>
+                    <span id="batch-image-count">0</span> images in this batch
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Selection -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i class="fas fa-image text-green-600"></i>
+                    Images in Selected Batch
+                </h3>
+            </div>
+            <div class="p-6">
+                <div id="select-batch-prompt" class="text-center py-4 text-gray-500 dark:text-gray-400">
+                    Please select a batch to view images
+                </div>
+                <select id="image-select" 
+                        class="hidden w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Select an image</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Image and Annotation UI -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-eye text-purple-600"></i>
+                Image View
+            </h3>
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="show-annotations" 
+                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                <span class="text-sm text-gray-700 dark:text-gray-300">Show Annotations</span>
+            </label>
+        </div>
+        <div class="p-6">
+            <div id="select-image-prompt" class="text-center py-12 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-image text-4xl mb-4"></i>
+                <p>Please select an image to view</p>
+            </div>
+            <div id="image-container" class="hidden text-center relative bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden">
+                <img id="main-image" alt="Selected image" class="max-w-full h-auto">
+                <canvas id="annotation-canvas" class="absolute top-0 left-0 pointer-events-none"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Annotations UI -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <i class="fas fa-tags text-orange-600"></i>
+                Annotations
+            </h3>
+        </div>
+        <div class="p-6">
+            <div id="annotation-prompt" class="text-center py-4 text-gray-500 dark:text-gray-400">
+                Select an image to view or add annotations
+            </div>
+            <div id="annotation-controls" class="hidden space-y-4">
+                <div>
+                    <label for="category-select" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Category
+                    </label>
+                    <select id="category-select" 
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
+                        <option value="">Select category</option>
+                    </select>
+                </div>
+                <div class="flex gap-3">
+                    <button id="start-annotation-btn" 
+                            data-loading
+                            class="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                        <i class="fas fa-plus"></i>
+                        <span>Start New Annotation</span>
+                    </button>
+                    <button id="cancel-annotation-btn" 
+                            class="hidden inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                        <i class="fas fa-times"></i>
+                        <span>Cancel</span>
+                    </button>
+                </div>
+                            <div id="annotation-instructions" class="info-message" style="display: none; margin-top: 10px;">
+                                Click on the image to create bounding box points. Click the first point again to complete the annotation.
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <h4>Existing Annotations</h4>
+                                <div id="annotation-list">
+                                    <div class="info-message">No annotations yet</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sensor Data UI -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="section">
+                    <div class="section-header" onclick="toggleSensorData()" style="cursor: pointer;">
+                        Sensor Data
+                        <span id="toggle-icon" style="float: right;">▼</span>
+                    </div>
+                    <div class="section-body" id="sensor-data-body" style="display: none;">
+                        <div class="info-message" id="select-image-for-sensor">Please select an image to view sensor data</div>
+                        <div id="sensor-data-content" style="display: none;">
+                            <!-- Sensor data will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Dialog -->
+    <div id="login-dialog" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5);">
+        <div style="width: 300px; background-color: white; margin: 100px auto; padding: 20px; border-radius: 5px;">
+            <h3>Login to Facade Studio</h3>
+            <div>
+                <label for="username">Username</label>
+                <input type="text" id="username">
+            </div>
+            <div>
+                <label for="password">Password</label>
+                
+                <!-- Existing Annotations List -->
+                <div id="annotations-list" class="mt-6">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-3">Existing Annotations</h4>
+                    <div id="annotations-container" class="space-y-2">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">No annotations yet</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sensor Data Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mt-8">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+            <button onclick="toggleSensorData()" 
+                    class="w-full flex items-center justify-between text-lg font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-chart-line text-indigo-600"></i>
+                    Sensor Data
+                </div>
+                <span id="toggle-icon" class="text-gray-400">▼</span>
+            </button>
+        </div>
+        <div id="sensor-data-body" class="p-6 hidden">
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <p class="text-gray-600 dark:text-gray-400">Sensor data will be displayed here when available.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Dialog -->
+    <div id="login-dialog" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">Login</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Username
+                        </label>
+                        <input type="text" id="username" 
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Password
+                        </label>
+                        <input type="password" id="password" 
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div class="flex gap-3 justify-end mt-6">
+                    <button onclick="hideLogin()" 
+                            class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="login()" 
+                            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts_extra %}
+    <script>
+        // Simplified JavaScript for basic interactions
+        function toggleSensorData() {
+            const body = document.getElementById('sensor-data-body');
+            const icon = document.getElementById('toggle-icon');
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                icon.textContent = '▲';
+            } else {
+                body.classList.add('hidden');
+                icon.textContent = '▼';
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-dialog').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function hideLogin() {
+            document.getElementById('login-dialog').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function login() {
+            // Simple mock login
+            alert('Login functionality would go here');
+            hideLogin();
+        }
+
+        function refreshBatches() {
+            // For testing only
+            document.getElementById('batch-loading').classList.remove('hidden');
+            document.getElementById('batch-select').classList.add('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('batch-loading').classList.add('hidden');
+                document.getElementById('batch-select').classList.remove('hidden');
+                
+                // Add some test batches
+                const batchSelect = document.getElementById('batch-select');
+                batchSelect.innerHTML = '<option value="">Select a batch</option>';
+                batchSelect.innerHTML += '<option value="B1">Batch B1 (5 images)</option>';
+                batchSelect.innerHTML += '<option value="B2">Batch B2 (3 images)</option>';
+            }, 1000);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshBatches();
+            
+            // Batch selection handler
+            document.getElementById('batch-select')?.addEventListener('change', function(e) {
+                const batchValue = e.target.value;
+                const imageSelect = document.getElementById('image-select');
+                const selectBatchPrompt = document.getElementById('select-batch-prompt');
+                const batchInfo = document.getElementById('batch-info');
+                
+                if (batchValue) {
+                    selectBatchPrompt.classList.add('hidden');
+                    imageSelect.classList.remove('hidden');
+                    batchInfo.classList.remove('hidden');
+                    
+                    // Mock images for selected batch
+                    imageSelect.innerHTML = '<option value="">Select an image</option>';
+                    const imageCount = batchValue === 'B1' ? 5 : 3;
+                    for (let i = 1; i <= imageCount; i++) {
+                        imageSelect.innerHTML += `<option value="img${i}">Image ${i}</option>`;
+                    }
+                    
+                    document.getElementById('batch-image-count').textContent = imageCount;
+                } else {
+                    selectBatchPrompt.classList.remove('hidden');
+                    imageSelect.classList.add('hidden');
+                    batchInfo.classList.add('hidden');
+                }
+            });
+            
+            // Image selection handler
+            document.getElementById('image-select')?.addEventListener('change', function(e) {
+                const imageValue = e.target.value;
+                const imageContainer = document.getElementById('image-container');
+                const selectImagePrompt = document.getElementById('select-image-prompt');
+                const annotationControls = document.getElementById('annotation-controls');
+                const annotationPrompt = document.getElementById('annotation-prompt');
+                
+                if (imageValue) {
+                    selectImagePrompt.classList.add('hidden');
+                    imageContainer.classList.remove('hidden');
+                    annotationPrompt.classList.add('hidden');
+                    annotationControls.classList.remove('hidden');
+                    
+                    // Mock image loading
+                    const mainImage = document.getElementById('main-image');
+                    mainImage.src = 'https://via.placeholder.com/800x600/f0f0f0/666?text=' + encodeURIComponent(imageValue);
+                } else {
+                    selectImagePrompt.classList.remove('hidden');
+                    imageContainer.classList.add('hidden');
+                    annotationPrompt.classList.remove('hidden');
+                    annotationControls.classList.add('hidden');
+                }
+            });
+            
+            // Close login dialog on escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideLogin();
+                }
+            });
+        });
+    </script>
+{% endblock %}
+        }
+
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshBatches();
+            
+            // Add event listeners
+            document.getElementById('batch-select').addEventListener('change', function(e) {
+                if (e.target.value) {
+                    document.getElementById('select-batch-prompt').style.display = 'none';
+                    document.getElementById('image-select').style.display = 'block';
+                    document.getElementById('batch-info').style.display = 'block';
+                    document.getElementById('batch-image-count').textContent = e.target.value === 'B1' ? 5 : 3;
+                    
+                    // Add some test images
+                    const imageSelect = document.getElementById('image-select');
+                    imageSelect.innerHTML = '<option value="">Select an image</option>';
+                    if (e.target.value === 'B1') {
+                        imageSelect.innerHTML += '<option value="1">Image 1</option>';
+                        imageSelect.innerHTML += '<option value="2">Image 2</option>';
+                        imageSelect.innerHTML += '<option value="3">Image 3</option>';
+                        imageSelect.innerHTML += '<option value="4">Image 4</option>';
+                        imageSelect.innerHTML += '<option value="5">Image 5</option>';
+                    } else {
+                        imageSelect.innerHTML += '<option value="6">Image 6</option>';
+                        imageSelect.innerHTML += '<option value="7">Image 7</option>';
+                        imageSelect.innerHTML += '<option value="8">Image 8</option>';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

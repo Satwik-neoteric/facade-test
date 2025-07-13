@@ -1,0 +1,325 @@
+/* Based on the original Facade Studio styling */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    height: 100%;
+    overflow: hidden;
+    background-color: #333;
+    color: #eee;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto auto;
+    grid-template-areas:
+        "header"
+        "batches"
+        "images"
+        "view"
+        "annotations"
+        "sensor";
+    height: 100vh;
+    gap: 5px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+
+.panel {
+    background-color: #444;
+    padding: 10px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header-panel {
+    grid-area: header;
+    background-color: #222;
+    color: white;
+    padding: 5px 20px;
+    flex-direction: row;
+    align-items: center;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.header-logo-title {
+    display: flex;
+    align-items: center;
+}
+
+.header-logo {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.header-logo-title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.batches-panel {
+    grid-area: batches;
+}
+
+.images-panel {
+    grid-area: images;
+}
+
+.view-panel {
+    grid-area: view;
+}
+
+.annotations-panel {
+    grid-area: annotations;
+}
+
+.sensor-panel {
+    grid-area: sensor;
+}
+
+h2 {
+    margin-top: 0;
+    color: #ff9900;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #666;
+    padding-bottom: 5px;
+}
+
+/* Form inputs */
+select, input, button {
+    padding: 8px;
+    margin: 5px 0;
+    background-color: #333;
+    border: 1px solid #666;
+    color: white;
+    border-radius: 3px;
+    width: 100%;
+}
+
+button {
+    background-color: #007bff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.refresh-button {
+    background-color: transparent;
+    border: 1px solid #666;
+    padding: 3px 8px;
+    width: auto;
+    float: right;
+    margin-top: -30px;
+    font-size: 0.9rem;
+}
+
+.info-message {
+    background-color: rgba(0, 123, 255, 0.2);
+    border: 1px solid rgba(0, 123, 255, 0.3);
+    padding: 8px;
+    border-radius: 3px;
+    font-size: 0.9rem;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.switch-container {
+    display: flex;
+    align-items: center;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #555;
+    transition: .4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #007bff;
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+/* For the sensor data toggle */
+.toggle-button {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    width: auto;
+}
+
+/* Image container styling */
+.image-container {
+    position: relative;
+    margin: 0 auto;
+    max-width: 100%;
+    text-align: center;
+}
+
+#main-image {
+    max-width: 100%;
+    max-height: 50vh;
+}
+
+#annotation-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+}
+
+/* Existing annotations list */
+.annotation-list {
+    margin-top: 10px;
+    max-height: 150px;
+    overflow-y: auto;
+    background-color: #333;
+    border: 1px solid #666;
+    border-radius: 3px;
+}
+
+.annotation-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 8px;
+    border-bottom: 1px solid #555;
+}
+
+.annotation-item:last-child {
+    border-bottom: none;
+}
+
+.annotation-category {
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    background-color: #ff9900;
+    color: black;
+}
+
+.annotation-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.annotation-actions button {
+    padding: 2px 5px;
+    width: auto;
+    font-size: 0.8rem;
+}
+
+.edit-btn {
+    background-color: #17a2b8;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+}
+
+/* Sensor data styling */
+.sensor-data-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.sensor-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sensor-table th, .sensor-table td {
+    padding: 5px;
+    text-align: left;
+    border-bottom: 1px solid #555;
+}
+
+.sensor-table th {
+    color: #aaa;
+}
+
+#map {
+    height: 150px;
+    margin-top: 10px;
+    border-radius: 3px;
+}
+
+/* Responsive layout */
+@media (min-width: 768px) {
+    .app-container {
+        grid-template-columns: 250px 1fr 250px;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+            "header header header"
+            "batches view annotations"
+            "images view sensor";
+    }
+}
+
+@media (max-width: 768px) {
+    body, html {
+        overflow: auto;
+    }
+    
+    .app-container {
+        height: auto;
+        overflow-y: auto;
+    }
+}

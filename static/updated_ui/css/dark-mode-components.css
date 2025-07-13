@@ -1,0 +1,315 @@
+/* Dark Mode Component Styles for Facade Studio */
+
+/* Hero Gradient Effects */
+.hero-gradient {
+    background: linear-gradient(135deg, 
+        #667eea 0%, 
+        #764ba2 25%, 
+        #f093fb 50%, 
+        #f5576c 75%, 
+        #4facfe 100%);
+}
+
+.dark .hero-gradient,
+.hero-gradient-dark {
+    background: linear-gradient(135deg, 
+        #1e293b 0%, 
+        #334155 25%, 
+        #475569 50%, 
+        #64748b 75%, 
+        #94a3b8 100%);
+}
+
+/* Glass Effect */
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.dark .glass-effect,
+.glass-effect-dark {
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Navbar Dark Mode Overrides */
+.navbar-dark-override {
+    background-color: rgb(31 41 55) !important;
+    border-color: rgb(55 65 81) !important;
+}
+
+.dark .navbar-dark-override,
+.dark nav {
+    background-color: rgb(17 24 39) !important;
+    border-color: rgb(31 41 55) !important;
+}
+
+/* Card Dark Mode Effects */
+.card-dark-mode {
+    background: linear-gradient(145deg, #374151, #1f2937);
+    border: 1px solid #4b5563;
+}
+
+.dark .card-dark-mode {
+    background: linear-gradient(145deg, #111827, #0f172a);
+    border: 1px solid #374151;
+}
+
+/* Button Effects */
+.btn-glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-glass:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.dark .btn-glass {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .btn-glass:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Gradient Text */
+.gradient-text {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.dark .gradient-text {
+    background: linear-gradient(45deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Scrollbar Dark Mode */
+.dark ::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+}
+
+/* Theme Toggle Animation */
+.theme-toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle-icon.rotating {
+    transform: rotate(180deg);
+}
+
+/* Fade In Animation for Theme Changes */
+.theme-transition {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Modal Dark Mode */
+.modal-dark {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content-dark {
+    background: linear-gradient(145deg, #374151, #1f2937);
+    border: 1px solid #4b5563;
+    color: #f9fafb;
+}
+
+/* Modal Dark Mode Enhancements */
+.dark .modal-content {
+    background-color: #1f2937 !important;
+    border: 1px solid #374151 !important;
+    color: #f9fafb !important;
+}
+
+.dark .modal-header {
+    border-bottom: 1px solid #374151 !important;
+    background: linear-gradient(135deg, #374151, #1f2937) !important;
+}
+
+.dark .modal-footer {
+    border-top: 1px solid #374151 !important;
+    background-color: #111827 !important;
+}
+
+.dark .modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Dark mode form elements in modals */
+.dark .modal .form-control {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+}
+
+.dark .modal .form-control:focus {
+    background-color: #374151 !important;
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 0.25rem rgba(96, 165, 250, 0.25) !important;
+}
+
+.dark .modal .form-select {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+}
+
+.dark .modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Dark mode alerts in modals */
+.dark .modal .alert-danger {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+    color: #fecaca !important;
+}
+
+.dark .modal .alert-success {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+    border-color: #22c55e !important;
+    color: #bbf7d0 !important;
+}
+
+/* Dark mode button variants in modals */
+.dark .modal .btn-secondary {
+    background-color: #4b5563 !important;
+    border-color: #6b7280 !important;
+    color: #f9fafb !important;
+}
+
+.dark .modal .btn-secondary:hover {
+    background-color: #6b7280 !important;
+    border-color: #9ca3af !important;
+}
+
+/* Ensure proper modal z-index in dark mode */
+.dark .modal {
+    z-index: 1055 !important;
+}
+
+.dark .modal-dialog {
+    z-index: 1056 !important;
+}
+
+/* Custom CSS Variables for Theme */
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --accent-primary: #3b82f6;
+    --accent-secondary: #8b5cf6;
+}
+
+.dark {
+    --bg-primary: #111827;
+    --bg-secondary: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #374151;
+    --accent-primary: #60a5fa;
+    --accent-secondary: #a78bfa;
+}
+
+/* Component-specific dark mode utilities */
+.bg-primary {
+    background-color: var(--bg-primary) !important;
+}
+
+.bg-secondary {
+    background-color: var(--bg-secondary) !important;
+}
+
+.text-primary {
+    color: var(--text-primary) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+.border-primary {
+    border-color: var(--border-color) !important;
+}
+
+/* Loading Animation for Dark Mode */
+.loading-overlay-dark {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(3px);
+}
+
+.loading-spinner-dark {
+    border: 3px solid #374151;
+    border-top: 3px solid #60a5fa;
+}
+
+/* Footer Dark Mode */
+.footer-dark {
+    background: linear-gradient(145deg, #111827, #0f172a);
+    border-top: 1px solid #374151;
+}
+
+/* Form Elements Dark Mode */
+.dark input,
+.dark textarea,
+.dark select {
+    background-color: #374151 !important;
+    border-color: #4b5563 !important;
+    color: #f9fafb !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+    border-color: #60a5fa !important;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1) !important;
+}
+
+/* Responsive Dark Mode Adjustments */
+@media (max-width: 768px) {
+    .glass-effect {
+        backdrop-filter: blur(8px);
+    }
+    
+    .dark .glass-effect,
+    .glass-effect-dark {
+        backdrop-filter: blur(12px);
+    }
+}
+
+/* Print Mode - Disable Dark Mode */
+@media print {
+    .dark * {
+        background: white !important;
+        color: black !important;
+        border-color: #ccc !important;
+    }
+}

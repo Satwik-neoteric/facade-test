@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" class="transition-colors duration-300">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facade AI Studio</title>
+    <link rel="icon" href="{{ url_for('static', path='/images/Facade-Icon.png') }}" type="image/png">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Dark Mode Component Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', path='updated_ui/css/dark-mode-components.css') }}">
+    
+    <!-- Theme toggle styles -->
+    <style>
+        .theme-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 15px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+        
+        .theme-toggle-btn:focus {
+            outline: 2px solid #007bff;
+            outline-offset: 2px;
+        }
+        
+        /* Dark mode styles */
+        .dark-theme {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        
+        .dark-theme .panel {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+        
+        .dark-theme .header-panel {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        }
+        
+        .dark-theme .left-panel,
+        .dark-theme .right-panel,
+        .dark-theme .bottom-panel,
+        .dark-theme .action-panel {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+        
+        .dark-theme .center-panel {
+            background-color: #1e1e1e;
+        }
+        
+        .dark-theme .theme-toggle-btn {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #ffd700;
+        }
+        
+        .dark-theme button,
+        .dark-theme .class-button {
+            background-color: #404040;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+        
+        .dark-theme button:hover,
+        .dark-theme .class-button:hover {
+            background-color: #555;
+        }
+        
+        .dark-theme input,
+        .dark-theme select,
+        .dark-theme textarea {
+            background-color: #333;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+        
+        .dark-theme .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        
+        .dark-theme .modal-dialog {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="panel header-panel">
+            <div class="header-content">
+                <div class="header-logo-title">
+                    <img src="{{ url_for('static', path='/images/Facade-Logo.png') }}" alt="Facade AI Studio Logo" class="header-logo">
+                    <h1>- Image Studio</h1>
+                </div>
+                <div class="navigation-links">
+                    <a href="/" class="active">Home</a>
+                    <a href="/label">Label</a>
+                    <a href="/dashboard">Dashboard</a>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar">U</div>
+                    <div class="user-details">
+                        <span class="user-name">User1</span>
+                        <span class="user-role">Default Admin</span>
+                    </div>
+                    <!-- Theme Toggle Button -->
+                    <button id="theme-toggle" 
+                            class="theme-toggle-btn"
+                            aria-label="Toggle theme"
+                            title="Toggle between light and dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel left-panel">
+            <div id="batch-selection-container" style="display: none;">
+                <h2>Select Batch</h2>
+                <select id="batch-selector" class="batch-dropdown">
+                    <option value="">Select Batch</option>
+                </select>
+            </div>
+            <button id="open-filter-dialog" class="filter-button">
+                <span class="filter-button-icon">🔍</span> Filter Images
+            </button>
+            <h2>Images</h2>
+            <ul id="image-list">
+                <li class="loading">Loading images...</li>
+            </ul>
+        </div>
+
+        <div class="panel action-panel">
+            <div class="action-buttons">
+                <button id="submit-btn"><span class="icon">✓</span> Submit</button>
+                <button id="accept-btn" class="validation-btn" style="display: none;"><span class="icon">✓</span> Accept</button>
+                <button id="skip-btn"><span class="icon">➡</span> Skip</button>
+                <button id="delete-btn"><span class="icon">✗</span> Delete</button>
+                <!-- Validation mode buttons (hidden by default) -->
+                <button id="reject-btn" class="validation-btn" style="display: none;"><span class="icon">✗</span> Reject</button>
+            </div>
+            <div class="mode-toggle">
+                <span class="mode-label">Label</span>
+                <label class="switch">
+                    <input type="checkbox" id="mode-toggle-switch">
+                    <span class="slider round"></span>
+                </label>
+                <span class="mode-label">Validate</span>
+            </div>
+        </div>
+        
+        <div class="panel center-panel">
+            <div id="canvas-container">
+                <div id="canvas-wrapper">
+                    <canvas id="annotation-canvas"></canvas>
+                </div>
+            </div>
+            <div id="status-bar">
+                Mode: <span id="mode-status">Select</span> |
+                Zoom: <span id="zoom-status">Full</span> |
+                Image: <span id="image-name-status">None</span> |
+                Selected: <span id="selected-object-status">None</span> |
+                Coords: <span id="coords-status">(0, 0)</span>
+            </div>
+        </div>
+
+        <div class="panel right-panel">
+            <!-- Annotations Section -->
+            <div class="right-panel-section annotations-section">
+                <h3 class="right-panel-title">Annotations</h3>
+                <ul id="annotation-list">
+                    <!-- Annotations will be populated here by JavaScript -->
+                </ul>
+            </div>
+            
+            <!-- Image Metadata Section -->
+            <div class="right-panel-section metadata-section">
+                <h3 class="right-panel-title">Image Metadata</h3>
+                <div id="metadata-box">
+                    <p class="no-data">No image loaded</p>
+                </div>
+            </div>
+            
+            <!-- Sensor Data Section -->
+            <div class="right-panel-section sensor-section">
+                <h3 class="right-panel-title">Sensor Data</h3>
+                <div id="sensor-data-container">
+                    <table id="sensor-data-table">
+                        <!-- Sensor data will be populated here by JavaScript -->
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Log Section -->
+            <div class="right-panel-section log-section">
+                <h3 class="right-panel-title">Log</h3>
+                <div id="log-box">
+                    <!-- Log entries will be populated here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="panel bottom-panel">
+            <h3>Select Class:</h3>
+            <table class="class-table">
+                <tr>
+                    <td><button class="class-button active" data-class="Short-Gasket">Short Gasket</button></td>
+                    <td><button class="class-button" data-class="Defective-Mastic">Defective Mastic</button></td>
+                    <td><button class="class-button" data-class="Glazing-Defects">Glazing Defects</button></td>
+                    <td><button class="class-button" data-class="Stonework-Faults">Stonework Faults</button></td>
+                </tr>
+                <tr>
+                    <td><button class="class-button" data-class="Stonework-Fracture">Stonework Fracture</button></td>
+                    <td><button class="class-button" data-class="Cladding-Disengaged">Cladding Disengaged</button></td>
+                    <td><button class="class-button" data-class="Mechanical-Faults">Mechanical Faults</button></td>
+                    <td><button class="class-button" data-class="Gaskets-Disengaged">Gaskets Disengaged</button></td>
+                </tr>
+                <tr class="mask-row">
+                    <td><button class="class-button" data-class="WindowPane-Mask">WindowPane Mask</button></td>
+                    <td><button class="class-button" data-class="Human-Mask">Human Mask</button></td>
+                    <td><button class="class-button" data-class="Privacy-Mask">Privacy Mask</button></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Filter Modal Dialog -->
+    <div id="filter-modal" class="modal-overlay">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h2>Image Filters</h2>
+                <button id="close-filter-dialog" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="filter-group">
+                    <label class="main-label" for="date-start">Date Range:</label>
+                    <input type="date" id="date-start" name="date-start" class="filter-input">
+                    <span class="date-range-separator">to</span>
+                    <input type="date" id="date-end" name="date-end" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="main-label" for="name-filter">Filename Pattern:</label>
+                    <input type="text" id="name-filter" name="name-filter" placeholder="e.g., img_*.jpg" class="filter-input">
+                </div>
+                <div class="filter-group">
+                    <label class="main-label">Image Status:</label>
+                    <div class="filter-radio-group">
+                        <div class="filter-radio-item">
+                            <input type="radio" id="filter-all" name="annotation-status" value="all" checked>
+                            <label for="filter-all">All Images</label>
+                        </div>
+                        <div class="filter-radio-item">
+                            <input type="radio" id="filter-unlabelled" name="annotation-status" value="unlabelled">
+                            <label for="filter-unlabelled">Unlabelled Only</label>
+                        </div>
+                    </div>
+                    <!-- Show Deleted toggle -->
+                    <div class="filter-checkbox-item show-deleted-option">
+                        <input type="checkbox" id="show-deleted" name="show-deleted">
+                        <label for="show-deleted">Show Deleted Images</label>
+                    </div>
+                </div>
+                <div class="filter-group" id="has-annotations-container">
+                    <label class="main-label">Has Annotations:</label>
+                    <div class="filter-checkbox-item">
+                        <input type="checkbox" id="has-annotations" name="has-annotations" checked>
+                        <label for="has-annotations">Show images with annotations</label>
+                    </div>
+                </div>
+                <div class="filter-group" id="class-filter-container">
+                    <label class="main-label">Object Classes:</label>
+                    <div class="filter-checkbox-group" id="class-filter-group">
+                        <!-- Class checkboxes will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="reset-filters-btn">Reset</button>
+                <button id="apply-filters-btn">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notes Dialog for Rejection -->
+    <div id="notes-dialog">
+        <h3>Rejection Notes</h3>
+        <p>Please provide a reason for rejecting this annotation:</p>
+        <textarea id="notes-text" placeholder="Enter your notes here..."></textarea>
+        <div class="dialog-buttons">
+            <button id="notes-cancel-btn">Cancel</button>
+            <button id="notes-submit-btn">Submit Rejection</button>
+        </div>
+    </div>
+
+    <!-- Include jQuery before other scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', path='/js/fabric.min.js') }}"></script>
+    
+    <!-- Theme Manager -->
+    <script src="{{ url_for('static', path='/updated_ui/core/theme-manager.js') }}"></script>
+    
+    <!-- Initialize Theme Manager -->
+    <script>
+        // Initialize theme manager when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 DOM Content Loaded - Index Page');
+            
+            if (window.ThemeManager) {
+                window.themeManager = new window.ThemeManager();
+                console.log('🎨 Theme Manager initialized from index.html');
+            } else {
+                console.error('❌ ThemeManager class not found');
+                
+                // Simple fallback theme toggle
+                const themeButton = document.getElementById('theme-toggle');
+                if (themeButton) {
+                    console.log('✅ Using simple fallback theme toggle');
+                    
+                    // Initialize from localStorage
+                    const savedTheme = localStorage.getItem('theme') || 'light';
+                    if (savedTheme === 'dark') {
+                        document.body.classList.add('dark-theme');
+                        document.documentElement.classList.add('dark');
+                        const icon = themeButton.querySelector('i');
+                        if (icon) icon.className = 'fas fa-sun';
+                    }
+                    
+                    themeButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        console.log('🖱️ Theme button clicked (fallback)');
+                        
+                        const body = document.body;
+                        const html = document.documentElement;
+                        const icon = themeButton.querySelector('i');
+                        const isDark = body.classList.contains('dark-theme');
+                        
+                        if (isDark) {
+                            // Switch to light mode
+                            body.classList.remove('dark-theme');
+                            html.classList.remove('dark');
+                            if (icon) icon.className = 'fas fa-moon';
+                            localStorage.setItem('theme', 'light');
+                            console.log('🌞 Switched to light mode (fallback)');
+                        } else {
+                            // Switch to dark mode
+                            body.classList.add('dark-theme');
+                            html.classList.add('dark');
+                            if (icon) icon.className = 'fas fa-sun';
+                            localStorage.setItem('theme', 'dark');
+                            console.log('🌙 Switched to dark mode (fallback)');
+                        }
+                    });
+                } else {
+                    console.error('❌ Theme toggle button not found');
+                }
+            }
+        });
+    </script>
+    
+    <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script>
+</body>
+</html>

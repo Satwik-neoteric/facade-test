@@ -1,0 +1,270 @@
+/* Enhanced Navbar Styles for Facade Studio */
+
+/* Ensure consistent navbar appearance across all themes */
+.navbar-enhanced {
+    /* Light mode navbar */
+    background: rgb(255 255 255) !important;
+    border-color: rgb(229 231 235) !important; /* gray-200 */
+}
+
+.dark .navbar-enhanced {
+    /* Dark mode navbar */
+    background: rgb(15 23 42) !important; /* slate-900 */
+    border-color: rgb(51 65 85) !important; /* slate-700 */
+}
+
+/* User avatar improvements */
+.user-avatar,
+.user-avatar-mobile {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.user-avatar:hover,
+.user-avatar-mobile:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+
+/* User info container styling */
+.user-info-container {
+    background: transparent !important;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.user-info-container:hover {
+    background: transparent !important;
+}
+
+.dark .user-info-container {
+    background: transparent !important;
+    border: none;
+}
+
+.dark .user-info-container:hover {
+    background: transparent !important;
+}
+
+/* Navigation link enhancements */
+.nav-link {
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
+    transition: left 0.5s;
+}
+
+.dark .nav-link::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.nav-link:hover::before {
+    left: 100%;
+}
+
+/* Active nav link styles */
+.nav-link-active {
+    position: relative;
+}
+
+.nav-link-active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+}
+
+/* Theme toggle button enhancements */
+#theme-toggle {
+    position: relative;
+    overflow: hidden;
+    background: transparent !important;
+}
+
+#theme-toggle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+    background: transparent !important;
+}
+
+.dark #theme-toggle::before {
+    background: rgba(255, 255, 255, 0.1);
+    background: transparent !important;
+}
+
+#theme-toggle:hover::before {
+    width: 100%;
+    height: 100%;
+    background: transparent !important;
+}
+
+/* Mobile menu enhancements */
+.mobile-menu {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95) !important; /* white with opacity */
+}
+
+.dark .mobile-menu {
+    background: rgba(15, 23, 42, 0.95) !important; /* slate-900 with opacity */
+}
+
+/* Mobile user info styling */
+.mobile-user-section {
+    background: linear-gradient(135deg, rgba(249, 250, 251, 0.8), rgba(243, 244, 246, 0.8));
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+.dark .mobile-user-section {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.8));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Role badge styling */
+.user-role,
+.user-role-mobile {
+    background: rgba(59, 130, 246, 0.1);
+    color: rgb(59, 130, 246);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.dark .user-role,
+.dark .user-role-mobile {
+    background: rgba(59, 130, 246, 0.2);
+    color: rgb(147, 197, 253);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Logout button enhancements */
+.logout-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.logout-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.05), transparent);
+    transition: left 0.3s;
+}
+
+.dark .logout-btn::before {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+}
+
+.logout-btn:hover::before {
+    left: 100%;
+}
+
+/* Logo sizing consistency */
+.logo-light,
+.logo-dark {
+    width: 128px !important;
+    height: 32px !important;
+    object-fit: contain;
+    object-position: left center;
+}
+
+/* Ensure logos maintain exact same dimensions */
+.logo-container {
+    width: 128px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .user-name,
+    .user-role {
+        display: none;
+    }
+    
+    .mobile-user-section {
+        margin: 1rem 0;
+    }
+}
+
+/* Loading states */
+.loading-user-info {
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+    background-size: 200% 100%;
+    animation: loading-shimmer 1.5s infinite;
+}
+
+.dark .loading-user-info {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+    background-size: 200% 100%;
+}
+
+@keyframes loading-shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Focus states for accessibility */
+.nav-link:focus,
+#theme-toggle:focus,
+.logout-btn:focus {
+    outline: 2px solid rgb(59, 130, 246);
+    outline-offset: 2px;
+    background: transparent !important;
+}
+
+/* Dark mode specific adjustments */
+.dark .navbar-enhanced {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+}
+
+/* Light mode specific adjustments */
+html:not(.dark) .navbar-enhanced {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .user-avatar,
+    .user-avatar-mobile {
+        border-width: 3px;
+    }
+    
+    .nav-link {
+        font-weight: 600;
+    }
+}

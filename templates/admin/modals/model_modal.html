@@ -1,0 +1,93 @@
+<div class="modal fade" id="modelModal" tabindex="-1" aria-labelledby="modelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl">
+            <div class="modal-header bg-gradient-to-r from-purple-600 to-purple-700 text-white border-0 rounded-t-xl">
+                <h4 class="modal-title font-bold text-lg" id="modelModalTitle">Register Model</h4>
+                <button type="button" class="btn-close btn-close-white opacity-75 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close" id="modelModalCloseBtn"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="modelForm" class="space-y-4">
+                    <input type="hidden" id="modelFormIdInput">
+                    <div class="form-group">
+                        <label for="modelFormModelName" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-robot mr-2 text-purple-500"></i>Model Name
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="modelFormModelName" 
+                               required 
+                               placeholder="e.g., Glazing-Defects">
+                    </div>
+                    <div class="form-group">
+                        <label for="modelFormAzureModelName" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-cloud mr-2 text-blue-500"></i>Azure Model Name
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="modelFormAzureModelName" 
+                               required 
+                               placeholder="e.g., Glazing-Defects:2">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label for="modelFormConfidence" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                <i class="fas fa-percentage mr-2 text-green-500"></i>Confidence (%)
+                            </label>
+                            <input type="number" 
+                                   class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                   id="modelFormConfidence" 
+                                   required 
+                                   placeholder="e.g., 80" 
+                                   min="0" 
+                                   max="100">
+                            <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>Confidence threshold (0-100)
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="modelFormModelAccuracy" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                <i class="fas fa-bullseye mr-2 text-orange-500"></i>Accuracy (%)
+                            </label>
+                            <input type="number" 
+                                   class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                   id="modelFormModelAccuracy" 
+                                   required 
+                                   placeholder="e.g., 93" 
+                                   min="0" 
+                                   max="100">
+                            <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>Model accuracy (0-100)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelFormCategoryNo" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-hashtag mr-2 text-indigo-500"></i>Category Number
+                        </label>
+                        <input type="number" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="modelFormCategoryNo" 
+                               required 
+                               placeholder="e.g., 3" 
+                               min="1">
+                        <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>The category number associated with this model
+                        </div>
+                    </div>
+                    <div id="modelModalError" class="alert alert-danger bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 p-4 rounded-xl" role="alert" style="margin-top: 10px; display: none;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span class="font-medium"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-gray-50 dark:bg-gray-800 border-0 rounded-b-xl p-6 flex space-x-3">
+                <button type="button" class="btn btn-secondary px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 border-0 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-200" data-bs-dismiss="modal" id="modelFormCancelBtn">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button type="submit" form="modelForm" class="btn btn-primary px-6 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-0 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105" id="modelFormSaveBtn">
+                    <i class="fas fa-save mr-2"></i>Save Model
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}CSS Test Page{% endblock %}
+
+{% block additional_styles %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/label.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', path='/css/label_v2.css') }}">
+<style>
+    .test-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #ddd;
+    }
+    
+    .test-section h2 {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>CSS Loading Test Page</h1>
+            <p>This page helps diagnose CSS loading issues in the application.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="test-section">
+                <h2>Bootstrap Test</h2>
+                <p>These elements use Bootstrap classes:</p>
+                <button class="btn btn-primary">Primary Button</button>
+                <button class="btn btn-success">Success Button</button>
+                <button class="btn btn-danger">Danger Button</button>
+                <div class="alert alert-info mt-3">This is an info alert</div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="test-section">
+                <h2>Custom CSS Tests</h2>
+                <p>The elements below should be styled by our custom CSS files if they're loading correctly:</p>
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test Card Header</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Card body content</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="test-section">
+                <h2>label.css Specific Tests</h2>
+                <p>The following elements should be styled by label.css:</p>
+                <div id="annotation-canvas" style="width:100px; height:100px; border:1px solid #ddd;">
+                    Hover over me - cursor should be crosshair
+                </div>
+                <div class="annotation-item mt-3">
+                    <span>Annotation Item</span>
+                    <div class="annotation-actions">
+                        <button>Action 1</button>
+                        <button>Action 2</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('CSS Test page loaded');
+        
+        // List all loaded stylesheets
+        const sheets = document.styleSheets;
+        console.log('Loaded stylesheets:');
+        for (let i = 0; i < sheets.length; i++) {
+            try {
+                console.log(i, sheets[i].href);
+            } catch (e) {
+                console.log(i, 'Unable to access stylesheet');
+            }
+        }
+    });
+</script>
+{% endblock %}

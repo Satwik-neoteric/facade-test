@@ -1,0 +1,552 @@
+{% extends "basic.html" %}
+
+{% block title %}Facade AI Studio - Administrator{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', path='updated_ui/styles/enhanced-styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='updated_ui/styles/pagination.css') }}">
+    <style>
+        .admin-card {
+            transition: all 0.3s ease;
+        }
+        .admin-card:hover {
+            transform: translateY(-4px);
+        }
+        .section-gradient {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(147, 51, 234, 0.05));
+        }
+        .dark .section-gradient {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 51, 234, 0.1));
+        }
+        
+        /* Enhanced clickable styles for dashboard cards */
+        .dashboard-stats-card {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dashboard-stats-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .dashboard-stats-card:active {
+            transform: translateY(0) scale(0.98);
+            transition: transform 0.1s;
+        }
+        
+        .dashboard-stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            border-radius: 0.5rem;
+        }
+        
+        .dashboard-stats-card:hover::before {
+            opacity: 1;
+        }
+        
+        .dashboard-stats-card.active {
+            transform: translateY(-1px) scale(1.01);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dashboard-stats-card.active::before {
+            opacity: 0.7;
+        }
+        
+        /* Add subtle animation when cards become active */
+        .dashboard-stats-card.active .text-3xl {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        /* Enhanced Modal Styles for Admin Page */
+        .modal {
+            z-index: 1055 !important;
+        }
+        
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+        
+        .modal-dialog {
+            z-index: 1056 !important;
+            position: relative;
+        }
+        
+        .modal-content {
+            z-index: 1057 !important;
+            position: relative;
+        }
+        
+        /* Ensure admin sections don't interfere with modals */
+        .admin-section {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .dashboard-stats-card {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Override any table styles that might interfere */
+        .table-container {
+            position: relative;
+            z-index: auto;
+        }
+        
+        /* Modal specific fixes for forms and inputs */
+        .modal .form-control {
+            position: relative;
+            z-index: auto;
+        }
+        
+        .modal .btn {
+            position: relative;
+            z-index: auto;
+        }
+        
+        /* Ensure dropdowns in modals work properly */
+        .modal .dropdown-menu {
+            z-index: 1058 !important;
+        }
+        
+        /* Loading state for modals */
+        .modal .loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6 max-w-7xl mx-auto">
+    
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    Administration Panel
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400 mt-2">
+                    Manage users, batches, buildings, models, and pipelines
+                </p>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="flex space-x-3">
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" onclick="window.refreshAdminData()">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Refresh Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+        
+
+        <!-- Batches Card -->
+        <div class="dashboard-stats-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700" data-section="batches">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-orange-100 dark:bg-orange-900 text-orange-600 dark:text-orange-400">
+                    <i class="fas fa-layer-group text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Batches</p>
+                    <div class="flex items-center">
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white" id="batches-count">-</p>
+                        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400" id="batches-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="batches-last-updated">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buildings Card -->
+        <div class="dashboard-stats-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700" data-section="buildings">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400">
+                    <i class="fas fa-building text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Buildings</p>
+                    <div class="flex items-center">
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white" id="buildings-count">-</p>
+                        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400" id="buildings-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="buildings-last-updated">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        
+
+        <!-- Pipelines Card -->
+        <div class="dashboard-stats-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700" data-section="pipelines">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
+                    <i class="fas fa-cogs text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pipelines</p>
+                    <div class="flex items-center">
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white" id="active-pipelines-count">-</p>
+                        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400" id="pipelines-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="pipelines-last-updated">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Models Card -->
+        <div class="dashboard-stats-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700" data-section="models">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-400">
+                    <i class="fas fa-brain text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Models</p>
+                    <div class="flex items-center">
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white" id="models-count">-</p>
+                        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400" id="models-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="models-last-updated">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Card -->
+        <div class="dashboard-stats-card bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border border-gray-200 dark:border-gray-700" data-section="users">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <div class="ml-4">
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
+                    <div class="flex items-center">
+                        <p class="text-3xl font-bold text-gray-900 dark:text-white" id="total-users-count">-</p>
+                        <span class="ml-2 text-xs text-gray-500 dark:text-gray-400" id="users-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400" id="users-last-updated">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Sections Container -->
+    <div id="management-sections" class="space-y-8">
+        
+        <!-- Users Management Section -->
+        <div id="users-section" class="admin-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">User Management</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Manage system users and their permissions</p>
+                </div>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" data-bs-toggle="modal" data-bs-target="#user-modal">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add User
+                </button>
+            </div>
+            <div id="users-table-container">
+                <!-- Users table will be populated here -->
+            </div>
+        </div>
+
+        <!-- Batches Management Section -->
+        <div id="batches-section" class="admin-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Batch Management</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Manage image batches for processing and annotation</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors" data-bs-toggle="modal" data-bs-target="#register-batch-modal">
+                        <i class="fas fa-plus mr-2"></i>
+                        Register Batch
+                    </button>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors" data-bs-toggle="modal" data-bs-target="#upload-images-modal">
+                        <i class="fas fa-upload mr-2"></i>
+                        Upload Images
+                    </button>
+                    <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors" data-bs-toggle="modal" data-bs-target="#run-inference-modal">
+                        <i class="fas fa-play mr-2"></i>
+                        Run Inference
+                    </button>
+                </div>
+            </div>
+            <div id="batches-table-container">
+                <!-- Batches table will be populated here -->
+            </div>
+        </div>
+
+        <!-- Buildings Management Section -->
+        <div id="buildings-section" class="admin-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Building Management</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Manage building configurations and settings</p>
+                </div>
+                <button class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors" data-bs-toggle="modal" data-bs-target="#buildingModal">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Building
+                </button>
+            </div>
+            <div id="buildings-container">
+                <!-- Buildings cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Models Management Section -->
+        <div id="models-section" class="admin-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Model Management</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Manage AI models and their configurations</p>
+                </div>
+                <button class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors" data-bs-toggle="modal" data-bs-target="#modelModal">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Model
+                </button>
+            </div>
+            <div id="models-container">
+                <!-- Models cards will be populated here -->
+            </div>
+        </div>
+
+        <!-- Pipelines Management Section -->
+        <div id="pipelines-section" class="admin-section bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700 hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Pipeline Management</h2>
+                    <p class="text-gray-600 dark:text-gray-400">Manage inference pipelines and their configurations</p>
+                </div>
+                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors" data-bs-toggle="modal" data-bs-target="#pipelineModal">
+                    <i class="fas fa-plus mr-2"></i>
+                    Add Pipeline
+                </button>
+            </div>
+            <div id="pipelines-container">
+                <!-- Pipelines cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    {% include 'admin/modals/register_batch_modal.html' %}
+    {% include 'admin/modals/upload_images_modal.html' %}
+    {% include 'admin/modals/run_inference_modal.html' %}
+    {% include 'admin/modals/batch_images_modal.html' %}
+    
+    <!-- Other Modals -->
+    {% include 'admin/modals/building_modal.html' %}
+    {% include 'admin/modals/model_modal.html' %}
+    {% include 'admin/modals/user_modal.html' %}
+    {% include 'admin/modals/pipeline_modal.html' %}
+
+    <!-- Toast notifications container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+    <!-- Batch Management Configuration -->
+    <script>
+        const BATCH_MANAGEMENT_CONFIG = {
+            apiEndpoints: {
+                registerBatch: "/api/admin/batches",
+                uploadImages: "/api/admin/batches/{batch_id}/images",
+                runInference: "/api/admin/batches/{batch_id}/inference",
+                getBatchStatus: "/api/admin/batches/{batch_id}/status",
+                downloadBatch: "/api/admin/batches/{batch_id}/download",
+                getBatchImages: "/api/admin/batches/{batch_id}/images"
+            }
+        };
+    </script>
+<!-- Load main facade studio loader (includes all admin components) -->
+    <script src="{{ url_for('static', path='updated_ui/facade-studio-loader.js') }}"></script>
+    
+    <script src="{{ url_for('static', path='updated_ui/pages/admin/batch-management.js') }}"></script>
+    <script src="{{ url_for('static', path='updated_ui/pages/admin/building-management.js') }}"></script>
+    <script src="{{ url_for('static', path='updated_ui/pages/admin/pipeline-management.js') }}"></script>
+    <!-- Load Model Management functionality (Updated UI) -->
+    <script src="{{ url_for('static', path='updated_ui/pages/admin/model-management.js') }}"></script>
+    
+    <!-- Streamlined initialization script -->
+    <script>
+        /**
+         * ADMIN PAGE INITIALIZATION - PRODUCTION OPTIMIZED
+         * 
+         * ARCHITECTURE:
+         * This script handles the coordination between the Facade Studio Loader
+         * and the admin page components. It implements intelligent initialization
+         * sequencing to minimize Time-to-Interactive (TTI).
+         * 
+         * INITIALIZATION SEQUENCE:
+         * 1. DOM Content Loaded - Set up basic page state and safety measures
+         * 2. Hide all modals to prevent flash of unwanted content
+         * 3. Set up global utility functions for debugging and maintenance
+         * 4. Wait for Facade Studio Ready event - main application initialization
+         * 5. Prevent duplicate initialization with singleton pattern
+         * 
+         * PERFORMANCE OPTIMIZATIONS:
+         * - Uses event delegation for better performance
+         * - Implements lazy evaluation of debug functions
+         * - Minimizes DOM queries through caching
+         * - Provides immediate feedback to users
+         */
+        
+        // Global state management to prevent duplicate initialization
+   
+    let adminPageInitialized = false;
+    let adminDebugMode = false;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🔧 Admin Page - DOM Content Loaded, setting up infrastructure...');
+        hideAllModalsImmediately();
+        setupGlobalUtilityFunctions();
+        console.log('✅ Admin page DOM setup completed');
+    });
+
+    document.addEventListener('facadeStudioReady', function (event) {
+        if (adminPageInitialized) {
+            console.log('ℹ️ Admin page already initialized, skipping duplicate initialization');
+            return;
+        }
+
+        console.log('🎉 Facade Studio Ready! Initializing admin page...', event.detail);
+
+        try {
+            adminPageInitialized = true;
+            console.log('✅ Admin page fully initialized');
+        } catch (error) {
+            console.error('❌ Error during admin page initialization:', error);
+            adminPageInitialized = false;
+        }
+    });
+
+    function hideAllModalsImmediately() {
+        try {
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.querySelectorAll('.modal').forEach(m => {
+                m.style.display = 'none';
+                m.classList.remove('show');
+                m.removeAttribute('aria-modal');
+                m.setAttribute('aria-hidden', 'true');
+            });
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+            console.log('✅ Modal state cleaned on page load');
+        } catch (error) {
+            console.warn('⚠️ Error cleaning modal state:', error.message);
+        }
+    }
+
+    function setupGlobalUtilityFunctions() {
+        window.refreshAdminData = function () {
+            console.log('🔄 Refreshing currently visible admin section...');
+            const controller = window.adminPageController;
+            const sectionManager = controller?.sectionManager;
+
+            if (sectionManager && typeof sectionManager.refreshSection === 'function') {
+                const section = sectionManager.state.currentSection || 'batches';
+                return sectionManager.refreshSection(section);
+            }
+
+            console.warn('⚠️ Admin controller not available. Reloading page...');
+            window.location.reload();
+        };
+
+        window.checkModalStates = function () {
+            const modals = document.querySelectorAll('.modal');
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            console.log('🔍 Modal State Report:');
+            console.log(`  - Found ${modals.length} modal elements`);
+            console.log(`  - Found ${backdrops.length} backdrop elements`);
+            console.log(`  - Body has modal-open class: ${document.body.classList.contains('modal-open')}`);
+            modals.forEach((modal, index) => {
+                console.log(`  - Modal ${index + 1}: visible=${modal.classList.contains('show')}, display=${modal.style.display}`);
+            });
+        };
+
+        window.forceHideAllModals = hideAllModalsImmediately;
+
+        window.testModal = function (modalId) {
+            console.log(`🧪 Testing modal: ${modalId}`);
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                const bootstrapModal = new bootstrap.Modal(modal);
+                bootstrapModal.show();
+                console.log(`✅ Modal ${modalId} should now be visible`);
+            } else {
+                console.error(`❌ Modal ${modalId} not found`);
+            }
+        };
+
+        console.log('✅ Global utility functions initialized');
+    }
+
+    window.toggleAdminDebug = function (enable = null) {
+        adminDebugMode = enable !== null ? enable : !adminDebugMode;
+
+        if (window.facadeStudioLoader) {
+            window.facadeStudioLoader.config.debugMode = adminDebugMode;
+        }
+
+        if (window.adminPageController) {
+            window.adminPageController.config.debugMode = adminDebugMode;
+        }
+
+        console.log(`🐛 Admin debug mode: ${adminDebugMode ? 'ENABLED' : 'DISABLED'}`);
+
+        if (adminDebugMode) {
+            console.log(`
+🔧 ADMIN DEBUG COMMANDS AVAILABLE:
+    ┌─────────────────────────────────────────────────────────┐
+    │ Data Management:                                        │
+    │  • refreshAdminData() - Refresh all admin data          │
+    │                                                         │
+    │ Modal Management:                                       │
+    │  • checkModalStates() - Inspect modal states            │
+    │  • forceHideAllModals() - Emergency modal cleanup       │
+    │  • testModal('modalId') - Test specific modal           │
+    │                                                         │
+    │ Advanced Debugging:                                     │
+    │  • window.adminPageController - Access main controller  │
+    │  • window.facadeStudioLoader - Access module loader     │
+    └─────────────────────────────────────────────────────────┘
+            `);
+        }
+    };
+
+    window.toggleAdminDebug(false);
+    console.log('🚀 Admin page initialization script loaded - waiting for DOM and Facade Studio...');
+</script>
+{% endblock %}

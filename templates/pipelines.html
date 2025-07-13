@@ -1,0 +1,177 @@
+{% extends "basic.html" %}
+
+{% block title %}Pipelines - Facade AI Studio{% endblock %}
+
+{% block content %}
+<main class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl p-8 mb-8 text-white">
+        <h1 class="text-4xl font-bold mb-4">Inference Pipeline Management</h1>
+        <p class="text-xl opacity-90">Configure and manage your AI inference pipelines</p>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Pipeline Management</h2>
+                <span id="pipeline-count" class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm font-medium">
+                    Loading...
+                </span>
+            </div>
+            <button id="openPipelineModalBtn" 
+                    data-loading
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                <i class="fas fa-plus"></i>
+                <span>Register New Pipeline</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Pipeline List Container -->
+    <div id="pipelineListContainer" class="space-y-6">
+        <div class="flex items-center justify-center p-8">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">Loading pipelines...</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Pipeline Modal -->
+<div id="pipelineModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
+        <!-- Modal Header -->
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <h3 id="pipelineModalTitle" class="text-xl font-semibold text-gray-900 dark:text-white">Register Pipeline</h3>
+            <button id="pipelineModalCloseBtn" 
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="p-6">
+            <form id="pipelineForm" class="space-y-6">
+                <input type="hidden" id="pipelineFormIdInput">
+
+                <!-- Pipeline Name -->
+                <div class="space-y-2">
+                    <label for="pipelineFormName" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Pipeline Name
+                    </label>
+                    <input type="text" 
+                           id="pipelineFormName" 
+                           required 
+                           placeholder="e.g., Facade Defect Detection"
+                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                </div>
+
+                <!-- Pipeline Version -->
+                <div class="space-y-2">
+                    <label for="pipelineFormVersion" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Version
+                    </label>
+                    <input type="text" 
+                           id="pipelineFormVersion" 
+                           required 
+                           placeholder="e.g., 1.0.0 or v1"
+                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                </div>
+
+                <!-- AML ID -->
+                <div class="space-y-2">
+                    <label for="pipelineFormAmlId" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Azure ML Pipeline ID
+                    </label>
+                    <input type="text" 
+                           id="pipelineFormAmlId" 
+                           required 
+                           placeholder="Azure ML Pipeline ID"
+                           class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        The ID of the registered pipeline in Azure Machine Learning.
+                    </p>
+                </div>
+
+                <!-- Error Alert -->
+                <div id="pipelineModalError" class="hidden bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg">
+                    <!-- Error message will be inserted here -->
+                </div>
+            </form>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
+            <button type="button" 
+                    id="pipelineModalCancelBtn" 
+                    class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                Cancel
+            </button>
+            <button type="submit" 
+                    form="pipelineForm" 
+                    id="pipelineModalSaveBtn"
+                    data-loading
+                    class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                <span id="pipelineModalSaveBtnText">Register Pipeline</span>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+            </section>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="pipelineFormCancelBtn">Cancel</button>
+                <button type="submit" form="pipelineForm" class="btn btn-primary" id="pipelineFormSaveBtn">Save Pipeline</button> {# Use type="submit" and form attribute #}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+    <script src="{{ url_for('static', path='js/pipelineAdmin.js') }}"></script>
+    
+    <script>
+        // Initialize pipeline management functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Modal close functionality
+            const modal = document.getElementById('pipelineModal');
+            const closeBtn = document.getElementById('pipelineModalCloseBtn');
+            const cancelBtn = document.getElementById('pipelineModalCancelBtn');
+            
+            function closeModal() {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+            
+            function openModal() {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+            
+            closeBtn?.addEventListener('click', closeModal);
+            cancelBtn?.addEventListener('click', closeModal);
+            
+            // Close modal when clicking outside
+            modal?.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+            
+            // Open modal button
+            document.getElementById('openPipelineModalBtn')?.addEventListener('click', openModal);
+            
+            // Escape key handler
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+{% endblock %}

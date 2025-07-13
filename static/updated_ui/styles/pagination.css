@@ -1,0 +1,176 @@
+/* Pagination Styles for Admin Cards */
+
+.admin-section-wrapper {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+html.dark .admin-section-wrapper {
+    background: #181f2a !important;
+}
+
+.pagination-controls {
+    border-top: 1px solid #e5e7eb;
+    background: white;
+}
+
+html.dark .pagination-controls {
+    border-top-color: #374151;
+    background: #181f2a !important;
+}
+
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: transparent !important;
+}
+
+@media (max-width: 768px) {
+    .cards-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+        gap: 1rem;
+    }
+}
+
+/* Card containers - force transparent in dark mode */
+html.dark #buildings-cards-container,
+html.dark #models-cards-container,
+html.dark #pipelines-cards-container,
+html.dark #users-cards-container,
+html.dark #batches-cards-container {
+    background: transparent !important;
+}
+
+/* Card backgrounds - force dark in dark mode */
+.admin-card,
+.bg-white.dark\:bg-gray-800 {
+    background: white;
+}
+
+html.dark .admin-card,
+html.dark .bg-white.dark\:bg-gray-800 {
+    background: #232b39 !important;
+}
+
+/* Remove white from grid parent in dark mode */
+html.dark .bg-white,
+html.dark .cards-grid.bg-white {
+    background: transparent !important;
+}
+
+/* Table wrappers */
+.table-wrapper {
+    background: white;
+    border-radius: 0.75rem 0.75rem 0 0;
+    overflow: hidden;
+}
+
+html.dark .table-wrapper {
+    background: #181f2a !important;
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: #d1d5db;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+html.dark .empty-state h3 {
+    color: white;
+}
+
+.empty-state p {
+    color: #6b7280;
+}
+
+html.dark .empty-state p {
+    color: #9ca3af;
+}
+
+/* Pagination info text */
+.pagination-info {
+    font-size: 0.875rem;
+    color: #374151;
+}
+
+html.dark .pagination-info {
+    color: #d1d5db;
+}
+
+/* Card action buttons */
+.card-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.admin-card:hover .card-actions {
+    opacity: 1;
+}
+
+.card-actions button {
+    padding: 0.5rem;
+    color: #9ca3af;
+    transition: color 0.2s ease-in-out;
+}
+
+.card-actions button:hover {
+    color: #3b82f6;
+}
+
+.card-actions button.danger:hover {
+    color: #ef4444;
+}
+
+.card-actions button.success:hover {
+    color: #10b981;
+}
+
+/* Dashboard Stats Cards */
+.dashboard-stats-card {
+    transition: all 0.3s ease;
+}
+
+.dashboard-stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+html.dark .dashboard-stats-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure dashboard cards have proper dark mode styling */
+html.dark .grid .bg-white {
+    background: #232b39 !important;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

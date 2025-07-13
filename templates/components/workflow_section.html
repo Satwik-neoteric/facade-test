@@ -1,0 +1,69 @@
+<section id="workflow" class="py-20 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+                How It Works
+            </h2>
+            <p class="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                A seamless process from deployment to actionable reporting in just three simple steps
+            </p>
+        </div>
+        
+        <div class="relative">
+            <!-- Connection Line -->
+            <div class="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 transform -translate-y-1/2"></div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+                {% for step in data.Workflow %}
+                <div class="text-center group relative">
+                    <!-- Step Number -->
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold z-10">
+                        {{ loop.index }}
+                    </div>
+                    
+                    <!-- Card -->
+                    <div class="bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-xl">
+                        <!-- Icon -->
+                        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="{{ step.icon }} text-3xl text-white"></i>
+                        </div>
+                        
+                        <!-- Content -->
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {{ step.title }}
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {{ step.desc }}
+                        </p>
+                        
+                        <!-- Progress Indicator -->
+                        <div class="mt-6">
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 w-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Call to Action -->
+        <div class="text-center mt-16">
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-8 border border-blue-200 dark:border-blue-800">
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                    Ready to streamline your workflow?
+                </h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
+                    Join thousands of professionals who have transformed their facade analysis process
+                </p>
+                <a href="/api/auth/login" 
+                   class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
+                   data-loading="Getting Started...">
+                    <i class="fas fa-play mr-2"></i>
+                    Start Your Journey
+                </a>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,261 @@
+/* /styles/intro.css */
+
+/* ===== Global Styles & Variables ===== */
+:root {
+  --primary-color: #0d6efd; /* Bootstrap Blue */
+  --dark-color: #212529;    /* Bootstrap Dark */
+  --light-color: #f8f9fa;   /* Bootstrap Light */
+  --text-color: #495057;
+  --light-text-color: #adb5bd; /* Lighter text for dark backgrounds */
+  --white-color: #ffffff;
+  --section-padding: 5rem 0;
+}
+/* /styles/intro.css */
+
+/* This rule in your intro.css will now be applied */
+.navbar-custom-bg {
+  background-color: #000000 !important; 
+}
+
+/* ===== Global Styles & Variables (Scoped to Intro Page) ===== */
+/* :root variables are globally available, but their application is now fully scoped */
+
+/* Scoped body-like styles to the #intro-page-container wrapper.
+   Actual global <body> tag styling for all pages should be in a separate, global CSS file. */
+#intro-page-container {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-color);
+  background-color: var(--white-color);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Add this to your static/css/intro.css file */
+
+
+#intro-page-container h1,
+#intro-page-container h2,
+#intro-page-container h3,
+#intro-page-container h4,
+#intro-page-container h5,
+#intro-page-container h6 {
+  font-weight: 700;
+  color: var(--dark-color); /* Default dark color for headings */
+}
+
+#intro-page-container section {
+  padding: var(--section-padding);
+}
+
+#intro-page-container .section-title {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+#intro-page-container .section-title h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--dark-color); /* Ensure section titles are dark by default on intro page */
+}
+
+#intro-page-container .section-title p {
+  font-size: 1.1rem;
+  color: var(--text-color); /* Default text color for paragraphs in section titles on intro page */
+}
+
+#intro-page-container .btn:hover {
+  transform: translateY(-3px);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* ===== Section-Specific Backgrounds (Scoped) ===== */
+
+/* --- Light Sections --- */
+#intro-page-container #features,
+#intro-page-container #gallery,
+#intro-page-container #team {
+    background-color: var(--light-color);
+}
+
+/* --- Dark Sections --- */
+#intro-page-container #services,
+#intro-page-container #workflow,
+#intro-page-container #contact {
+    background-color: var(--dark-color);
+}
+
+/* ===== Text Color Fixes for Light Sections (Scoped) ===== */
+#intro-page-container #features .section-title h2,
+#intro-page-container #features .section-title p,
+#intro-page-container #gallery .section-title h2,
+#intro-page-container #gallery .section-title p,
+#intro-page-container #team .section-title h2,
+#intro-page-container #team .section-title p {
+    color: var(--dark-color);
+}
+
+#intro-page-container #team .team-member .card-body .card-title {
+    color: var(--dark-color);
+}
+#intro-page-container #team .team-member .card-body .card-text {
+    color: var(--text-color);
+}
+
+
+/* ===== Text Color Fixes for Dark Sections (Scoped) ===== */
+#intro-page-container #services .section-title h2, 
+#intro-page-container #services .section-title p,
+#intro-page-container #workflow .section-title h2, 
+#intro-page-container #workflow .section-title p,
+#intro-page-container #contact  h2, 
+#intro-page-container #contact  p {
+    color: var(--white-color);
+}
+
+#intro-page-container #services h5,
+#intro-page-container #workflow .workflow-item h5,
+#intro-page-container #contact h5 {
+    color: var(--white-color);
+}
+
+#intro-page-container #services p,
+#intro-page-container #contact p {
+    color: var(--light-text-color);
+}
+
+#intro-page-container #workflow .workflow-item p {
+    color: var(--light-text-color) !important;
+}
+
+
+/* ===== Component-Specific Styling (Scoped) ===== */
+
+/* --- Hero Section --- */
+.navbar-custom-bg {
+  position: relative;
+  z-index: 10;
+}
+
+.hero-section::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 0;
+}
+.hero-section .container {
+  position: relative;
+  z-index: 1;
+}
+
+
+#intro-page-container .hero-section {
+  position: relative;
+  background: url('../img/home.png') center center/cover no-repeat;
+  min-height: 65vh; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+  overflow: hidden;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+#intro-page-container .hero-section .btn-light {
+    /* /* font-weight: 600; */
+  margin: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem; 
+}
+
+/* --- General Card Styling (Scoped to Intro Page) --- */
+#intro-page-container .card { 
+    transition: all 0.3s ease;
+    border: none;
+}
+#intro-page-container .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* --- Services Section --- */
+#intro-page-container .service-item {
+  background: rgba(255, 255, 255, 0.04);
+  padding: 2rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 100%;
+  transition: all 0.3s ease;
+}
+#intro-page-container .service-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-5px);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+#intro-page-container .service-item .service-icon i {
+  color: var(--primary-color);
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+/* --- Gallery Section --- */
+#intro-page-container .gallery-item.card {
+  padding: 0;
+  position: relative;
+}
+#intro-page-container .gallery-item img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 0.375rem;
+}
+#intro-page-container .gallery-item .gallery-caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  color: var(--white-color);
+  padding: 1.5rem 1rem 1rem 1rem;
+  border-bottom-left-radius: 0.375rem;
+  border-bottom-right-radius: 0.375rem;
+  transition: opacity 0.3s ease;
+}
+#intro-page-container .gallery-item:hover .gallery-caption {
+    opacity: 0.8;
+}
+
+/* --- Team Section (Light Background, Scoped) --- */
+#intro-page-container .team-member img {
+    border: 5px solid var(--white-color); 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+/* Text within team member cards should be dark on the light #team background */
+/* These are already handled by the general #intro-page-container h5 and p rules */
+
+
+/* --- Workflow Section Enhancement (Scoped) --- */
+#intro-page-container .workflow-item {
+  padding: 2rem 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  height: 100%;
+  transition: all 0.3s ease-in-out;
+}
+
+#intro-page-container .workflow-item:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+#intro-page-container .workflow-item .workflow-icon i {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}

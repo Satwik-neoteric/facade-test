@@ -1,0 +1,57 @@
+{
+  "info": {
+    "description": "Facade Studio Annotations",
+    "date_created": "2025-06-26T16:31:00.761Z"
+  },
+  "images": [
+    {
+      "id": "cam1_1742732917",
+      "file_name": "CabotSQ1/cam/cam1_1742732917.jpg",
+      "width": 3840,
+      "height": 2160
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": "cam1_1742732917",
+      "category_id": 1,
+      "segmentation": [
+        [
+          2033.3804732547062,
+          946.460475265502,
+          1759.5873499039603,
+          1246.507124309526,
+          2112.1426779386593,
+          1359.0250246020648
+        ]
+      ],
+      "area": 145451.83002683963,
+      "bbox": [
+        1759.5873499039603,
+        946.460475265502,
+        352.55532803469896,
+        412.5645493365628
+      ],
+      "iscrowd": 0,
+      "objectId": "1750955445560"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "Defective-Mastic",
+      "supercategory": "Facade"
+    }
+  ],
+  "BatchID": "CabotSQ1",
+  "ImageID": "cam1_1742732917",
+  "id": "cam1_1742732917",
+  "Status": "Labelled",
+  "admin_metadata": {
+    "Validation_User": "",
+    "Validation_Date": "",
+    "Validation_Action": "",
+    "Notes": ""
+  }
+}

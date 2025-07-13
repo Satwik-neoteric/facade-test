@@ -1,0 +1,1692 @@
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("[DEBUG] DOM Content Loaded - Starting label.js initialization");
+    
+    // Wait for main.js to be fully loaded before proceeding
+    const waitForMainJS = () => {
+        return new Promise((resolve) => {
+            const checkMainJS = () => {
+                if (window.AppState && window.mainJsFunctions) {
+                    resolve();
+                } else {
+                    setTimeout(checkMainJS, 50);
+                }
+            };
+            checkMainJS();
+        });
+    };
+    
+    // Initialize after main.js is ready
+    waitForMainJS().then(() => {
+        initializeLabelJS();
+    });
+    
+    async function initializeLabelJS() {
+        console.log("[DEBUG] Main.js detected, initializing label.js");
+        
+        // Check if critical elements exist
+        const criticalElements = {
+            'mode-toggle-switch': document.getElementById('mode-toggle-switch'),
+            'submit-btn': document.getElementById('submit-btn'),
+            'delete-btn': document.getElementById('delete-btn'),
+            'skip-btn': document.getElementById('skip-btn'),
+            'accept-btn': document.getElementById('accept-btn'),
+            'reject-btn': document.getElementById('reject-btn'),
+            'mode-label-left': document.getElementById('mode-label-left'),
+            'mode-label-right': document.getElementById('mode-label-right')
+        };
+        
+        console.log("[DEBUG] Critical elements check:", criticalElements);
+        
+        Object.keys(criticalElements).forEach(key => {
+            if (!criticalElements[key]) {
+                console.error(`[DEBUG] Missing critical element: ${key}`);
+            } else {
+                console.log(`[DEBUG] ✓ Found element: ${key}`, criticalElements[key]);
+            }
+        });
+
+        // State variables
+        let userRoles = [];
+        let currentMode = 'label';
+        let currentBatchId = null;
+        let currentImageId = null;
+        let annotations = [];
+        let categories = [];
+        
+        // Pan functionality state
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
+        let currentPanX = 0;
+        let currentPanY = 0;
+        let currentScale = 1;
+
+        // Get DOM elements - updated to match your HTML
+        const modeToggleSwitch = document.getElementById('mode-toggle-switch');
+        const submitBtn = document.getElementById('submit-btn');
+        const deleteBtn = document.getElementById('delete-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const acceptBtn = document.getElementById('accept-btn');
+        const rejectBtn = document.getElementById('reject-btn');
+        // Batch and image elements
+        const batchSelect = document.getElementById('batch-selector');
+        const imageList = document.getElementById('image-list');
+       
+        // Canvas and annotation elements
+        const annotationCanvas = document.getElementById('annotation-canvas');
+        const ctx = annotationCanvas?.getContext('2d');
+        const annotationList = document.getElementById('annotation-list');
+       
+        // Metadata elements
+        const metadataBox = document.getElementById('metadata-box');
+        const sensorDataTable = document.getElementById('sensor-data-table');
+       
+        // Class buttons
+        const classButtons = document.querySelectorAll('.class-button');
+       
+        // Additional DOM elements
+        const imageContainer = document.getElementById('canvas-container');
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        const mainImage = document.getElementById('main-image');
+        
+        // Sidebar elements
+        const leftSidebar = document.getElementById('left-sidebar');
+        const rightSidebar = document.getElementById('right-sidebar');
+        const collapseLeftBtn = document.getElementById('collapse-left-sidebar');
+        const collapseRightBtn = document.getElementById('collapse-right-sidebar');
+        const expandLeftBtn = document.getElementById('expand-left-sidebar');
+        const expandRightBtn = document.getElementById('expand-right-sidebar');
+        
+        // Bottom panel elements
+        const bottomPanel = document.getElementById('bottom-panel');
+        const collapseBottomBtn = document.getElementById('collapse-bottom-panel');
+        const batchSelectionContainer = document.getElementById('batch-selection-container');
+
+        // Initialize the application
+        try {
+            console.log('Starting initialization...');
+            await initializeUserRoles();
+           
+            if (isLabeller() || isReviewer()) {
+                await loadBatches();
+                await loadCategories();
+                setupEventListeners();
+                setupSidebarCollapse();
+                setupModeToggleRobust(); // Use robust toggle setup from archive
+                setupImagePanZoom();
+                
+                console.log('Application initialized');
+            }
+        } catch (error) {
+            console.error('Initialization failed:', error);
+        }
+
+        // =================================================================
+        // FUNCTION CONSOLIDATION - Replace duplicates with main.js calls
+        // =================================================================
+
+        // 1. IMAGE SELECTION AND LOADING - Use main.js functions
+        function handleImageSelection(imageId, imagePath) {
+            // Delegate to main.js function, but sync local state
+            currentImageId = imageId;
+            if (window.AppState) {
+                window.AppState.currentImageId = imageId;
+            }
+            
+            // Call main.js implementation
+            return window.mainJsFunctions.handleImageSelection(imageId, imagePath);
+        }
+
+        function loadImage(imagePath, loadId) {
+            // Delegate to main.js function
+            return window.mainJsFunctions.loadImage(imagePath, loadId);
+        }
+
+        // 2. BATCH MANAGEMENT - Use main.js functions
+        function loadBatches() {
+            console.log("[DEBUG] Loading batches via main.js");
+            return window.mainJsFunctions.loadBatches();
+        }
+
+        function handleBatchSelection(batchId) {
+            // Sync local state before delegating
+            currentBatchId = batchId;
+            if (window.AppState) {
+                window.AppState.currentBatch = batchId;
+            }
+            
+            console.log("[DEBUG] Handling batch selection via main.js:", batchId);
+            return window.mainJsFunctions.handleBatchSelection(batchId);
+        }
+
+        // Alias for backward compatibility
+        function populateImageList(images) {
+            console.log("[DEBUG] populateImageList redirecting to main.js displayBatchImages");
+            return window.mainJsFunctions.displayBatchImages ? 
+                window.mainJsFunctions.displayBatchImages(images, currentBatchId) :
+                displayBatchImages(images, currentBatchId);
+        }
+
+        // 3. ANNOTATIONS - Use main.js functions
+        function loadAnnotationsForImage(batchId, imageId) {
+            console.log("[DEBUG] Loading annotations via main.js");
+            // Convert to main.js function call
+            const imagePath = window.AppState?.currentImage || window.AppState?.currentImageFilename;
+            if (imagePath) {
+                return window.mainJsFunctions.loadAnnotations(imagePath, batchId, imageId);
+            } else {
+                console.warn("[DEBUG] No image path available for loading annotations");
+                return Promise.resolve();
+            }
+        }
+
+        function saveAnnotationsToServer() {
+            console.log("[DEBUG] Saving annotations via main.js");
+            return window.mainJsFunctions.saveAnnotations();
+        }
+
+        // 4. NAVIGATION - Use main.js functions
+        function loadNextImage() {
+            console.log("[DEBUG] Loading next image via main.js");
+            return window.mainJsFunctions.navigateToNextImage();
+        }
+
+        function skipImage() {
+            console.log('[DEBUG] Skipping image via main.js navigation');
+            
+            // Use main.js navigation throttling
+            if (!window.mainJsFunctions.canNavigate()) {
+                return;
+            }
+            
+            // Clear any existing state before moving to next image
+            if (window.AppState) {
+                window.AppState.annotations = [];
+            }
+            annotations = [];
+            
+            if (ctx) {
+                clearCanvas();
+            }
+            updateAnnotationList();
+            
+            // Use main.js navigation
+            return window.mainJsFunctions.navigateToNextImage().then(success => {
+                if (success) {
+                    showMessage('Image skipped', 'info');
+                } else {
+                    showMessage('No more images available', 'info');
+                }
+                return success;
+            });
+        }
+
+        // 5. MESSAGING AND STATUS - Use main.js functions
+        function showMessage(message, type = 'info') {
+            if (window.mainJsFunctions.showMessage) {
+                return window.mainJsFunctions.showMessage(message, type);
+            } else {
+                // Fallback implementation
+                console.log(`[${type.toUpperCase()}] ${message}`);
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'error' ? '#dc2626' : type === 'warning' ? '#d97706' : type === 'success' ? '#059669' : '#3b82f6'};
+                    color: white;
+                    padding: 12px 16px;
+                    border-radius: 6px;
+                    z-index: 1000;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 3000);
+            }
+        }
+
+        function updateStatus(elementId, text) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.textContent = text;
+            }
+        }
+
+        // 6. SENSOR DATA - Use main.js functions
+        function loadSensorDataForImage(batchId, imageId) {
+            console.log("[DEBUG] Loading sensor data via main.js");
+            return window.mainJsFunctions.loadSensorData(batchId, imageId);
+        }
+
+        function updateSensorDisplay(sensor) {
+            console.log("[DEBUG] Updating sensor display via main.js");
+            return window.mainJsFunctions.displaySensorData(sensor);
+        }
+
+        // 7. CANVAS OPERATIONS - Use main.js functions where available
+        function clearCanvas() {
+            if (window.mainJsFunctions.clearCanvas) {
+                return window.mainJsFunctions.clearCanvas();
+            } else if (ctx && annotationCanvas) {
+                ctx.clearRect(0, 0, annotationCanvas.width, annotationCanvas.height);
+            }
+        }
+
+        function resetPanZoom() {
+            currentPanX = 0;
+            currentPanY = 0;
+            currentScale = 1;
+            updateImageTransform();
+            updateStatus('zoom-status', 'Full');
+            console.log('Pan/zoom reset');
+        }
+
+        function fitImageToContainer() {
+            const img = document.getElementById('main-image');
+            if (!img || !imageContainer) return;
+            
+            const containerRect = imageContainer.getBoundingClientRect();
+            const imgRect = img.getBoundingClientRect();
+            
+            const scaleX = containerRect.width / img.naturalWidth;
+            const scaleY = containerRect.height / img.naturalHeight;
+            currentScale = Math.min(scaleX, scaleY, 1);
+            
+            currentPanX = (containerRect.width - img.naturalWidth * currentScale) / 2;
+            currentPanY = (containerRect.height - img.naturalHeight * currentScale) / 2;
+            
+            updateImageTransform();
+            updateStatus('zoom-status', `${Math.round(currentScale * 100)}%`);
+            console.log('Image fitted to container');
+        }
+
+        // Replace the existing toggle functions with these corrected versions:
+
+function setupModeToggleRobust() {
+    console.log("[DEBUG] Starting robust toggle setup");
+    
+    const toggle = document.getElementById('mode-toggle-switch');
+    if (!toggle) {
+        console.error("[DEBUG] Mode toggle switch element not found!");
+        return;
+    }
+    
+    console.log("[DEBUG] Toggle element found:", toggle);
+    
+    // Wait longer and try multiple times if needed
+    setTimeout(() => {
+        console.log("[DEBUG] Setting up toggle after delay");
+        
+        // Check user roles
+        if (isLabeller() && isReviewer()) {
+            toggle.checked = currentMode === 'validate';
+            toggle.disabled = false;
+            console.log("[DEBUG] Toggle enabled for dual-role user, checked:", toggle.checked);
+        } else {
+            toggle.disabled = true;
+            console.log("[DEBUG] Toggle disabled - user roles:", { labeller: isLabeller(), reviewer: isReviewer() });
+            return; // Don't set up event listeners if disabled
+        }
+        
+        // Remove any existing event listeners by cloning
+        const newToggle = toggle.cloneNode(true);
+        toggle.parentNode.replaceChild(newToggle, toggle);
+        console.log("[DEBUG] Toggle element cloned and replaced");
+        
+        // Set up event listeners on the new element
+        setupRobustToggleEventListeners(newToggle);
+        addToggleVisualFeedback(newToggle);
+        
+        // Initial styling update
+        updateLabelStyling(newToggle.checked);
+        
+    }, 200); // Increased delay
+}
+
+function setupRobustToggleEventListeners(toggle) {
+    console.log("[DEBUG] Setting up robust toggle event listeners");
+    
+    // Main change event with detailed logging
+    toggle.addEventListener('change', function(e) {
+        console.log("[DEBUG] Toggle changed - checked:", this.checked, "disabled:", this.disabled);
+        if (!this.disabled) {
+            handleModeToggle.call(this, e);
+        } else {
+            console.log("[DEBUG] Toggle change ignored - element is disabled");
+        }
+    });
+    
+    // Find toggle container with multiple fallback methods
+    let toggleContainer = null;
+    
+    // Method 1: Look for parent with toggle-switch class
+    toggleContainer = toggle.closest('.toggle-switch');
+    
+    // Method 2: Look for next sibling div
+    if (!toggleContainer) {
+        toggleContainer = toggle.nextElementSibling;
+    }
+    
+    // Method 3: Look for parent div
+    if (!toggleContainer) {
+        toggleContainer = toggle.parentElement;
+    }
+    
+    console.log("[DEBUG] Toggle container found:", toggleContainer);
+    
+    // Set up container clicking if found
+    if (toggleContainer) {
+        toggleContainer.addEventListener('click', function(e) {
+            console.log("[DEBUG] Toggle container clicked");
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isLabeller() && isReviewer() && !toggle.disabled) {
+                console.log("[DEBUG] Toggling via container click");
+                toggle.checked = !toggle.checked;
+                const changeEvent = new Event('change', { bubbles: true });
+                toggle.dispatchEvent(changeEvent);
+            } else {
+                console.log("[DEBUG] Container click ignored - insufficient permissions or disabled");
+            }
+        });
+        
+        // Prevent toggle from being clicked twice
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    // Label clicking with improved selectors
+    const labelLeft = document.getElementById('mode-label-left');
+    const labelRight = document.getElementById('mode-label-right');
+    
+    console.log("[DEBUG] Labels found - Left:", labelLeft, "Right:", labelRight);
+    
+    if (labelLeft) {
+        labelLeft.addEventListener('click', function(e) {
+            console.log("[DEBUG] Left label clicked (Label mode)");
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isLabeller() && isReviewer() && !toggle.disabled) {
+                console.log("[DEBUG] Setting to label mode");
+                toggle.checked = false;
+                const changeEvent = new Event('change', { bubbles: true });
+                toggle.dispatchEvent(changeEvent);
+            } else {
+                console.log("[DEBUG] Left label click ignored");
+            }
+        });
+        
+        // Add cursor pointer
+        labelLeft.style.cursor = 'pointer';
+    }
+    
+    if (labelRight) {
+        labelRight.addEventListener('click', function(e) {
+            console.log("[DEBUG] Right label clicked (Validate mode)");
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (isLabeller() && isReviewer() && !toggle.disabled) {
+                console.log("[DEBUG] Setting to validate mode");
+                toggle.checked = true;
+                const changeEvent = new Event('change', { bubbles: true });
+                toggle.dispatchEvent(changeEvent);
+            } else {
+                console.log("[DEBUG] Right label click ignored");
+            }
+        });
+        
+        // Add cursor pointer
+        labelRight.style.cursor = 'pointer';
+    }
+    
+    toggle._hasToggleListeners = true;
+    console.log("[DEBUG] Toggle event listeners setup complete");
+}
+
+function addToggleVisualFeedback(toggle) {
+    console.log("[DEBUG] Adding visual feedback to toggle");
+    
+    // Find the toggle container using multiple methods
+    let toggleContainer = toggle.closest('.toggle-switch') || 
+                         toggle.nextElementSibling || 
+                         toggle.parentElement;
+    
+    const labelLeft = document.getElementById('mode-label-left');
+    const labelRight = document.getElementById('mode-label-right');
+    
+    if (toggleContainer) {
+        console.log("[DEBUG] Adding hover effects to toggle container");
+        
+        // Hover effects for toggle container
+        toggleContainer.addEventListener('mouseenter', function() {
+            if (!toggle.disabled) {
+                this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+                this.style.transition = 'box-shadow 0.2s ease';
+            }
+        });
+        
+        toggleContainer.addEventListener('mouseleave', function() {
+            this.style.boxShadow = '';
+        });
+        
+        // Click feedback
+        toggleContainer.addEventListener('mousedown', function() {
+            if (!toggle.disabled) {
+                this.style.transform = 'scale(0.95)';
+                this.style.transition = 'transform 0.1s ease';
+            }
+        });
+        
+        toggleContainer.addEventListener('mouseup', function() {
+            this.style.transform = '';
+        });
+    }
+    
+    // Label hover effects
+    [labelLeft, labelRight].forEach((label, index) => {
+        if (label) {
+            console.log(`[DEBUG] Adding hover effects to label ${index === 0 ? 'left' : 'right'}`);
+            
+            label.addEventListener('mouseenter', function() {
+                if (isLabeller() && isReviewer() && !toggle.disabled) {
+                    this.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                    this.style.borderRadius = '4px';
+                    this.style.padding = '2px 4px';
+                    this.style.transition = 'background-color 0.2s ease';
+                }
+            });
+            
+            label.addEventListener('mouseleave', function() {
+                this.style.backgroundColor = '';
+                this.style.borderRadius = '';
+                this.style.padding = '';
+            });
+            
+            // Click feedback
+            label.addEventListener('mousedown', function() {
+                if (isLabeller() && isReviewer() && !toggle.disabled) {
+                    this.style.transform = 'scale(0.95)';
+                    this.style.transition = 'transform 0.1s ease';
+                }
+            });
+            
+            label.addEventListener('mouseup', function() {
+                this.style.transform = '';
+            });
+        }
+    });
+}
+
+function handleModeToggle(e) {
+    console.log("[DEBUG] handleModeToggle called, checked:", this.checked);
+    
+    if (!(isLabeller() && isReviewer())) {
+        console.log("[DEBUG] User doesn't have both roles, toggle disabled");
+        this.checked = currentMode === 'validate'; // Revert to current state
+        return;
+    }
+    
+    if (this.disabled) {
+        console.log("[DEBUG] Toggle is disabled, ignoring change");
+        return;
+    }
+    
+    const isValidateMode = this.checked;
+    const oldMode = currentMode;
+    currentMode = isValidateMode ? 'validate' : 'label';
+    
+    console.log(`[DEBUG] Mode toggle: ${oldMode} -> ${currentMode}`);
+    
+    // Update label styling
+    updateLabelStyling(isValidateMode);
+    
+    // Update UI for the new mode
+    updateUIForMode(isValidateMode);
+    
+    // Sync with main.js if available
+    if (window.AppState) {
+        window.AppState.currentMode = currentMode;
+        console.log("[DEBUG] Updated AppState.currentMode to:", currentMode);
+    }
+    
+    // Call main.js toggle function if available
+    if (typeof window.toggleValidationMode === 'function') {
+        console.log("[DEBUG] Calling window.toggleValidationMode");
+        window.toggleValidationMode(isValidateMode);
+    } else {
+        console.log("[DEBUG] window.toggleValidationMode not available");
+    }
+    
+    // Show user feedback
+    showMessage(`Switched to ${currentMode} mode`, 'info');
+    
+    console.log(`[DEBUG] Mode successfully changed to: ${currentMode}`);
+}
+
+function updateLabelStyling(isValidateMode) {
+    console.log("[DEBUG] Updating label styling for mode:", isValidateMode ? 'validate' : 'label');
+    
+    const labelLeft = document.getElementById('mode-label-left');
+    const labelRight = document.getElementById('mode-label-right');
+    
+    if (labelLeft && labelRight) {
+        // Reset all classes first
+        labelLeft.classList.remove('text-blue-600', 'text-blue-500', 'text-gray-500');
+        labelRight.classList.remove('text-blue-600', 'text-blue-500', 'text-gray-500');
+        
+        if (isValidateMode) {
+            // Validate mode (right side active)
+            labelLeft.style.fontWeight = 'normal';
+            labelLeft.classList.add('text-gray-500');
+            
+            labelRight.style.fontWeight = 'bold';
+            labelRight.classList.add('text-blue-600');
+            
+            console.log("[DEBUG] Styled for validate mode - left gray, right blue");
+        } else {
+            // Label mode (left side active)
+            labelLeft.style.fontWeight = 'bold';
+            labelLeft.classList.add('text-blue-600');
+            
+            labelRight.style.fontWeight = 'normal';
+            labelRight.classList.add('text-gray-500');
+            
+            console.log("[DEBUG] Styled for label mode - left blue, right gray");
+        }
+    } else {
+        console.error("[DEBUG] Label elements not found for styling");
+    }
+}
+
+        // =================================================================
+        // REMAINING LABEL.JS SPECIFIC FUNCTIONS (keep as-is)
+        // =================================================================
+
+        // Role management
+        async function initializeUserRoles() {
+            try {
+                console.log('🔍 Fetching user info...');
+                const response = await fetch('/api/users/me');
+                if (!response.ok) throw new Error('Failed to fetch user info');
+                const userData = await response.json();
+                userRoles = userData.roles || [];
+                console.log('👤 User roles:', userRoles);
+                await setupBasedOnRole();
+            } catch (error) {
+                console.error('❌ Error initializing user:', error);
+            }
+        }
+ 
+        function isAdministrator() {
+            const hasAdminRole = userRoles.includes('Administrator');
+            const hasMainJsAdminRole = window.AppState?.user?.role === 'Default Admin';
+            return hasAdminRole || hasMainJsAdminRole;
+        }
+ 
+        function isLabeller() {
+            const hasLabellerRole = userRoles.includes('Labeller');
+            const hasMainJsAdminRole = window.AppState?.user?.role === 'Default Admin';
+            return hasLabellerRole || isAdministrator() || hasMainJsAdminRole;
+        }
+ 
+        function isReviewer() {
+            const hasReviewerRole = userRoles.includes('Reviewer');
+            const hasMainJsReviewerRole = window.AppState?.user?.role === 'Reviewer';
+            const hasMainJsAdminRole = window.AppState?.user?.role === 'Default Admin';
+            return hasReviewerRole || isAdministrator() || hasMainJsReviewerRole || hasMainJsAdminRole;
+        }
+
+        async function setupBasedOnRole() {
+            console.group('[DEBUG] Setting up UI based on roles');
+            console.log('Label.js roles (array):', userRoles);
+            console.log('Main.js role (string):', window.AppState?.user?.role);
+            console.log('isAdministrator:', isAdministrator());
+            console.log('isReviewer:', isReviewer());
+            console.log('isLabeller:', isLabeller());
+            console.log('Has both roles (can toggle):', isLabeller() && isReviewer());
+           
+            // Hide all action buttons initially except Skip
+            if (acceptBtn) acceptBtn.style.display = 'none';
+            if (rejectBtn) rejectBtn.style.display = 'none';
+            if (submitBtn) submitBtn.style.display = 'none';
+            if (deleteBtn) deleteBtn.style.display = 'none';
+            
+            // Ensure Skip button is always visible
+            if (skipBtn) {
+                skipBtn.style.display = 'inline-flex';
+                skipBtn.disabled = false;
+                console.log('[DEBUG] Initial setup - Skip button made visible and enabled');
+            }
+ 
+            if (isReviewer() && !isLabeller()) {
+                // Pure Reviewer
+                console.log('[DEBUG] User is pure Reviewer only');
+                currentMode = 'validate';
+                if (modeToggleSwitch) {
+                    modeToggleSwitch.checked = true;
+                    modeToggleSwitch.disabled = true;
+                }
+                if (acceptBtn) acceptBtn.style.display = 'inline-flex';
+                if (rejectBtn) rejectBtn.style.display = 'inline-flex';
+               
+                if (annotationCanvas) {
+                    annotationCanvas.style.pointerEvents = 'none';
+                    annotationCanvas.style.opacity = '0.5';
+                }
+                
+                if (typeof window.toggleValidationMode === 'function') {
+                    window.toggleValidationMode(true);
+                }
+            } else if (isLabeller() && !isReviewer()) {
+                // Pure Labeller
+                console.log('[DEBUG] User is pure Labeller only');
+                currentMode = 'label';
+                if (modeToggleSwitch) {
+                    modeToggleSwitch.checked = false;
+                    modeToggleSwitch.disabled = true;
+                }
+                if (submitBtn) submitBtn.style.display = 'inline-flex';
+                if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+                
+                if (typeof window.toggleValidationMode === 'function') {
+                    window.toggleValidationMode(false);
+                }
+            } else if (isLabeller() && isReviewer()) {
+                // User has BOTH roles
+                console.log('[DEBUG] User has both roles (Admin or dual-role user), enabling toggle');
+                currentMode = 'label';
+                
+                setupModeToggle();
+                updateUIForMode(false);
+            } else {
+                console.error('[DEBUG] User has no valid roles');
+            }
+            
+            updateLabelStyling(currentMode === 'validate');
+            console.groupEnd();
+        }
+
+        function updateUIForMode(isValidateMode) {
+            currentMode = isValidateMode ? 'validate' : 'label';
+            
+            console.log(`[DEBUG] updateUIForMode called with isValidateMode: ${isValidateMode}`);
+            
+            if (isValidateMode) {
+                console.log('[DEBUG] Switching to validate mode');
+                
+                if (submitBtn) {
+                    submitBtn.style.display = 'none';
+                    console.log('[DEBUG] Hiding submit button');
+                }
+                if (deleteBtn) {
+                    deleteBtn.style.display = 'none';
+                    console.log('[DEBUG] Hiding delete button');
+                }
+                
+                if (acceptBtn) {
+                    acceptBtn.style.display = 'inline-flex';
+                    console.log('[DEBUG] Showing accept button');
+                }
+                if (rejectBtn) {
+                    rejectBtn.style.display = 'inline-flex';
+                    console.log('[DEBUG] Showing reject button');
+                }
+                
+                if (skipBtn) {
+                    skipBtn.style.display = 'inline-flex !important';
+                    skipBtn.disabled = false;
+                    skipBtn.setAttribute('style', 'display: inline-flex !important; visibility: visible !important;');
+                    skipBtn.setAttribute('data-always-visible', 'true');
+                    console.log('[DEBUG] Keeping skip button visible and enabled with forced styles');
+                }
+                
+                if (annotationCanvas) {
+                    annotationCanvas.style.pointerEvents = 'none';
+                    console.log('[DEBUG] Disabled canvas interaction');
+                }
+                
+                const classButtons = document.querySelectorAll('.class-button');
+                classButtons.forEach(button => {
+                    button.disabled = true;
+                    button.classList.add('opacity-50', 'cursor-not-allowed');
+                });
+                
+            } else {
+                console.log('[DEBUG] Switching to label mode');
+                
+                if (acceptBtn) {
+                    acceptBtn.style.display = 'none';
+                    console.log('[DEBUG] Hiding accept button');
+                }
+                if (rejectBtn) {
+                    rejectBtn.style.display = 'none';
+                    console.log('[DEBUG] Hiding reject button');
+                }
+                
+                if (isLabeller()) {
+                    if (submitBtn) {
+                        submitBtn.style.display = 'inline-flex';
+                        console.log('[DEBUG] Showing submit button');
+                    }
+                    if (deleteBtn) {
+                        deleteBtn.style.display = 'inline-flex';
+                        console.log('[DEBUG] Showing delete button');
+                    }
+                    
+                    if (annotationCanvas) {
+                        annotationCanvas.style.pointerEvents = 'auto';
+                        console.log('[DEBUG] Enabled canvas interaction');
+                    }
+                }
+                
+                if (skipBtn) {
+                    skipBtn.style.display = 'inline-flex !important';
+                    skipBtn.disabled = false;
+                    skipBtn.setAttribute('style', 'display: inline-flex !important; visibility: visible !important;');
+                    skipBtn.setAttribute('data-always-visible', 'true');
+                    console.log('[DEBUG] Keeping skip button visible and enabled with forced styles');
+                }
+                
+                const classButtons = document.querySelectorAll('.class-button');
+                classButtons.forEach(button => {
+                    button.disabled = false;
+                    button.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            }
+            
+            const modeStatus = document.getElementById('mode-status');
+            if (modeStatus) {
+                modeStatus.textContent = isValidateMode ? 'Validate' : 'Label';
+                modeStatus.className = isValidateMode ? 'text-orange-400' : 'text-blue-400';
+            }
+            
+            if (isValidateMode) {
+                document.body.classList.add('validation-mode');
+            } else {
+                document.body.classList.remove('validation-mode');
+            }
+            
+            console.log(`Mode switched to: ${currentMode}`);
+        }
+
+        function setupEventListeners() {
+            if (batchSelect) {
+                batchSelect.addEventListener('change', function() {
+                    handleBatchSelection(this.value);
+                });
+            }
+           
+            if (submitBtn) {
+                submitBtn.addEventListener('click', submitAnnotations);
+            }
+           
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', acceptAnnotations);
+            }
+           
+            if (rejectBtn) {
+                rejectBtn.addEventListener('click', rejectAnnotations);
+            }
+           
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', deleteAnnotations);
+            }
+           
+            if (skipBtn) {
+                const newSkipBtn = skipBtn.cloneNode(true);
+                skipBtn.parentNode.replaceChild(newSkipBtn, skipBtn);
+                
+                newSkipBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('[DEBUG] Skip button clicked');
+                    
+                    setTimeout(() => {
+                        skipImage();
+                    }, 50);
+                });
+                
+                window.skipBtn = newSkipBtn;
+            }
+           
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('class-button')) {
+                    const classButtons = document.querySelectorAll('.class-button');
+                    classButtons.forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                }
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'f' || e.key === 'F') {
+                    e.preventDefault();
+                    fitImageToContainer();
+                }
+                else if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    resetPanZoom();
+                }
+                else if (e.key === ' ' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    fitImageToContainer();
+                }
+            });
+            
+            console.log('Event listeners set up successfully');
+        }
+
+        // Load categories
+        function loadCategories() {
+            fetch('/api/classes')
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    categories = data || [];
+                })
+                .catch(error => {
+                    console.error('Error loading categories:', error);
+                    categories = [];
+                });
+        }
+
+        // Drawing Annotations (simplified since main.js handles most annotation logic)
+        function drawAnnotations() {
+            if (!annotationCanvas || !ctx) return;
+           
+            clearCanvas();
+            if (!annotations || !annotations.length) return;
+           
+            annotations.forEach(annotation => {
+                drawAnnotation(annotation);
+            });
+        }
+ 
+        function drawAnnotation(annotation) {
+            if (!ctx) return;
+            
+            let points = [];
+            
+            if (annotation.segmentation && annotation.segmentation.length > 0) {
+                const segmentation = annotation.segmentation[0];
+                for (let i = 0; i < segmentation.length; i += 2) {
+                    points.push({ x: segmentation[i], y: segmentation[i + 1] });
+                }
+            } else if (annotation.points && Array.isArray(annotation.points)) {
+                points = annotation.points;
+            } else {
+                console.warn('Annotation has no valid points data:', annotation);
+                return;
+            }
+            
+            if (points.length < 3) {
+                console.warn('Annotation has insufficient points:', points.length);
+                return;
+            }
+           
+            const categoryId = annotation.category_id || annotation.categoryId;
+            const category = categories.find(c => c.id === categoryId || c.name === annotation.categoryName);
+            const color = category?.color || '#FF0000';
+           
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.fillStyle = `${color}33`;
+           
+            ctx.beginPath();
+            const firstPoint = normalizePoint(points[0]);
+            ctx.moveTo(firstPoint.x, firstPoint.y);
+           
+            for (let i = 1; i < points.length; i++) {
+                const point = normalizePoint(points[i]);
+                ctx.lineTo(point.x, point.y);
+            }
+           
+            ctx.closePath();
+            ctx.stroke();
+            ctx.fill();
+        }
+ 
+        function normalizePoint(point) {
+            const img = document.getElementById('main-image');
+            if (!img) return { x: 0, y: 0 };
+           
+            return {
+                x: (point.x / img.naturalWidth) * annotationCanvas.width,
+                y: (point.y / img.naturalHeight) * annotationCanvas.height
+            };
+        }
+
+        // Update the annotation list
+        function updateAnnotationList() {
+            if (!annotationList) return;
+           
+            annotationList.innerHTML = '';
+            
+            const currentAnnotations = window.AppState?.annotations || annotations || [];
+           
+            if (!currentAnnotations || !currentAnnotations.length) {
+                annotationList.innerHTML = '<div class="empty">No annotations yet</div>';
+                return;
+            }
+           
+            currentAnnotations.forEach((annotation, index) => {
+                const categoryId = annotation.category_id || annotation.categoryId;
+                const category = categories.find(c => c.id === categoryId || c.name === annotation.categoryName);
+                const categoryName = category?.name || `Category ${categoryId}` || 'Unknown';
+                const color = category?.color || '#FF0000';
+               
+                const item = document.createElement('li');
+                item.className = 'annotation-item';
+                item.innerHTML = `
+                    <span class="category-badge" style="background-color: ${color}">${categoryName}</span>
+                    <div class="annotation-actions">
+                        <button class="btn-edit" data-index="${index}">Edit</button>
+                        <button class="btn-delete" data-index="${index}">Delete</button>
+                    </div>
+                `;
+               
+                annotationList.appendChild(item);
+            });
+        }
+
+        // Button action functions
+        function submitAnnotations() {
+            if (!isLabeller()) {
+                console.warn('Submit action is only available for labellers');
+                return;
+            }
+            syncBatchAndImageFromAppState();
+            console.log('Submitting annotations for image:', currentImageId);
+            
+            const currentAnnotations = window.AppState?.annotations || annotations || [];
+            console.log('Current annotations count:', currentAnnotations.length);
+            
+            if (!currentAnnotations || currentAnnotations.length === 0) {
+                showMessage('No annotations to submit', 'warning');
+                return;
+            }
+            
+            saveAnnotationsToServer().then(success => {
+                if (success) {
+                    showMessage('Annotations submitted successfully', 'success');
+                    loadNextImage();
+                } else {
+                    showMessage('Error submitting annotations', 'error');
+                }
+            }).catch(error => {
+                console.error('Error submitting annotations:', error);
+                showMessage('Error submitting annotations: ' + error.message, 'error');
+            });
+        }
+ 
+        function acceptAnnotations() {
+            if (!isReviewer()) {
+                console.warn('Accept action is only available for reviewers');
+                return;
+            }
+            
+            console.log('Accepting annotations for image:', currentImageId);
+            
+            saveValidationStatus('accepted').then(() => {
+                showMessage('Annotations accepted', 'success');
+                loadNextImage();
+            }).catch(error => {
+                console.error('Error accepting annotations:', error);
+                showMessage('Error accepting annotations: ' + error.message, 'error');
+            });
+        }
+ 
+        function rejectAnnotations() {
+            if (!isReviewer()) {
+                console.warn('Reject action is only available for reviewers');
+                return;
+            }
+            
+            console.log('Rejecting annotations for image:', currentImageId);
+            
+            saveValidationStatus('rejected').then(() => {
+                showMessage('Annotations rejected', 'warning');
+                loadNextImage();
+            }).catch(error => {
+                console.error('Error rejecting annotations:', error);
+                showMessage('Error rejecting annotations: ' + error.message, 'error');
+            });
+        }
+ 
+        function deleteAnnotations() {
+            if (!isLabeller()) {
+                console.warn('Delete action is only available for labellers');
+                return;
+            }
+            
+            console.log('Deleting annotations for image:', currentImageId);
+            
+            if (!confirm('Are you sure you want to delete all annotations for this image?')) {
+                return;
+            }
+            
+            showMessage('Deleting annotations...', 'info');
+            
+            annotations = [];
+            if (window.AppState) {
+                window.AppState.annotations = [];
+            }
+            clearCanvas();
+            updateAnnotationList();
+            
+            saveAnnotationsToServer().then(() => {
+                showMessage('Annotations deleted successfully', 'success');
+            }).catch(error => {
+                console.error('Error deleting annotations:', error);
+                showMessage('Error deleting annotations: ' + error.message, 'error');
+                
+                return deleteAnnotationsAlternative();
+            }).catch(fallbackError => {
+                console.error('Fallback delete method also failed:', fallbackError);
+                showMessage('Failed to delete annotations from server', 'error');
+            });
+        }
+        
+        async function deleteAnnotationsAlternative() {
+            const batchId = window.AppState?.currentBatch || currentBatchId;
+            const imageId = window.AppState?.currentImageId || currentImageId;
+            
+            if (!batchId || !imageId) {
+                throw new Error('No batch or image selected');
+            }
+            
+            try {
+                const response = await fetch('/api/annotations/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        batch_id: batchId,
+                        image_id: imageId
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Clear endpoint failed: ${response.statusText}`);
+                }
+                
+                console.log('Successfully cleared annotations via clear endpoint');
+            } catch (clearError) {
+                console.warn('Clear endpoint not available, trying DELETE method:', clearError);
+                
+                const deleteResponse = await fetch(`/api/annotations/${batchId}/${imageId}?batch_id=${batchId}&image_id=${imageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!deleteResponse.ok) {
+                    throw new Error(`DELETE request failed: ${deleteResponse.statusText}`);
+                }
+                
+                console.log('Successfully deleted annotations via DELETE method');
+            }
+        }
+
+        // Helper to sync local batch/image IDs with AppState
+        function syncBatchAndImageFromAppState() {
+            if (window.AppState) {
+                currentBatchId = window.AppState.currentBatch || currentBatchId;
+                currentImageId = window.AppState.currentImageId || currentImageId;
+            }
+        }
+        
+        // Setup sidebar collapse functionality
+        function setupSidebarCollapse() {
+            if (collapseLeftBtn && leftSidebar) {
+                collapseLeftBtn.addEventListener('click', function() {
+                    leftSidebar.classList.add('collapsed');
+                    const icon = collapseLeftBtn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-chevron-right';
+                    
+                    window.dispatchEvent(new Event('resize'));
+                });
+            }
+            
+            if (expandLeftBtn && leftSidebar) {
+                expandLeftBtn.addEventListener('click', function() {
+                    leftSidebar.classList.remove('collapsed');
+                    const icon = collapseLeftBtn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-chevron-left';
+                    
+                    window.dispatchEvent(new Event('resize'));
+                });
+            }
+            
+            if (collapseRightBtn && rightSidebar) {
+                collapseRightBtn.addEventListener('click', function() {
+                    rightSidebar.classList.add('collapsed');
+                    const icon = collapseRightBtn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-chevron-left';
+                    
+                    window.dispatchEvent(new Event('resize'));
+                });
+            }
+            
+            if (expandRightBtn && rightSidebar) {
+                expandRightBtn.addEventListener('click', function() {
+                    rightSidebar.classList.remove('collapsed');
+                    const icon = collapseRightBtn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-chevron-right';
+                    
+                    window.dispatchEvent(new Event('resize'));
+                });
+            }
+            
+            if (collapseBottomBtn && bottomPanel) {
+                collapseBottomBtn.addEventListener('click', function() {
+                    bottomPanel.classList.toggle('collapsed');
+                    const icon = collapseBottomBtn.querySelector('i');
+                    
+                    if (bottomPanel.classList.contains('collapsed')) {
+                        if (icon) icon.className = 'fas fa-chevron-up';
+                    } else {
+                        if (icon) icon.className = 'fas fa-chevron-down';
+                    }
+                    
+                    window.dispatchEvent(new Event('resize'));
+                });
+            }
+        }
+        
+        // Setup mode toggle functionality
+        function setupModeToggle() {
+            console.log("[DEBUG] Starting setupModeToggle");
+            
+            const toggle = document.getElementById('mode-toggle-switch');
+            
+            if (!toggle) {
+                console.error("[DEBUG] Mode toggle switch element not found in DOM!");
+                return;
+            }
+            
+            console.log("[DEBUG] Setting up mode toggle in label.js");
+            
+            setTimeout(() => {
+                console.log("[DEBUG] Setting toggle state after delay");
+                
+                if (isLabeller() && isReviewer()) {
+                    toggle.checked = currentMode === 'validate';
+                    toggle.disabled = false;
+                    console.log("[DEBUG] Toggle state set for dual-role user - checked:", toggle.checked, "disabled:", toggle.disabled);
+                } else {
+                    console.log("[DEBUG] Single role user - toggle controlled by main.js");
+                }
+                
+                const newToggle = toggle.cloneNode(true);
+                toggle.parentNode.replaceChild(newToggle, toggle);
+                
+                setupToggleEventListeners(newToggle);
+                
+            }, 100);
+        }
+        
+        function setupToggleEventListeners(toggle) {
+            console.log("[DEBUG] Setting up event listeners for toggle");
+            
+            toggle.addEventListener('change', function(e) {
+                console.log("[DEBUG] Toggle changed via change event:", this.checked);
+                handleModeToggle.call(this, e);
+            });
+            
+            toggle.addEventListener('click', function(e) {
+                console.log("[DEBUG] Toggle clicked:", this.checked);
+                handleToggleClick.call(this, e);
+            });
+            
+            const toggleContainer = document.querySelector('.mode-toggle-container');
+            if (toggleContainer) {
+                toggleContainer.addEventListener('click', function(e) {
+                    if (e.target === toggleLabel || e.target === toggleDiv || e.target === toggle) {
+                        console.log("[DEBUG] Toggle container clicked:", e.target);
+                    }
+                });
+            }
+            
+            const toggleLabel = toggle.closest('label');
+            if (toggleLabel) {
+                toggleLabel.addEventListener('click', function(e) {
+                    console.log("[DEBUG] Label CLICKED:", e);
+                    
+                    if (e.target !== toggle) {
+                        e.preventDefault();
+                        console.log("[DEBUG] Triggering toggle from label click");
+                        
+                        if (isLabeller() && isReviewer() && !toggle.disabled) {
+                            toggle.checked = !toggle.checked;
+                            console.log("[DEBUG] Manually toggled checkbox to:", toggle.checked);
+                            
+                            const changeEvent = new Event('change', { bubbles: true });
+                            toggle.dispatchEvent(changeEvent);
+                        }
+                    }
+                });
+                
+                console.log("[DEBUG] Label element:", toggleLabel);
+            }
+            
+            const toggleDiv = document.querySelector('#mode-toggle-switch + div');
+            if (toggleDiv) {
+                toggleDiv.addEventListener('click', function(e) {
+                    console.log("[DEBUG] Visual toggle div CLICKED:", e);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    if (isLabeller() && isReviewer() && !toggle.disabled) {
+                        toggle.checked = !toggle.checked;
+                        console.log("[DEBUG] Manually toggled checkbox to:", toggle.checked);
+                        
+                        const changeEvent = new Event('change', { bubbles: true });
+                        toggle.dispatchEvent(changeEvent);
+                    }
+                });
+                console.log("[DEBUG] Added click handler to visual toggle div:", toggleDiv);
+            }
+            
+            const labelLeft = document.getElementById('mode-label-left');
+            const labelRight = document.getElementById('mode-label-right');
+            
+            if (labelLeft) {
+                labelLeft.addEventListener('click', function(e) {
+                    console.log("[DEBUG] Left label clicked - switching to Label mode");
+                    
+                    if (isLabeller() && isReviewer() && !toggle.disabled) {
+                        toggle.checked = false;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        toggle.dispatchEvent(changeEvent);
+                    }
+                });
+            }
+            
+            if (labelRight) {
+                labelRight.addEventListener('click', function(e) {
+                    console.log("[DEBUG] Right label clicked - switching to Validate mode");
+                    
+                    if (isLabeller() && isReviewer() && !toggle.disabled) {
+                        toggle.checked = true;
+                        const changeEvent = new Event('change', { bubbles: true });
+                        toggle.dispatchEvent(changeEvent);
+                    }
+                });
+            }
+            
+            console.log("[DEBUG] Mode toggle setup complete, initial state:", toggle.checked);
+            toggle._hasToggleListeners = true;
+        }
+        
+        function handleToggleClick(e) {
+            console.log("[DEBUG] Toggle CLICKED:", e);
+            console.log("[DEBUG] Toggle checked after click:", this.checked);
+        }
+        
+        function handleModeToggle(e) {
+            if (!(isLabeller() && isReviewer())) {
+                console.log("[DEBUG] User doesn't have both roles, ignoring toggle");
+                return;
+            }
+            
+            if (this.disabled) {
+                console.log("[DEBUG] Toggle is disabled, ignoring change");
+                return;
+            }
+            
+            const isValidateMode = this.checked;
+            console.log(`[DEBUG] Toggle switched to: ${isValidateMode ? 'Validate' : 'Label'} mode in label.js`);
+            
+            currentMode = isValidateMode ? 'validate' : 'label';
+            
+            updateLabelStyling(isValidateMode);
+            updateUIForMode(isValidateMode);
+            
+            if (typeof window.toggleValidationMode === 'function') {
+                console.log("[DEBUG] Calling global toggleValidationMode");
+                try {
+                    window.toggleValidationMode(isValidateMode);
+                } catch (error) {
+                    console.error("[DEBUG] Error calling global toggleValidationMode:", error);
+                }
+            } else {
+                console.warn("[DEBUG] Global toggleValidationMode function not found - will retry");
+                
+                setTimeout(() => {
+                    if (typeof window.toggleValidationMode === 'function') {
+                        console.log("[DEBUG] Retrying global toggleValidationMode call");
+                        window.toggleValidationMode(isValidateMode);
+                    } else {
+                        console.error("[DEBUG] Global toggleValidationMode still not available");
+                    }
+                }, 100);
+            }
+        }
+        
+        function updateLabelStyling(isValidateMode) {
+            const labelLeft = document.getElementById('mode-label-left');
+            const labelRight = document.getElementById('mode-label-right');
+            
+            if (labelLeft && labelRight) {
+                if (isValidateMode) {
+                    labelLeft.style.fontWeight = 'normal';
+                    labelLeft.classList.remove('text-blue-600');
+                    labelRight.style.fontWeight = 'bold';
+                    labelRight.classList.add('text-blue-600');
+                    console.log('[DEBUG] Updated labels for validate mode');
+                } else {
+                    labelLeft.style.fontWeight = 'bold';
+                    labelLeft.classList.add('text-blue-600');
+                    labelRight.style.fontWeight = 'normal';
+                    labelRight.classList.remove('text-blue-600');
+                    console.log('[DEBUG] Updated labels for label mode');
+                }
+            }
+        }
+
+        // Setup image pan and zoom functionality
+        function setupImagePanZoom() {
+            if (!imageContainer) return;
+            
+            imageContainer.addEventListener('dragstart', (e) => e.preventDefault());
+            imageContainer.addEventListener('mousedown', handlePanStart);
+            document.addEventListener('mousemove', handlePanMove);
+            document.addEventListener('mouseup', handlePanEnd);
+            imageContainer.addEventListener('wheel', handleZoom);
+            imageContainer.addEventListener('imageLoaded', resetPanZoom);
+            
+            console.log('Image pan/zoom functionality initialized');
+        }
+        
+        function handlePanStart(e) {
+            if (e.shiftKey && e.button === 0) {
+                e.preventDefault();
+                isPanning = true;
+                panStartX = e.clientX - currentPanX;
+                panStartY = e.clientY - currentPanY;
+                imageContainer.classList.add('panning');
+                console.log('Pan started');
+            }
+        }
+        
+        function handlePanMove(e) {
+            if (!isPanning) {
+                if (e.shiftKey && imageContainer) {
+                    imageContainer.style.cursor = 'grab';
+                } else if (imageContainer) {
+                    imageContainer.style.cursor = '';
+                }
+                return;
+            }
+            
+            e.preventDefault();
+            currentPanX = e.clientX - panStartX;
+            currentPanY = e.clientY - panStartY;
+            
+            updateImageTransform();
+        }
+        
+        function handlePanEnd(e) {
+            if (isPanning) {
+                isPanning = false;
+                imageContainer.classList.remove('panning');
+                imageContainer.style.cursor = '';
+                console.log('Pan ended');
+            }
+        }
+        
+        function handleZoom(e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+                
+                const zoomIntensity = 0.1;
+                const wheel = e.deltaY < 0 ? 1 : -1;
+                const zoom = Math.exp(wheel * zoomIntensity);
+                
+                const rect = imageContainer.getBoundingClientRect();
+                const centerX = e.clientX - rect.left;
+                const centerY = e.clientY - rect.top;
+                
+                const newScale = Math.min(Math.max(0.1, currentScale * zoom), 5);
+                
+                if (newScale !== currentScale) {
+                    currentPanX = centerX - (centerX - currentPanX) * (newScale / currentScale);
+                    currentPanY = centerY - (centerY - currentPanY) * (newScale / currentScale);
+                    currentScale = newScale;
+                    
+                    updateImageTransform();
+                    updateStatus('zoom-status', `${Math.round(currentScale * 100)}%`);
+                }
+            }
+        }
+        
+        function updateImageTransform() {
+            const canvasWrapper = document.getElementById('canvas-wrapper');
+            if (canvasWrapper) {
+                canvasWrapper.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentScale})`;
+                canvasWrapper.style.transformOrigin = '0 0';
+                canvasWrapper.style.transition = isPanning ? 'none' : 'transform 0.1s ease-out';
+            }
+        }
+        
+        // Helper function to save validation status
+        async function saveValidationStatus(status) {
+            syncBatchAndImageFromAppState();
+            const batchId = window.AppState?.currentBatch || currentBatchId;
+            const imageId = window.AppState?.currentImageId || currentImageId;
+            
+            if (!batchId || !imageId) {
+                throw new Error('No batch or image selected');
+            }
+            
+            const payload = {
+                batch_id: batchId,
+                image_id: imageId,
+                validation_status: status,
+                reviewer_id: userRoles.join(','),
+                timestamp: new Date().toISOString()
+            };
+            
+            const response = await fetch('/api/admin/validation-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return response.json();
+        }
+        
+        // Fallback function to ensure toggle is set up
+        function ensureToggleSetup() {
+            const toggle = document.getElementById('mode-toggle-switch');
+            if (toggle && (isLabeller() && isReviewer())) {
+                console.log("[DEBUG] Ensuring toggle is properly set up (fallback check)");
+                
+                const hasEventListeners = toggle._hasToggleListeners;
+                
+                if (!hasEventListeners) {
+                    console.log("[DEBUG] Setting up toggle event listeners (fallback)");
+                    setupModeToggle();
+                } else {
+                    console.log("[DEBUG] Toggle already has event listeners, skipping setup");
+                }
+            } else if (toggle) {
+                console.log("[DEBUG] Toggle found but user doesn't have both roles - skipping setup");
+            } else {
+                console.log("[DEBUG] Toggle element not found in fallback check");
+            }
+        }
+        
+        setTimeout(ensureToggleSetup, 1000);
+        
+        setTimeout(() => {
+            if (window.AppState?.user) {
+                console.log("[DEBUG] Main.js AppState detected, re-checking roles");
+                if (isLabeller() && isReviewer()) {
+                    console.log("[DEBUG] User now has both roles, ensuring toggle is set up");
+                    ensureToggleSetup();
+                }
+            }
+        }, 1500);
+        
+        // Debug function to test toggle manually (accessible from browser console)
+        window.debugToggle = function() {
+            const toggle = document.getElementById('mode-toggle-switch');
+            if (toggle) {
+                console.log("=== TOGGLE DEBUG INFO ===");
+                console.log("Toggle element:", toggle);
+                console.log("Checked:", toggle.checked);
+                console.log("Disabled:", toggle.disabled);
+                console.log("Event listeners attached:", toggle._hasToggleListeners);
+                console.log("\n--- Role Information ---");
+                console.log("Label.js roles (array):", userRoles);
+                console.log("Main.js role (string):", window.AppState?.user?.role);
+                console.log("Is Administrator:", isAdministrator());
+                console.log("Is Labeller:", isLabeller());
+                console.log("Is Reviewer:", isReviewer());
+                console.log("Can toggle (has both roles):", isLabeller() && isReviewer());
+                console.log("Current mode:", currentMode);
+                
+                console.log("\n--- Testing manual toggle ---");
+                const oldState = toggle.checked;
+                toggle.checked = !oldState;
+                console.log("Toggled from", oldState, "to", toggle.checked);
+                
+                const changeEvent = new Event('change', { bubbles: true });
+                toggle.dispatchEvent(changeEvent);
+                
+                console.log("========================");
+            } else {
+                console.error("Toggle element not found!");
+            }
+        };
+        
+        console.log("[DEBUG] Toggle debug function available as window.debugToggle()");
+        
+        function addToggleVisualFeedback() {
+            const toggle = document.getElementById('mode-toggle-switch');
+            const toggleDiv = document.querySelector('#mode-toggle-switch + div');
+            
+            if (toggle && toggleDiv) {
+                toggleDiv.addEventListener('mouseenter', function() {
+                    if (!toggle.disabled) {
+                        this.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.3)';
+                    }
+                });
+                
+                toggleDiv.addEventListener('mouseleave', function() {
+                    this.style.boxShadow = '';
+                });
+                
+                toggleDiv.addEventListener('mousedown', function() {
+                    if (!toggle.disabled) {
+                        this.style.transform = 'scale(0.95)';
+                    }
+                });
+                
+                toggleDiv.addEventListener('mouseup', function() {
+                    this.style.transform = '';
+                });
+                
+                console.log("[DEBUG] Visual feedback added to toggle");
+            }
+        }
+        
+        setTimeout(addToggleVisualFeedback, 200);
+        
+        window.debugButtonStates = function() {
+            console.group('[DEBUG] Current Button States');
+            console.log('Current mode:', currentMode);
+            console.log('User roles:', userRoles);
+            console.log('isLabeller():', isLabeller());
+            console.log('isReviewer():', isReviewer());
+            console.log('isAdministrator():', isAdministrator());
+            
+            const buttons = {
+                'submit-btn': submitBtn,
+                'delete-btn': deleteBtn,
+                'skip-btn': skipBtn,
+                'accept-btn': acceptBtn,
+                'reject-btn': rejectBtn
+            };
+            
+            Object.entries(buttons).forEach(([name, btn]) => {
+                if (btn) {
+                    console.log(`${name}:`, {
+                        exists: true,
+                        visible: btn.style.display !== 'none',
+                        display: btn.style.display,
+                        classes: btn.className
+                    });
+                } else {
+                    console.log(`${name}: NOT FOUND`);
+                }
+            });
+            
+            const toggle = document.getElementById('mode-toggle-switch');
+            if (toggle) {
+                console.log('Toggle:', {
+                    checked: toggle.checked,
+                    disabled: toggle.disabled,
+                    classes: toggle.className
+                });
+            }
+            
+            console.groupEnd();
+        };
+
+        // =================================================================
+        // EXPOSE CONSOLIDATED FUNCTIONS FOR TESTING
+        // =================================================================
+        
+        // Expose functions that other modules might need
+        window.labelJsFunctions = {
+            handleImageSelection,
+            loadImage,
+            loadBatches,
+            handleBatchSelection,
+            populateImageList,
+            loadAnnotationsForImage,
+            saveAnnotationsToServer,
+            loadNextImage,
+            skipImage,
+            showMessage,
+            updateStatus,
+            loadSensorDataForImage,
+            updateSensorDisplay,
+            clearCanvas,
+            // Label.js specific functions
+            submitAnnotations,
+            acceptAnnotations,
+            rejectAnnotations,
+            deleteAnnotations,
+            updateUIForMode,
+            setupModeToggle,
+            syncBatchAndImageFromAppState
+        };
+        
+        console.log("[DEBUG] Label.js initialization complete with consolidated functions");
+    }
+});

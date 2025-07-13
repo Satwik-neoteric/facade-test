@@ -1,0 +1,192 @@
+<div id="run-inference-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-2xl">
+            <div class="modal-header bg-gradient-to-r from-pink-600 to-pink-700 text-white border-0 rounded-t-xl">
+                <h4 class="modal-title font-bold text-lg">Run AI Inference on Batch</h4>
+                <button type="button" class="btn-close btn-close-white modal-close opacity-75 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6 max-h-96 overflow-y-auto">
+                <form id="run-inference-form" class="space-y-6">
+                    <!-- Batch Selection -->
+                    <div class="form-group">
+                        <label for="inference-batch-id" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-layer-group mr-2 text-pink-500"></i>Target Batch <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <select class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                id="inference-batch-id" 
+                                required>
+                            <option value="">Select a batch...</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Models Section -->
+                    <div class="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+                        <h5 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                            <i class="fas fa-brain mr-2 text-purple-500"></i>AI Models
+                        </h5>
+                        <div class="form-group">
+                            <label for="inference-model1" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                <i class="fas fa-robot mr-2 text-indigo-500"></i>Primary Model <span class="text-red-500 ml-1">*</span>
+                            </label>
+                            <select class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                    id="inference-model1" 
+                                    required>
+                                <option value="">Select primary model...</option>
+                            </select>
+                        </div>
+                        
+                        <div id="additional-models-container" class="space-y-3">
+                            <!-- Additional models will be added here dynamically -->
+                        </div>
+                        
+                        <button type="button" id="add-model-btn" class="btn btn-outline-secondary btn-sm mt-3 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200">
+                            <i class="fas fa-plus mr-2"></i>Add Another Model
+                        </button>
+                    </div>
+                    
+                    <!-- Inference Configuration -->
+                    <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
+                        <h5 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                            <i class="fas fa-cogs mr-2 text-blue-500"></i>Inference Configuration
+                        </h5>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="inference-mode" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-play mr-2 text-green-500"></i>Mode
+                                </label>
+                                <select class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                        id="inference-mode">
+                                    <option value="force">Force</option>
+                                    <option value="auto">Auto</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="inference-window-size" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-expand mr-2 text-orange-500"></i>Window Size
+                                </label>
+                                <input type="number" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="inference-window-size" 
+                                       value="512" 
+                                       min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="inference-overlap" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-layer-group mr-2 text-purple-500"></i>Overlap
+                                </label>
+                                <input type="number" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="inference-overlap" 
+                                       value="64" 
+                                       min="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="inference-confidence" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-percentage mr-2 text-green-500"></i>Confidence (%)
+                                </label>
+                                <input type="number" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="inference-confidence" 
+                                       value="50" 
+                                       min="0" 
+                                       max="100">
+                            </div>
+                        </div>
+                        <div class="form-group mt-4">
+                            <div class="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                                <input class="form-check-input w-5 h-5 text-pink-600 bg-gray-100 border-gray-300 rounded focus:ring-pink-500 dark:focus:ring-pink-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" 
+                                       type="checkbox" 
+                                       id="inference-trace" 
+                                       checked>
+                                <label class="form-check-label ml-3 text-sm font-medium text-gray-700 dark:text-gray-300" for="inference-trace">
+                                    <i class="fas fa-search mr-2 text-pink-500"></i>Enable Tracing
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Compute Configuration -->
+                    <div class="bg-green-50 dark:bg-green-900/20 rounded-xl p-4">
+                        <h5 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                            <i class="fas fa-server mr-2 text-green-500"></i>Compute Configuration
+                        </h5>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="compute-target" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-microchip mr-2 text-blue-500"></i>Compute Target
+                                </label>
+                                <input type="text" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="compute-target" 
+                                       value="cpu-cluster2">
+                            </div>
+                            <div class="form-group">
+                                <label for="inference-instance-count" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-clone mr-2 text-indigo-500"></i>Instance Count
+                                </label>
+                                <input type="number" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="inference-instance-count" 
+                                       value="1" 
+                                       min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="mini-batch-size" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-boxes mr-2 text-orange-500"></i>Mini Batch Size
+                                </label>
+                                <input type="text" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="mini-batch-size" 
+                                       value="5">
+                            </div>
+                            <div class="form-group">
+                                <label for="max-concurrency" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-tachometer-alt mr-2 text-purple-500"></i>Max Concurrency
+                                </label>
+                                <input type="number" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="max-concurrency" 
+                                       value="2" 
+                                       min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="error-threshold" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>Error Threshold
+                                </label>
+                                <input type="number" 
+                                       class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                       id="error-threshold" 
+                                       value="-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="logging-level" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                                    <i class="fas fa-file-alt mr-2 text-gray-500"></i>Logging Level
+                                </label>
+                                <select class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                        id="logging-level">
+                                    <option value="DEBUG">DEBUG</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="WARNING">WARNING</option>
+                                    <option value="ERROR">ERROR</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="run-inference-error" class="alert alert-danger bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 p-4 rounded-xl" style="display: none;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span class="font-medium"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-gray-50 dark:bg-gray-800 border-0 rounded-b-xl p-6 flex space-x-3">
+                <button type="button" class="btn btn-secondary modal-close px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 border-0 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-200" data-bs-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button type="submit" form="run-inference-form" class="btn btn-primary px-6 py-2 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white border-0 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i class="fas fa-magic mr-2"></i>Run Inference
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,172 @@
+/* --- Custom Navbar for Facade AI Studio --- */
+.main-navbar {
+    width: 100%;
+    background: #111;
+    color: #fff;
+    padding: 0;
+    margin: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-family: inherit;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    z-index: 100;
+}
+.navbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 32px;
+    min-height: 56px;
+}
+.navbar-left {
+    display: flex;
+    align-items: center;
+}
+.navbar-logo {
+    height: 38px;
+    margin-right: 12px;
+    vertical-align: middle;
+}
+.navbar-appname {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+.logo-bold {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1.3rem;
+}
+.logo-light {
+    color: #4fc3f7;
+    font-weight: 400;
+    font-size: 1.1rem;
+}
+.navbar-menu {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0 32px 0 32px;
+    padding: 0;
+    gap: 24px;
+}
+.navbar-menu li {
+    display: inline-block;
+}
+.navbar-menu a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 8px 18px 6px 18px;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+.navbar-menu a.active, .navbar-menu a:hover {
+    background: #2196f3;
+    color: #fff;
+}
+.navbar-userinfo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+.user-details {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+.user-name {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1rem;
+}
+.user-role {
+    font-size: 0.85rem;
+    color: #bbb;
+}
+/* --- End Custom Navbar --- */
+
+/* Global styles */
+body {
+    background-color: #f8f9fa;
+}
+
+/* Main container */
+.container-fluid {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+}
+
+/* Card styles */
+.card {
+    margin-bottom: 1.5rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    font-weight: 500;
+}
+
+/* Form controls */
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+/* Navbar */
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Alerts */
+.alert {
+    border-radius: 0.5rem;
+}
+
+/* Image container */
+#image-container {
+    max-height: 600px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+#main-image {
+    max-width: 100%;
+    max-height: 600px;
+}
+
+/* Annotation styles */
+#annotation-canvas {
+    cursor: crosshair;
+}

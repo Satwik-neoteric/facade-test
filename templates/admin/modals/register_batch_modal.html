@@ -1,0 +1,59 @@
+<div id="register-batch-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl">
+            <div class="modal-header bg-gradient-to-r from-teal-600 to-teal-700 text-white border-0 rounded-t-xl">
+                <h4 class="modal-title font-bold text-lg">Register New Batch</h4>
+                <button type="button" class="btn-close btn-close-white modal-close opacity-75 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="register-batch-form" class="space-y-4">
+                    <div class="form-group">
+                        <label for="batch-id" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-id-badge mr-2 text-teal-500"></i>Batch ID <span class="text-red-500 ml-1">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="batch-id" 
+                               placeholder="e.g., BATCH_2024_001"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-description" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-align-left mr-2 text-blue-500"></i>Description
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="batch-description"
+                               placeholder="Brief description of the batch (optional)">
+                    </div>
+                    <div class="form-group">
+                        <label for="batch-categories" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-tags mr-2 text-purple-500"></i>Categories
+                        </label>
+                        <select class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                                id="batch-categories" 
+                                multiple>
+                        </select>
+                        <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>Hold Ctrl/Cmd to select multiple categories
+                        </div>
+                    </div>
+                    <div id="register-batch-error" class="alert alert-danger bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 p-4 rounded-xl" style="display: none;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span class="font-medium"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-gray-50 dark:bg-gray-800 border-0 rounded-b-xl p-6 flex space-x-3">
+                <button type="button" class="btn btn-secondary modal-close px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 border-0 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-200" data-bs-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button id="registerBatchBtn" type="submit" form="register-batch-form"
+                        class="btn btn-primary px-6 py-2 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white border-0 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105">
+                    <i class="fas fa-plus mr-2"></i>Register Batch
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>

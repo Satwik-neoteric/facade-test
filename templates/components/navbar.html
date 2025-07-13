@@ -1,0 +1,47 @@
+<nav class="navbar-enhanced bg-slate-900 dark:bg-slate-900 shadow-xl border-b border-slate-700 dark:border-slate-700 z-50 transition-all duration-300">
+  <div class="container mx-auto px-6">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="/" class="flex items-center space-x-4">
+        <div class="logo-container">
+          <!-- Light mode logo (Dark-Facade-Logo for light backgrounds) -->
+          <img 
+            src="{{ url_for('static', path='/images/Dark-Facade-Logo.png') }}" 
+            alt="Facade Studio" 
+            class="logo-light transition-transform duration-300 hover:scale-105 dark:hidden"
+          >
+          <!-- Dark mode logo (Light-Facade-Logo for dark backgrounds) -->
+          <img 
+            src="{{ url_for('static', path='/images/Light-Facade-Logo.png') }}" 
+            alt="Facade Studio" 
+            class="logo-dark transition-transform duration-300 hover:scale-105 hidden dark:block"
+          >
+        </div>
+        <h1 class="text-xl font-bold text-white hidden md:block">
+       
+        </h1>
+      </a>
+      
+      <!-- Right side controls -->
+      <div class="flex items-center space-x-4">
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" 
+                class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white
+                       transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 
+                       focus:ring-offset-2 focus:ring-offset-slate-900"
+                aria-label="Toggle theme">
+          <i class="fas fa-moon text-yellow-400"></i>
+        </button>
+        
+        <!-- Login Button -->
+        <a href="/api/auth/login" 
+           class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium 
+                  transition-all duration-200 transform hover:scale-105 focus:outline-none 
+                  focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+           data-loading="Logging in...">
+          <i class="fas fa-sign-in-alt mr-2"></i>Login
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,54 @@
+# Ignore directories
+/saved/
+/original/
+/clean_project/
+/temp_backup/
+/original_old/
+/asp/
+
+# Common .NET ignores
+bin/
+obj/
+*.user
+*.suo
+*.tmp
+*.log
+.vs/
+
+# Environment files
+venv/
+.venv
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/__pycache__/
+*.pyc
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Azure credentials and sensitive files
+Azure-Resources.txt
+**/deploy-*.cmd
+*.key
+config.json
+secrets.json
+
+# Backup and working directories with potential secrets
+/working/deploy-*.cmd
+/working/Azure-Resources.txt

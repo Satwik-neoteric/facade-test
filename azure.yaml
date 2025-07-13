@@ -1,0 +1,24 @@
+name: facade-studio-asp
+metadata:
+  template: azd-containerapp-dotnet
+services:
+  facade-studio-asp:
+    project: .
+    language: dotnet
+    host: containerapp
+    docker:
+      path: .
+      dockerfile: Dockerfile
+      context: .
+    env:
+      COSMOS_DB_CONNECTION_STRING: "{{keyvault.COSMOS_DB_CONNECTION_STRING}}"
+      COSMOS_ENDPOINT: "{{keyvault.COSMOS_ENDPOINT}}"
+      COSMOS_KEY: "{{keyvault.COSMOS_KEY}}"
+      COSMOS_DATABASE: "{{keyvault.COSMOS_DATABASE}}"
+      COSMOS_CONTAINER: "{{keyvault.COSMOS_CONTAINER}}"
+dependencies:
+  - keyvault
+  - containerregistry
+  - cosmosdb
+  - applicationinsights
+  - loganalytics

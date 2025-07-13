@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toggle Test - Facade AI Studio</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">Toggle Switch Test</h1>
+        
+        <!-- Mode Toggle Test -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 mb-6 shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Mode Toggle</h2>
+            <div class="flex items-center justify-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300" id="label-mode-text">Label</span>
+                <label class="relative inline-flex items-center cursor-pointer group">
+                    <input type="checkbox" id="mode-toggle-switch" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all duration-300 dark:border-gray-600 peer-checked:bg-blue-600 hover:bg-gray-300 dark:hover:bg-gray-600 peer-checked:hover:bg-blue-700 transition-all duration-300 group-hover:scale-105"></div>
+                </label>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300" id="validate-mode-text">Validate</span>
+            </div>
+            
+            <div class="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    Current Mode: <span id="current-mode" class="font-semibold">Label</span>
+                </p>
+                <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                    Press 'T' key to toggle mode
+                </p>
+            </div>
+        </div>
+        
+        <!-- Button Visibility Test -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Action Buttons</h2>
+            <div class="flex gap-3 flex-wrap">
+                <button id="submit-btn" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    <i class="fas fa-check"></i>
+                    <span>Submit</span>
+                </button>
+                
+                <button id="accept-btn" 
+                        class="hidden inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    <i class="fas fa-check"></i>
+                    <span>Accept</span>
+                </button>
+                
+                <button id="reject-btn" 
+                        class="hidden inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    <i class="fas fa-times"></i>
+                    <span>Reject</span>
+                </button>
+                
+                <button id="delete-btn" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete</span>
+                </button>
+                
+                <button id="skip-btn" 
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                    <i class="fas fa-arrow-right"></i>
+                    <span>Skip</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate the toggle functionality from label.js
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentMode = 'label';
+            
+            const modeToggleSwitch = document.getElementById('mode-toggle-switch');
+            const labelModeText = document.getElementById('label-mode-text');
+            const validateModeText = document.getElementById('validate-mode-text');
+            const currentModeSpan = document.getElementById('current-mode');
+            
+            const submitBtn = document.getElementById('submit-btn');
+            const acceptBtn = document.getElementById('accept-btn');
+            const rejectBtn = document.getElementById('reject-btn');
+            const deleteBtn = document.getElementById('delete-btn');
+            
+            function updateUIForMode(isValidateMode) {
+                currentMode = isValidateMode ? 'validate' : 'label';
+                currentModeSpan.textContent = currentMode.charAt(0).toUpperCase() + currentMode.slice(1);
+                
+                // Update mode text highlighting
+                if (isValidateMode) {
+                    labelModeText.classList.remove('text-blue-600', 'font-semibold');
+                    labelModeText.classList.add('text-gray-700', 'dark:text-gray-300');
+                    validateModeText.classList.remove('text-gray-700', 'dark:text-gray-300');
+                    validateModeText.classList.add('text-orange-600', 'font-semibold', 'dark:text-orange-400');
+                } else {
+                    validateModeText.classList.remove('text-orange-600', 'font-semibold', 'dark:text-orange-400');
+                    validateModeText.classList.add('text-gray-700', 'dark:text-gray-300');
+                    labelModeText.classList.remove('text-gray-700', 'dark:text-gray-300');
+                    labelModeText.classList.add('text-blue-600', 'font-semibold', 'dark:text-blue-400');
+                }
+                
+                // Update button visibility
+                if (isValidateMode) {
+                    submitBtn.style.display = 'none';
+                    deleteBtn.style.display = 'none';
+                    acceptBtn.style.display = 'inline-flex';
+                    rejectBtn.style.display = 'inline-flex';
+                    acceptBtn.classList.remove('hidden');
+                    rejectBtn.classList.remove('hidden');
+                } else {
+                    acceptBtn.style.display = 'none';
+                    rejectBtn.style.display = 'none';
+                    acceptBtn.classList.add('hidden');
+                    rejectBtn.classList.add('hidden');
+                    submitBtn.style.display = 'inline-flex';
+                    deleteBtn.style.display = 'inline-flex';
+                }
+            }
+            
+            // Setup toggle functionality
+            function setupModeToggle() {
+                if (modeToggleSwitch) {
+                    const isValidateMode = currentMode === 'validate';
+                    modeToggleSwitch.checked = isValidateMode;
+                    updateUIForMode(isValidateMode);
+                    
+                    modeToggleSwitch.addEventListener('change', function(e) {
+                        e.stopPropagation();
+                        const isValidateMode = this.checked;
+                        updateUIForMode(isValidateMode);
+                        console.log(`Mode toggled to: ${currentMode}`);
+                        
+                        // Visual feedback
+                        const toggleContainer = this.closest('label');
+                        if (toggleContainer) {
+                            toggleContainer.classList.add('scale-105');
+                            setTimeout(() => {
+                                toggleContainer.classList.remove('scale-105');
+                            }, 150);
+                        }
+                    });
+                    
+                    // Keyboard shortcut
+                    document.addEventListener('keydown', function(e) {
+                        if (e.key === 't' || e.key === 'T') {
+                            if (e.target.tagName.toLowerCase() !== 'input' && e.target.tagName.toLowerCase() !== 'textarea') {
+                                e.preventDefault();
+                                modeToggleSwitch.checked = !modeToggleSwitch.checked;
+                                modeToggleSwitch.dispatchEvent(new Event('change'));
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Initialize
+            setupModeToggle();
+        });
+    </script>
+</body>
+</html>

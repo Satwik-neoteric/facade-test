@@ -1,0 +1,48 @@
+<div id="category-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-2xl">
+            <div class="modal-header bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0 rounded-t-xl">
+                <h4 class="modal-title font-bold text-lg">Add New Category</h4>
+                <button type="button" class="btn-close btn-close-white modal-close opacity-75 hover:opacity-100" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-6">
+                <form id="add-category-form" class="space-y-4">
+                    <div class="form-group">
+                        <label for="category-name" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-tag mr-2 text-orange-500"></i>Category Name
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="category-name" 
+                               placeholder="e.g., Facade Damage"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category-supercategory" class="form-label text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
+                            <i class="fas fa-layer-group mr-2 text-blue-500"></i>Supercategory
+                        </label>
+                        <input type="text" 
+                               class="form-control w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" 
+                               id="category-supercategory"
+                               placeholder="e.g., Structural Issues (optional)">
+                        <div class="form-text text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>Optional parent category for hierarchical organization
+                        </div>
+                    </div>
+                    <div id="add-category-error" class="alert alert-danger bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-800 dark:text-red-200 p-4 rounded-xl" style="display: none;">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        <span class="font-medium"></span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer bg-gray-50 dark:bg-gray-800 border-0 rounded-b-xl p-6 flex space-x-3">
+                <button type="button" class="btn btn-secondary modal-close px-6 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 border-0 rounded-lg font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-200" data-bs-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary px-6 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white border-0 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105" onclick="addCategory()">
+                    <i class="fas fa-plus mr-2"></i>Add Category
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
