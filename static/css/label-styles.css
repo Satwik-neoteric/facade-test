@@ -40,7 +40,6 @@
 #bottom-panel {
     background: white;
     border-top: 1px solid #e5e7eb;
-    min-height: 100px;
     max-height: 200px;
     overflow-y: auto;
     transition: height 0.3s ease;
