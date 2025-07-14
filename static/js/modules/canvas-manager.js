@@ -756,28 +756,37 @@ export function resizeCanvas() {
     const canvasContainer = document.getElementById('canvas-container');
     if (!canvasContainer) return;
     
-    // Get actual container dimensions considering collapsed sidebars
+    // Get actual container dimensions considering collapsed sidebars and bottom panel
     const leftSidebar = document.getElementById('left-sidebar');
     const rightSidebar = document.getElementById('right-sidebar');
+    const bottomPanel = document.getElementById('bottom-panel');
     
-    // Calculate available space accounting for sidebars
+    // Calculate available space accounting for all panels
     let availableWidth = window.innerWidth;
     let availableHeight = window.innerHeight;
     
     // Subtract toolbar height (approximately 80px)
     availableHeight -= 120;
     
-    // Account for sidebars
+    // Account for left sidebar
     if (leftSidebar && !leftSidebar.classList.contains('collapsed')) {
         availableWidth -= leftSidebar.offsetWidth;
     } else if (leftSidebar && leftSidebar.classList.contains('collapsed')) {
         availableWidth -= 60; // Collapsed sidebar width
     }
     
+    // Account for right sidebar
     if (rightSidebar && !rightSidebar.classList.contains('collapsed')) {
         availableWidth -= rightSidebar.offsetWidth;
     } else if (rightSidebar && rightSidebar.classList.contains('collapsed')) {
         availableWidth -= 60; // Collapsed sidebar width
+    }
+    
+    // Account for bottom panel
+    if (bottomPanel && !bottomPanel.classList.contains('collapsed')) {
+        availableHeight -= bottomPanel.offsetHeight;
+    } else if (bottomPanel && bottomPanel.classList.contains('collapsed')) {
+        availableHeight -= 50; // Collapsed bottom panel height (just the header)
     }
     
     // Use most of the available space (leaving small margins)
@@ -858,6 +867,30 @@ function setupSidebarResizeHandlers() {
     
     if (expandRightBtn) {
         expandRightBtn.addEventListener('click', () => {
+            setTimeout(resizeCanvas, 300); // Wait for animation
+        });
+    }
+    
+    // Bottom panel collapse/expand
+    const collapseBottomBtn = document.getElementById('collapse-bottom-panel');
+    
+    if (collapseBottomBtn) {
+        collapseBottomBtn.addEventListener('click', () => {
+            const bottomPanel = document.getElementById('bottom-panel');
+            if (bottomPanel) {
+                // Toggle collapsed state
+                bottomPanel.classList.toggle('collapsed');
+                
+                // Update button icon
+                const icon = collapseBottomBtn.querySelector('i');
+                if (icon) {
+                    if (bottomPanel.classList.contains('collapsed')) {
+                        icon.className = 'fas fa-chevron-down';
+                    } else {
+                        icon.className = 'fas fa-chevron-up';
+                    }
+                }
+            }
             setTimeout(resizeCanvas, 300); // Wait for animation
         });
     }
