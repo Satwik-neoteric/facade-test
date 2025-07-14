@@ -782,12 +782,7 @@ export function resizeCanvas() {
         availableWidth -= 60; // Collapsed sidebar width
     }
     
-    // Account for bottom panel
-    if (bottomPanel && !bottomPanel.classList.contains('collapsed')) {
-        availableHeight -= bottomPanel.offsetHeight;
-    } else if (bottomPanel && bottomPanel.classList.contains('collapsed')) {
-        availableHeight -= 50; // Collapsed bottom panel height (just the header)
-    }
+    
     
     // Use most of the available space (leaving small margins)
     const maxWidth = Math.max(600, availableWidth - 40);
@@ -871,29 +866,7 @@ function setupSidebarResizeHandlers() {
         });
     }
     
-    // Bottom panel collapse/expand
-    const collapseBottomBtn = document.getElementById('collapse-bottom-panel');
     
-    if (collapseBottomBtn) {
-        collapseBottomBtn.addEventListener('click', () => {
-            const bottomPanel = document.getElementById('bottom-panel');
-            if (bottomPanel) {
-                // Toggle collapsed state
-                bottomPanel.classList.toggle('collapsed');
-                
-                // Update button icon
-                const icon = collapseBottomBtn.querySelector('i');
-                if (icon) {
-                    if (bottomPanel.classList.contains('collapsed')) {
-                        icon.className = 'fas fa-chevron-down';
-                    } else {
-                        icon.className = 'fas fa-chevron-up';
-                    }
-                }
-            }
-            setTimeout(resizeCanvas, 300); // Wait for animation
-        });
-    }
     
     console.log("[DEBUG] Sidebar resize handlers setup complete");
 }
