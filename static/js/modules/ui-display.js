@@ -481,7 +481,7 @@ export function showHelpOverlay() {
                         <h3 class="font-medium text-gray-900 dark:text-white mb-2">Annotation</h3>
                         <div class="space-y-1 text-sm">
                             <div class="flex justify-between"><span>Save</span><kbd>Ctrl+S</kbd></div>
-                            <div class="flex justify-between"><span>Delete Selected</span><kbd>Delete</kbd></div>
+                            <div class="flex justify-between"><span>Delete</span><kbd>Delete</kbd></div>
                             <div class="flex justify-between"><span>Deselect</span><kbd>Esc</kbd></div>
                             <div class="flex justify-between"><span>Hide/Show Annotations</span><kbd>H</kbd></div>
                         </div>

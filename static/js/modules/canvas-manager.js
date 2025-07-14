@@ -926,6 +926,66 @@ export function panCanvas(deltaX, deltaY) {
     canvas.setViewportTransform(vpt);
 }
 
+
+function handleKeyDown(event) {
+    const AppState = getAppState();
+    
+    // Ignore if user is typing in input fields
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    switch (event.key.toLowerCase()) {
+        case 'enter':
+            // Enter: Complete polygon if drawing
+            if (AppState.isDrawing && AppState.currentMode === 'polygon' && AppState.polyPoints?.length >= 3) {
+                event.preventDefault();
+                completePolygon();
+            }
+            break;
+            
+        case 'escape':
+            // Escape: Cancel current action
+            event.preventDefault();
+            handleEscapeKey();
+            break;
+            
+        case 'shift':
+            // Shift: Enable pan mode temporarily
+            if (!AppState.isPanning && AppState.fabricCanvas) {
+                AppState.fabricCanvas.defaultCursor = 'grab';
+                AppState.fabricCanvas.hoverCursor = 'grab';
+            }
+            break;
+
+        case 'z':
+            // Z: Zoom in
+            event.preventDefault();
+            {
+                const canvas = AppState.fabricCanvas;
+                if (canvas) {
+                    let zoom = canvas.getZoom();
+                    zoom = Math.min(zoom * 1.1, 20); // max zoom
+                    zoomCanvas(zoom);
+                }
+            }
+            break;
+
+        case 'x':
+            // X: Zoom out
+            event.preventDefault();
+            {
+                const canvas = AppState.fabricCanvas;
+                if (canvas) {
+                    let zoom = canvas.getZoom();
+                    zoom = Math.max(zoom / 1.1, 0.01); // min zoom
+                    zoomCanvas(zoom);
+                }
+            }
+            break;
+    }
+}
+
 /**
  * Cleanup event handlers
  */

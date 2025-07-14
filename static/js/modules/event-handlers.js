@@ -584,7 +584,7 @@ function handleClassButtonClick(button) {
     
     console.log(`[DEBUG] Selected class: ${className}, switched to drawing mode`);
     addLogEntry(`Selected class: ${className}`);
-    showMessage(`Selected class: ${className}. Click on canvas to start drawing.`, "info");
+    // showMessage(`Selected class: ${className}. Click on canvas to start drawing.`, "info");
 }
 
 /**
@@ -626,6 +626,9 @@ function setupKeyboardShortcuts() {
         }
         
         const AppState = getAppState();
+        const MIN_ZOOM = 0.1;
+        const MAX_ZOOM = 5;
+
         
         switch (event.key.toLowerCase()) {
             case 's':
@@ -685,43 +688,7 @@ function setupKeyboardShortcuts() {
                 toggleAnnotationVisibility();
                 break;
                 
-            case 'x':
-                // X: Zoom out
-                event.preventDefault();
-                if (window.modules?.canvasManager?.zoomCanvas) {
-                    window.modules.canvasManager.zoomCanvas(1/1.2);
-                } else if (AppState.fabricCanvas) {
-                    const currentZoom = AppState.fabricCanvas.getZoom();
-                    AppState.fabricCanvas.setZoom(currentZoom / 1.2);
-                    AppState.fabricCanvas.renderAll();
-                }
-                break;
-                
-            case 'y':
-                // Y: Toggle annotations visibility (same as H)
-                event.preventDefault();
-                toggleAnnotationVisibility();
-                break;
-                
-            case 'z':
-                // Z: Zoom in
-                event.preventDefault();
-                if (window.modules?.canvasManager?.zoomCanvas) {
-                    window.modules.canvasManager.zoomCanvas(1.2);
-                } else if (AppState.fabricCanvas) {
-                    const currentZoom = AppState.fabricCanvas.getZoom();
-                    AppState.fabricCanvas.setZoom(currentZoom * 1.2);
-                    AppState.fabricCanvas.renderAll();
-                }
-                break;
-                
-            case 'r':
-                // R: Reset zoom
-                event.preventDefault();
-                if (window.modules?.canvasManager?.resetZoom) {
-                    window.modules.canvasManager.resetZoom();
-                }
-                break;
+            
         }
     });
 }
@@ -828,5 +795,76 @@ export function setupFilterDialogHandlers() {
                 }
             }
         });
+    }
+}
+
+// Zoom function with clamping and transform update
+function zoomImage(factor) {
+    const prevScale = currentScale;
+    let newScale = Math.min(Math.max(currentScale * factor, MIN_SCALE), MAX_SCALE);
+
+    // Center zoom on image container
+    const imageContainer = document.getElementById('canvas-container');
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    if (!imageContainer || !canvasWrapper) return;
+
+    const rect = imageContainer.getBoundingClientRect();
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    // Adjust pan so zoom is centered
+    currentPanX = centerX - (centerX - currentPanX) * (newScale / prevScale);
+    currentPanY = centerY - (centerY - currentPanY) * (newScale / prevScale);
+    currentScale = newScale;
+
+    updateImageTransform();
+    updateStatus('zoom-status', `${Math.round(currentScale * 100)}%`);
+}
+
+
+// Reset pan/zoom to default
+function resetPanZoom() {
+    currentPanX = 0;
+    currentPanY = 0;
+    currentScale = 1;
+    updateImageTransform();
+    updateStatus('zoom-status', 'Full');
+    console.log('Pan/zoom reset');
+}
+
+// Fit image to container
+function fitImageToContainer() {
+    const img = document.getElementById('main-image');
+    const imageContainer = document.getElementById('canvas-container');
+    if (!img || !imageContainer) return;
+
+    const containerRect = imageContainer.getBoundingClientRect();
+    const scaleX = containerRect.width / img.naturalWidth;
+    const scaleY = containerRect.height / img.naturalHeight;
+    currentScale = Math.min(scaleX, scaleY, 1);
+
+    currentPanX = (containerRect.width - img.naturalWidth * currentScale) / 2;
+    currentPanY = (containerRect.height - img.naturalHeight * currentScale) / 2;
+
+    updateImageTransform();
+    updateStatus('zoom-status', `${Math.round(currentScale * 100)}%`);
+    console.log('Image fitted to container');
+}
+
+// Update transform for image viewer
+function updateImageTransform() {
+    const canvasWrapper = document.getElementById('canvas-wrapper');
+    if (canvasWrapper) {
+        canvasWrapper.style.transform = `translate(${currentPanX}px, ${currentPanY}px) scale(${currentScale})`;
+        canvasWrapper.style.transformOrigin = '0 0';
+        canvasWrapper.style.transition = isPanning ? 'none' : 'transform 0.1s ease-out';
+    }
+}
+
+// Utility to update status bar
+function updateStatus(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value;
     }
 }

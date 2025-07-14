@@ -71,10 +71,8 @@ async def get_batch_images(
         logger.info(f"Found {total_images} images for batch {batch_id}. Returning page {page} of {total_pages}.")
         return {
             "batch_id": batch_id,
-            "images": paginated_images,
-            "total_items": total_images,
-            "current_page": page,
-            "total_pages": total_pages,
+            "images": all_images_for_batch,
+            "total_items": total_images
         }
     except Exception as e:
         logger.error(f"Error listing images for batch {batch_id} via /api/batch/...: {e}", exc_info=True)
