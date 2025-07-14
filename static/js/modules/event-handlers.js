@@ -80,31 +80,46 @@ async function handleSubmitAnnotations() {
             return;
         }
 
+        // Always submit, even if no annotations
+        let cocoPayload;
         if (!AppState.annotations || AppState.annotations.length === 0) {
-            console.warn("[DEBUG] No annotations to submit");
-            showMessage("No annotations to submit", "warning");
-            return;
-        }
-
-        // Log each annotation before conversion
-        console.log("[DEBUG] Raw annotations before conversion:");
-        AppState.annotations.forEach((annotation, index) => {
-            console.log(`[DEBUG] Annotation ${index}:`, {
-                type: annotation.type,
-                points: annotation.points?.length || 0,
-                customData: annotation.customData,
-                stroke: annotation.stroke,
-                fill: annotation.fill
+            console.warn("[DEBUG] No annotations to submit, submitting blank []");
+            // Build blank COCO payload with required fields
+            cocoPayload = {
+                images: [{
+                    id: AppState.currentImageId,
+                    file_name: AppState.currentImageId,
+                    width: AppState.originalImageWidth || 800,
+                    height: AppState.originalImageHeight || 600
+                }],
+                annotations: [],
+                categories: AppState.classes?.map((cls, idx) => ({
+                    id: idx + 1,
+                    name: cls.name || cls,
+                    supercategory: "object"
+                })) || []
+            };
+        } else {
+            // Log each annotation before conversion
+            console.log("[DEBUG] Raw annotations before conversion:");
+            AppState.annotations.forEach((annotation, index) => {
+                console.log(`[DEBUG] Annotation ${index}:`, {
+                    type: annotation.type,
+                    points: annotation.points?.length || 0,
+                    customData: annotation.customData,
+                    stroke: annotation.stroke,
+                    fill: annotation.fill
+                });
             });
-        });
 
-        // Convert annotations to COCO format
-        console.log("[DEBUG] Converting to COCO format...");
-        const cocoPayload = convertFabricToCoco(AppState.annotations);
-        console.log("[DEBUG] COCO conversion result:", cocoPayload);
+            // Convert annotations to COCO format
+            console.log("[DEBUG] Converting to COCO format...");
+            cocoPayload = convertFabricToCoco(AppState.annotations);
+            console.log("[DEBUG] COCO conversion result:", cocoPayload);
 
-        if (!cocoPayload) {
-            throw new Error("Failed to convert annotations to COCO format");
+            if (!cocoPayload) {
+                throw new Error("Failed to convert annotations to COCO format");
+            }
         }
 
         // Validate COCO structure
@@ -120,7 +135,7 @@ async function handleSubmitAnnotations() {
         // Prepare the payload for submission
         const payload = {
             coco: cocoPayload,
-            log: [`Submitted ${AppState.annotations.length} annotations at ${new Date().toISOString()}`]
+            log: [`Submitted ${AppState.annotations?.length || 0} annotations at ${new Date().toISOString()}`]
         };
 
         console.log("[DEBUG] Final payload structure:", {
@@ -155,7 +170,7 @@ async function handleSubmitAnnotations() {
         if (!response.ok) {
             const errorText = await response.text();
             console.error("[DEBUG] Error response body:", errorText);
-            
+
             try {
                 const errorData = JSON.parse(errorText);
                 console.error("[DEBUG] Parsed error data:", errorData);
@@ -169,8 +184,8 @@ async function handleSubmitAnnotations() {
         const result = await response.json();
         console.log("[DEBUG] Submission successful:", result);
 
-        addLogEntry(`Submitted ${AppState.annotations.length} annotations for ${AppState.currentImageId}`);
-        showMessage(`Successfully submitted ${AppState.annotations.length} annotations`, "success");
+        addLogEntry(`Submitted ${AppState.annotations?.length || 0} annotations for ${AppState.currentImageId}`);
+        showMessage(`Successfully submitted ${AppState.annotations?.length || 0} annotations`, "success");
 
         // Auto-navigate to next image after successful submission
         setTimeout(() => {
