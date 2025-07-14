@@ -22,7 +22,14 @@ const filterState = {
  */
 export function initFilterManager() {
     console.log("[DEBUG] Initializing filter manager module");
+    
+    // Set up event handlers first
+    setupFilterEventHandlers();
+    
+    // Populate class options (with retry mechanism)
     populateClassFilterOptions();
+    
+    // Update UI
     updateFilterUI();
 }
 
@@ -32,19 +39,44 @@ export function initFilterManager() {
 function populateClassFilterOptions() {
     console.log("[DEBUG] Populating class filter options");
     
-    // Get the predefined classes from the class buttons
-    const classButtons = document.querySelectorAll('.class-button');
-    const classes = Array.from(classButtons).map(button => button.getAttribute('data-class')).filter(Boolean);
-    
-    if (!classes.length) {
-        console.warn("[DEBUG] No classes available for filter");
-        return;
-    }
-    
     const classFilterGroup = document.getElementById('class-filter-group');
     if (!classFilterGroup) {
         console.warn("[DEBUG] Class filter group element not found");
         return;
+    }
+    
+    // Try to get classes from multiple sources
+    let classes = [];
+    
+    // First, try to get from class buttons
+    const classButtons = document.querySelectorAll('.class-button');
+    if (classButtons.length > 0) {
+        classes = Array.from(classButtons).map(button => button.getAttribute('data-class')).filter(Boolean);
+        console.log("[DEBUG] Found classes from class buttons:", classes);
+    }
+    
+    // If no class buttons found, try to get from AppState
+    if (classes.length === 0) {
+        const appState = getAppState();
+        if (appState && appState.classes && Array.isArray(appState.classes)) {
+            classes = appState.classes.map(cls => cls.name || cls).filter(Boolean);
+            console.log("[DEBUG] Found classes from AppState:", classes);
+        }
+    }
+    
+    // If still no classes, use a default set
+    if (classes.length === 0) {
+        classes = [
+            'Brickwork-Fracture',
+            'Stonework-Fracture', 
+            'Cladding-Disengaged',
+            'Mechanical-Faults',
+            'Gaskets-Disengaged',
+            'WindowPane-Mask',
+            'Human-Mask',
+            'Privacy-Mask'
+        ];
+        console.log("[DEBUG] Using default classes:", classes);
     }
     
     classFilterGroup.innerHTML = '';
@@ -52,17 +84,19 @@ function populateClassFilterOptions() {
     
     classes.forEach(className => {
         const checkboxItem = document.createElement('div');
-        checkboxItem.className = 'filter-checkbox-item';
+        checkboxItem.className = 'filter-checkbox-item flex items-center space-x-2';
         
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.id = `class-${className}`;
         checkbox.name = 'class-filter';
         checkbox.value = className;
+        checkbox.className = 'w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500';
         
         const label = document.createElement('label');
         label.setAttribute('for', `class-${className}`);
-        label.textContent = className;
+        label.textContent = className.replace(/-/g, ' ');
+        label.className = 'text-sm text-gray-700 dark:text-gray-300';
         
         checkboxItem.appendChild(checkbox);
         checkboxItem.appendChild(label);
@@ -70,6 +104,14 @@ function populateClassFilterOptions() {
     });
     
     console.log("[DEBUG] Class filter options populated");
+}
+
+/**
+ * Refresh class filter options (call this after classes are loaded)
+ */
+export function refreshClassFilterOptions() {
+    console.log("[DEBUG] Refreshing class filter options");
+    populateClassFilterOptions();
 }
 
 /**
@@ -90,6 +132,9 @@ export function openFilterDialog() {
         console.error("[DEBUG] AppState not available");
         return;
     }
+    
+    // Refresh class options in case they weren't available during init
+    populateClassFilterOptions();
     
     // Populate with current filter state if filters are active
     if (filterState.isFilterActive) {
@@ -127,37 +172,47 @@ export function closeFilterDialog() {
     }
 }
 
+
 /**
  * Apply filters based on user selections
  */
 export async function applyFilters() {
+    console.log("[DEBUG] applyFilters function called");
+    
     try {
         const appState = getAppState();
+        console.log("[DEBUG] Current app state:", appState);
         
         // First, check if a batch is selected
-        if (!appState.currentBatch) {
+        if (!appState || !appState.currentBatch) {
+            console.error("[DEBUG] No batch selected");
             showMessage("Please select a batch first before applying filters", "warning");
             return;
         }
+        
+        console.log(`[DEBUG] Applying filters for batch: ${appState.currentBatch}`);
         
         // Disable apply button to prevent multiple clicks
         const applyBtn = document.getElementById('apply-filters-btn');
         if (applyBtn) {
             applyBtn.disabled = true;
             applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+            console.log("[DEBUG] Apply button disabled and showing spinner");
         }
         
         // Show loading indicator
         const imageList = document.getElementById('image-list');
         if (imageList) {
             imageList.innerHTML = '<li class="loading">Filtering images...</li>';
+            console.log("[DEBUG] Loading indicator shown");
         }
         
         // Collect filter criteria
         const filterCriteria = collectFilterCriteria();
-        console.log("[DEBUG] Applying filters:", filterCriteria);
+        console.log("[DEBUG] Applying filters with criteria:", filterCriteria);
         
         // Call API with filter criteria
+        console.log("[DEBUG] Making API call to /api/filtered-images");
         const response = await fetch('/api/filtered-images', {
             method: 'POST',
             headers: {
@@ -166,11 +221,16 @@ export async function applyFilters() {
             body: JSON.stringify(filterCriteria)
         });
         
+        console.log(`[DEBUG] API response status: ${response.status}`);
+        
         if (!response.ok) {
-            throw new Error(`Error filtering images: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error(`[DEBUG] API error response: ${errorText}`);
+            throw new Error(`Error filtering images: ${response.statusText} (Status: ${response.status})`);
         }
         
         const filteredImages = await response.json();
+        console.log("[DEBUG] Received filtered images:", filteredImages);
         
         // Update filter state
         updateFilterState(filterCriteria);
@@ -190,14 +250,17 @@ export async function applyFilters() {
             : `All filters cleared: Showing ${filteredImages.length} images`;
         
         showMessage(message, "info");
+        console.log(`[DEBUG] Filter operation completed successfully: ${message}`);
         
     } catch (error) {
-        console.error("Error applying filters:", error);
+        console.error("[DEBUG] Error in applyFilters:", error);
+        console.error("[DEBUG] Error stack:", error.stack);
         showMessage(`Error applying filters: ${error.message}`, "error");
         
         // Only try to refresh the image list if we have a batch selected
         const appState = getAppState();
-        if (appState.currentBatch) {
+        if (appState && appState.currentBatch) {
+            console.log("[DEBUG] Attempting to refresh image list as fallback");
             refreshImageList();
         } else {
             const imageList = document.getElementById('image-list');
@@ -210,7 +273,8 @@ export async function applyFilters() {
         const applyBtn = document.getElementById('apply-filters-btn');
         if (applyBtn) {
             applyBtn.disabled = false;
-            applyBtn.innerHTML = '<i class="fas fa-check"></i> Apply Filters';
+            applyBtn.innerHTML = 'Apply Filters';
+            console.log("[DEBUG] Apply button re-enabled");
         }
     }
 }
@@ -263,6 +327,16 @@ function collectFilterCriteria() {
         });
     }
     
+    console.log("[DEBUG] Collected filter criteria:", {
+        nameWildcard,
+        dateStart,
+        dateEnd,
+        unlabelledOnly,
+        hasAnnotations,
+        showDeleted,
+        classFilters
+    });
+    
     const appState = getAppState();
     return {
         batchId: appState.currentBatch,
@@ -293,6 +367,8 @@ function updateFilterState(criteria) {
         criteria.unlabelledOnly || !criteria.hasAnnotations ||
         criteria.showDeleted || criteria.classes.length > 0
     );
+    
+    console.log("[DEBUG] Updated filter state:", filterState);
 }
 
 /**
@@ -429,15 +505,30 @@ function updateImageList(filteredImages) {
                 const imageId = fileName.split('.')[0];
                 
                 const listItem = document.createElement('li');
-                listItem.className = 'image-item';
+                listItem.className = 'image-item cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded';
                 listItem.setAttribute('data-image-id', imageId);
                 listItem.setAttribute('data-image-path', imagePath);
+                listItem.setAttribute('data-batch-id', batchId);
                 listItem.textContent = imageId;
+                
+                // Add click event listener
+                listItem.addEventListener('click', function() {
+                    const imageId = this.dataset.imageId;
+                    const imagePath = this.dataset.imagePath;
+                    const batchId = this.dataset.batchId;
+                    
+                    if (window.modules?.batchManager?.handleImageSelection) {
+                        window.modules.batchManager.handleImageSelection(imageId, imagePath, batchId);
+                    } else if (window.handleImageSelection) {
+                        window.handleImageSelection(imageId, imagePath, batchId);
+                    }
+                });
+                
                 imageList.appendChild(listItem);
             } else if (typeof image === 'object' && image.id && image.file_name) {
                 // Handle object format with id and file_name properties
                 const listItem = document.createElement('li');
-                listItem.className = 'image-item';
+                listItem.className = 'image-item cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded';
                 listItem.setAttribute('data-image-id', image.id);
                 
                 // Ensure the image path is properly formatted for loading
@@ -457,7 +548,22 @@ function updateImageList(filteredImages) {
                 }
                 
                 listItem.setAttribute('data-image-path', imagePath);
+                listItem.setAttribute('data-batch-id', batchId);
                 listItem.textContent = image.id;
+                
+                // Add click event listener
+                listItem.addEventListener('click', function() {
+                    const imageId = this.dataset.imageId;
+                    const imagePath = this.dataset.imagePath;
+                    const batchId = this.dataset.batchId;
+                    
+                    if (window.modules?.batchManager?.handleImageSelection) {
+                        window.modules.batchManager.handleImageSelection(imageId, imagePath, batchId);
+                    } else if (window.handleImageSelection) {
+                        window.handleImageSelection(imageId, imagePath, batchId);
+                    }
+                });
+                
                 imageList.appendChild(listItem);
             }
         });
@@ -565,57 +671,129 @@ export function getFilterState() {
 export function setupFilterEventHandlers() {
     console.log("[DEBUG] Setting up filter form event handlers");
     
-    // Handle radio button changes
-    document.querySelectorAll('[name="annotation-status"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            const isUnlabelled = e.target.value === 'unlabelled';
-            const hasAnnotationsCheck = document.getElementById('has-annotations');
-            const classFilterContainer = document.getElementById('class-filter-container');
-            
-            if (hasAnnotationsCheck && classFilterContainer) {
-                if (isUnlabelled) {
-                    classFilterContainer.style.display = 'none';
-                    hasAnnotationsCheck.checked = false;
-                    hasAnnotationsCheck.disabled = true;
-                } else {
-                    hasAnnotationsCheck.disabled = false;
-                    if (hasAnnotationsCheck.checked) {
-                        classFilterContainer.style.display = 'block';
+    // Add a small delay to ensure DOM elements are available
+    setTimeout(() => {
+        // Handle radio button changes
+        const radioButtons = document.querySelectorAll('[name="annotation-status"]');
+        console.log(`[DEBUG] Found ${radioButtons.length} annotation-status radio buttons`);
+        
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                console.log(`[DEBUG] Radio button changed: ${e.target.value}`);
+                const isUnlabelled = e.target.value === 'unlabelled';
+                const hasAnnotationsCheck = document.getElementById('has-annotations');
+                const classFilterContainer = document.getElementById('class-filter-container');
+                
+                if (hasAnnotationsCheck && classFilterContainer) {
+                    if (isUnlabelled) {
+                        classFilterContainer.style.display = 'none';
+                        hasAnnotationsCheck.checked = false;
+                        hasAnnotationsCheck.disabled = true;
+                    } else {
+                        hasAnnotationsCheck.disabled = false;
+                        if (hasAnnotationsCheck.checked) {
+                            classFilterContainer.style.display = 'block';
+                        }
                     }
                 }
-            }
+            });
         });
-    });
-    
-    // Toggle class filter visibility based on "Has Annotations" checkbox
-    const hasAnnotationsCheck = document.getElementById('has-annotations');
-    if (hasAnnotationsCheck) {
-        hasAnnotationsCheck.addEventListener('change', (e) => {
-            const showClassFilters = e.target.checked;
-            const classFilterContainer = document.getElementById('class-filter-container');
-            
-            if (classFilterContainer) {
-                classFilterContainer.style.display = showClassFilters ? 'block' : 'none';
-                if (!showClassFilters) {
-                    // Uncheck all class filters when hiding
-                    document.querySelectorAll('[name="class-filter"]')
-                        .forEach(cb => cb.checked = false);
+        
+        // Toggle class filter visibility based on "Has Annotations" checkbox
+        const hasAnnotationsCheck = document.getElementById('has-annotations');
+        if (hasAnnotationsCheck) {
+            console.log("[DEBUG] Found has-annotations checkbox");
+            hasAnnotationsCheck.addEventListener('change', (e) => {
+                console.log(`[DEBUG] Has annotations changed: ${e.target.checked}`);
+                const showClassFilters = e.target.checked;
+                const classFilterContainer = document.getElementById('class-filter-container');
+                
+                if (classFilterContainer) {
+                    classFilterContainer.style.display = showClassFilters ? 'block' : 'none';
+                    if (!showClassFilters) {
+                        // Uncheck all class filters when hiding
+                        document.querySelectorAll('[name="class-filter"]')
+                            .forEach(cb => cb.checked = false);
+                    }
                 }
-            }
-        });
-    }
-    
-    // Apply filters button
-    const applyFiltersBtn = document.getElementById('apply-filters-btn');
-    if (applyFiltersBtn) {
-        applyFiltersBtn.addEventListener('click', applyFilters);
-    }
-    
-    // Reset filters button
-    const resetFiltersBtn = document.getElementById('reset-filters-btn');
-    if (resetFiltersBtn) {
-        resetFiltersBtn.addEventListener('click', () => resetFilters(true));
-    }
-    
-    console.log("[DEBUG] Filter form event handlers set up");
+            });
+        } else {
+            console.warn("[DEBUG] has-annotations checkbox not found");
+        }
+        
+        // Apply filters button
+        const applyFiltersBtn = document.getElementById('apply-filters-btn');
+        if (applyFiltersBtn) {
+            console.log("[DEBUG] Found apply-filters-btn, setting up click handler");
+            
+            // Remove any existing listeners first
+            applyFiltersBtn.replaceWith(applyFiltersBtn.cloneNode(true));
+            const newApplyBtn = document.getElementById('apply-filters-btn');
+            
+            newApplyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("[DEBUG] Apply filters button clicked - handler triggered");
+                applyFilters();
+            });
+        } else {
+            console.error("[DEBUG] apply-filters-btn not found in DOM");
+        }
+        
+        // Reset filters button
+        const resetFiltersBtn = document.getElementById('reset-filters-btn');
+        if (resetFiltersBtn) {
+            console.log("[DEBUG] Found reset-filters-btn");
+            resetFiltersBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log("[DEBUG] Reset filters button clicked");
+                resetFilters(true);
+            });
+        } else {
+            console.warn("[DEBUG] reset-filters-btn not found");
+        }
+        
+        // Close filter dialog button
+        const closeFilterBtn = document.getElementById('close-filter-dialog');
+        if (closeFilterBtn) {
+            console.log("[DEBUG] Found close-filter-dialog");
+            closeFilterBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log("[DEBUG] Close filter dialog button clicked");
+                closeFilterDialog();
+            });
+        } else {
+            console.warn("[DEBUG] close-filter-dialog not found");
+        }
+        
+        // Open filter dialog button
+        const openFilterBtn = document.getElementById('open-filter-dialog');
+        if (openFilterBtn) {
+            console.log("[DEBUG] Found open-filter-dialog");
+            openFilterBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log("[DEBUG] Open filter dialog button clicked");
+                openFilterDialog();
+            });
+        } else {
+            console.warn("[DEBUG] open-filter-dialog not found");
+        }
+        
+        // Close modal when clicking outside
+        const filterModal = document.getElementById('filter-modal');
+        if (filterModal) {
+            console.log("[DEBUG] Found filter-modal");
+            filterModal.addEventListener('click', function(event) {
+                if (event.target === filterModal) {
+                    console.log("[DEBUG] Clicked outside filter modal, closing");
+                    closeFilterDialog();
+                }
+            });
+        } else {
+            console.warn("[DEBUG] filter-modal not found");
+        }
+        
+        console.log("[DEBUG] Filter form event handlers setup completed");
+        
+    }, 500); // Wait 500ms for DOM to be ready
 }

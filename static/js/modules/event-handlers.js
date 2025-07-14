@@ -80,24 +80,41 @@ async function handleSubmitAnnotations() {
             return;
         }
 
+        // Disable submit button to prevent multiple clicks
+        const submitBtn = document.getElementById('submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Submitting...</span>';
+        }
+
         // Always submit, even if no annotations
         let cocoPayload;
         if (!AppState.annotations || AppState.annotations.length === 0) {
-            console.warn("[DEBUG] No annotations to submit, submitting blank []");
-            // Build blank COCO payload with required fields
+            console.warn("[DEBUG] No annotations to submit, submitting blank [] to overwrite existing");
+            
+            // Build blank COCO payload with all required fields for proper CosmosDB update
             cocoPayload = {
+                info: {
+                    description: "Facade AI Studio Annotations",
+                    date_created: new Date().toISOString()
+                },
                 images: [{
                     id: AppState.currentImageId,
-                    file_name: AppState.currentImageId,
+                    file_name: `${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg`,
                     width: AppState.originalImageWidth || 800,
                     height: AppState.originalImageHeight || 600
                 }],
-                annotations: [],
+                annotations: [], // This should overwrite existing annotations
                 categories: AppState.classes?.map((cls, idx) => ({
                     id: idx + 1,
                     name: cls.name || cls,
                     supercategory: "object"
-                })) || []
+                })) || [],
+                // Add required CosmosDB fields
+                BatchID: AppState.currentBatch,
+                ImageID: AppState.currentImageId,
+                id: AppState.currentImageId,
+                Status: "Labelled" // Mark as labelled even with empty annotations
             };
         } else {
             // Log each annotation before conversion
@@ -120,6 +137,12 @@ async function handleSubmitAnnotations() {
             if (!cocoPayload) {
                 throw new Error("Failed to convert annotations to COCO format");
             }
+
+            // Ensure required CosmosDB fields are present
+            cocoPayload.BatchID = AppState.currentBatch;
+            cocoPayload.ImageID = AppState.currentImageId;
+            cocoPayload.id = AppState.currentImageId;
+            cocoPayload.Status = "Labelled";
         }
 
         // Validate COCO structure
@@ -129,7 +152,10 @@ async function handleSubmitAnnotations() {
             hasCategories: Array.isArray(cocoPayload.categories),
             categoryCount: cocoPayload.categories?.length || 0,
             hasImages: Array.isArray(cocoPayload.images),
-            imageCount: cocoPayload.images?.length || 0
+            imageCount: cocoPayload.images?.length || 0,
+            hasBatchID: !!cocoPayload.BatchID,
+            hasImageID: !!cocoPayload.ImageID,
+            hasStatus: !!cocoPayload.Status
         });
 
         // Prepare the payload for submission
@@ -143,11 +169,12 @@ async function handleSubmitAnnotations() {
             hasLog: 'log' in payload,
             cocoType: typeof payload.coco,
             logType: typeof payload.log,
-            payloadSize: JSON.stringify(payload).length
+            payloadSize: JSON.stringify(payload).length,
+            isEmptySubmission: (AppState.annotations?.length || 0) === 0
         });
 
-        // Build API URL
-        const apiUrl = `/api/annotations/${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
+        // Use the simpler API URL format that matches the backend routing
+        const apiUrl = `/api/annotations/${AppState.currentBatch}/${AppState.currentImageId}?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
         console.log("[DEBUG] Submitting to URL:", apiUrl);
 
         // Submit to server
@@ -184,8 +211,19 @@ async function handleSubmitAnnotations() {
         const result = await response.json();
         console.log("[DEBUG] Submission successful:", result);
 
-        addLogEntry(`Submitted ${AppState.annotations?.length || 0} annotations for ${AppState.currentImageId}`);
-        showMessage(`Successfully submitted ${AppState.annotations?.length || 0} annotations`, "success");
+        // Check if CosmosDB was updated successfully
+        if (result.cosmosDBSaved === false && result.cosmosDBError) {
+            console.warn("[DEBUG] CosmosDB save failed:", result.cosmosDBError);
+            showMessage(`Warning: ${result.cosmosDBError}`, "warning");
+        }
+
+        const annotationCount = AppState.annotations?.length || 0;
+        const message = annotationCount === 0 
+            ? "Successfully submitted empty annotations (cleared existing)"
+            : `Successfully submitted ${annotationCount} annotations`;
+
+        addLogEntry(`Submitted ${annotationCount} annotations for ${AppState.currentImageId}`);
+        showMessage(message, "success");
 
         // Auto-navigate to next image after successful submission
         setTimeout(() => {
@@ -783,38 +821,55 @@ export function setupNotesDialogHandlers() {
 export function setupFilterDialogHandlers() {
     console.log("[DEBUG] Setting up filter dialog handlers");
     
-    const openFilterBtn = document.getElementById('open-filter-dialog');
-    const closeFilterBtn = document.getElementById('close-filter-dialog');
-    const filterModal = document.getElementById('filter-modal');
-    
-    if (openFilterBtn) {
-        openFilterBtn.addEventListener('click', function() {
-            if (window.modules?.filterManager?.openFilterDialog) {
-                window.modules.filterManager.openFilterDialog();
-            }
-        });
-    }
-    
-    if (closeFilterBtn) {
-        closeFilterBtn.addEventListener('click', function() {
-            if (window.modules?.filterManager?.closeFilterDialog) {
-                window.modules.filterManager.closeFilterDialog();
-            }
-        });
-    }
-    
-    // Close modal when clicking outside
-    if (filterModal) {
-        filterModal.addEventListener('click', function(event) {
-            if (event.target === filterModal) {
+    // Wait a bit for DOM to be ready and filter manager to be loaded
+    setTimeout(() => {
+        const openFilterBtn = document.getElementById('open-filter-dialog');
+        const closeFilterBtn = document.getElementById('close-filter-dialog');
+        const filterModal = document.getElementById('filter-modal');
+        
+        if (openFilterBtn) {
+            console.log("[DEBUG] Setting up open filter button handler");
+            openFilterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("[DEBUG] Open filter button clicked");
+                if (window.modules?.filterManager?.openFilterDialog) {
+                    window.modules.filterManager.openFilterDialog();
+                } else {
+                    console.error("[DEBUG] Filter manager not available");
+                }
+            });
+        } else {
+            console.error("[DEBUG] Open filter button not found");
+        }
+        
+        if (closeFilterBtn) {
+            console.log("[DEBUG] Setting up close filter button handler");
+            closeFilterBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log("[DEBUG] Close filter button clicked");
                 if (window.modules?.filterManager?.closeFilterDialog) {
                     window.modules.filterManager.closeFilterDialog();
+                } else {
+                    console.error("[DEBUG] Filter manager not available");
                 }
-            }
-        });
-    }
-    
-    console.log("[DEBUG] Filter dialog handlers set up");
+            });
+        }
+        
+        // Close modal when clicking outside
+        if (filterModal) {
+            console.log("[DEBUG] Setting up modal outside click handler");
+            filterModal.addEventListener('click', function(event) {
+                if (event.target === filterModal) {
+                    console.log("[DEBUG] Clicked outside filter modal");
+                    if (window.modules?.filterManager?.closeFilterDialog) {
+                        window.modules.filterManager.closeFilterDialog();
+                    }
+                }
+            });
+        }
+        
+        console.log("[DEBUG] Filter dialog handlers setup complete");
+    }, 1000); // Wait 1 second for everything to be loaded
 }
 
 // Zoom function with clamping and transform update

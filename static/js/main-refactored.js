@@ -41,6 +41,35 @@ async function initApp() {
             showMessage("Failed to load classes. Check console for details.", "error");
         }
         
+        // Initialize modular filter manager after classes are loaded
+        try {
+            const filterModule = await import('./modules/filter-manager.js');
+            if (filterModule.initFilterManager) {
+                filterModule.initFilterManager();
+                console.log("[DEBUG] Filter manager module initialized");
+                
+                // Store filter manager functions globally for access
+                window.modules = window.modules || {};
+                window.modules.filterManager = {
+                    openFilterDialog: filterModule.openFilterDialog,
+                    closeFilterDialog: filterModule.closeFilterDialog,
+                    applyFilters: filterModule.applyFilters,
+                    resetFilters: filterModule.resetFilters,
+                    refreshClassFilterOptions: filterModule.refreshClassFilterOptions,
+                    setupFilterEventHandlers: filterModule.setupFilterEventHandlers
+                };
+                
+                // Refresh class options now that classes are loaded
+                if (filterModule.refreshClassFilterOptions) {
+                    setTimeout(() => {
+                        filterModule.refreshClassFilterOptions();
+                    }, 100); // Small delay to ensure DOM is ready
+                }
+            }
+        } catch (error) {
+            console.error("[DEBUG] Error loading filter manager module:", error);
+        }
+
         // Setup event handlers
         setupEventHandlers();
         setupNotesDialogHandlers();
