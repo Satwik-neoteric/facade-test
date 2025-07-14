@@ -425,5 +425,120 @@
     </script>
      <!-- Load facade studio loader for theme management and other features -->
     <script src="{{ url_for('static', path='updated_ui/facade-studio-loader.js') }}"></script>
-    <!-- Label page specific styles -->
-    <link rel="stylesheet" href="{{ url_for('static', path='css/label-styles.css') }}">
+    
+    
+    <script>
+        async function loadClasses() {
+            try {
+                const response = await fetch('/api/classes');
+                const data = await response.json();
+                const container = document.getElementById('class-selection-table');
+                container.innerHTML = '';
+                data.classes.forEach((cls, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'class-button px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 shadow-md';
+                    button.dataset.class = cls.name;
+                    button.style.backgroundColor = cls.color;
+                    button.style.color = '#ffffff';
+                    button.textContent = cls.name.replace(/-/g, ' ');
+                    container.appendChild(button);
+                });
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        // Load classes when page is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadClasses();
+        });
+    </script>
+    <script>
+    // Fix for class selection panel collapse/expand icon and left sidebar collapse
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Bottom class selection panel logic ---
+        const classPanel = document.getElementById('class-selection-panel');
+        const collapseClassBtn = document.getElementById('collapse-class-selection');
+        const expandClassBtn = document.getElementById('expand-class-selection');
+        const classTable = document.getElementById('class-selection-table');
+        // --- Fix: Use CSS classes and transitions only, avoid inline style overrides except for expand button ---
+        if (collapseClassBtn) {
+            collapseClassBtn.addEventListener('click', function() {
+                classPanel.classList.add('collapsed');
+                collapseClassBtn.style.display = 'none';
+                expandClassBtn.style.display = 'flex';
+            });
+        }
+        if (expandClassBtn) {
+            expandClassBtn.addEventListener('click', function() {
+                classPanel.classList.remove('collapsed');
+                collapseClassBtn.style.display = '';
+                expandClassBtn.style.display = 'none';
+            });
+        }
+
+        // --- Left sidebar collapse/expand logic ---
+        const leftSidebar = document.getElementById('left-sidebar');
+        const collapseLeftBtn = document.getElementById('collapse-left-sidebar');
+        let expandLeftBtn = document.getElementById('expand-left-sidebar');
+        if (!expandLeftBtn) {
+            expandLeftBtn = document.createElement('button');
+            expandLeftBtn.id = 'expand-left-sidebar';
+            expandLeftBtn.className = 'expand-left-sidebar-btn hidden absolute top-4 left-2 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full p-2 shadow';
+            expandLeftBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            leftSidebar.parentNode.insertBefore(expandLeftBtn, leftSidebar);
+        }
+        if (leftSidebar && collapseLeftBtn && expandLeftBtn) {
+            collapseLeftBtn.addEventListener('click', function() {
+                leftSidebar.classList.add('collapsed');
+                collapseLeftBtn.style.display = 'none';
+                expandLeftBtn.classList.remove('hidden');
+            });
+            expandLeftBtn.addEventListener('click', function() {
+                leftSidebar.classList.remove('collapsed');
+                collapseLeftBtn.style.display = '';
+                expandLeftBtn.classList.add('hidden');
+            });
+        }
+    });
+    </script>
+    
+    
+    <script>
+        // Skip Button Visibility Enforcement
+        // This script runs periodically to ensure the skip button is always visible
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to ensure skip button visibility
+            function enforceSkipButtonVisibility() {
+                const skipBtn = document.getElementById('skip-btn');
+                if (skipBtn) {
+                    // Force the skip button to be visible with inline styles
+                    skipBtn.setAttribute('style', 'display: inline-flex !important; visibility: visible !important; opacity: 1 !important;');
+                    skipBtn.classList.add('global-button');
+                    skipBtn.disabled = false;
+                    console.log('[DEBUG] Enforcing skip button visibility via periodic check');
+                }
+            }
+            
+            // Run immediately
+            enforceSkipButtonVisibility();
+            
+            // Then run periodically every second
+            setInterval(enforceSkipButtonVisibility, 1000);
+            
+            // Also run after any toggle event
+            const modeToggle = document.getElementById('mode-toggle-switch');
+            if (modeToggle) {
+                modeToggle.addEventListener('change', function() {
+                    // Run immediately after toggle
+                    enforceSkipButtonVisibility();
+                    
+                    // And after a slight delay to override any other scripts
+                    setTimeout(enforceSkipButtonVisibility, 100);
+                    setTimeout(enforceSkipButtonVisibility, 500);
+                });
+            }
+        });
+    </script>
+     <link rel="stylesheet" href="{{ url_for('static', path='css/label-styles.css') }}">
+{% endblock %}

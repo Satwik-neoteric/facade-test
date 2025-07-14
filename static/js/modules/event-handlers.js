@@ -365,48 +365,102 @@ async function saveEmptyAnnotations() {
     const AppState = getAppState();
     
     try {
-        // Create empty COCO data structure
-        const emptyCocoData = {
+        console.log("[DEBUG] Saving empty annotations by reusing submit logic");
+        
+        // Store original annotations
+        const originalAnnotations = [...(AppState.annotations || [])];
+        
+        // Temporarily clear annotations to trigger empty submission logic
+        AppState.annotations = [];
+        
+        // Call the existing submit logic which already handles empty annotations correctly
+        const result = await handleSubmitAnnotationsInternal();
+        
+        // Restore annotations array (UI is already cleared)
+        AppState.annotations = originalAnnotations;
+        
+        return result;
+        
+    } catch (error) {
+        console.error("[DEBUG] Error in saveEmptyAnnotations:", error);
+        return false;
+    }
+}
+
+/**
+ * Internal submit function that can be reused
+ */
+async function handleSubmitAnnotationsInternal() {
+    // Extract the core submission logic from handleSubmitAnnotations
+    // This is the same logic but without the UI button management
+    const AppState = getAppState();
+
+    if (!AppState.currentBatch || !AppState.currentImageId) {
+        throw new Error("No image loaded to submit annotations for");
+    }
+
+    // Build COCO payload (handles empty annotations automatically)
+    let cocoPayload;
+    if (!AppState.annotations || AppState.annotations.length === 0) {
+        cocoPayload = {
+            info: {
+                description: "Facade AI Studio Annotations",
+                date_created: new Date().toISOString()
+            },
             images: [{
-                id: 1,
-                file_name: AppState.currentImageId,
+                id: AppState.currentImageId,
+                file_name: `${AppState.currentBatch}/cam/${AppState.currentImageId}.jpg`,
                 width: AppState.originalImageWidth || 800,
                 height: AppState.originalImageHeight || 600
             }],
             annotations: [],
-            categories: AppState.classes.map((className, index) => ({
-                id: index + 1,
-                name: className,
+            categories: AppState.classes?.map((cls, idx) => ({
+                id: idx + 1,
+                name: cls.name || cls,
                 supercategory: "object"
-            }))
+            })) || [],
+            BatchID: AppState.currentBatch,
+            ImageID: AppState.currentImageId,
+            id: AppState.currentImageId,
+            Status: "Labelled"
         };
-        
-        // Prepare payload for server
-        const payload = {
-            coco: emptyCocoData,
-            log: [],
-            batch_id: AppState.currentBatch,
-            image_id: AppState.currentImageId
-        };
-        
-        const response = await fetch(`/api/annotations/${AppState.currentImageId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Server error: ${response.status}`);
+    } else {
+        cocoPayload = convertFabricToCoco(AppState.annotations);
+        if (!cocoPayload) {
+            throw new Error("Failed to convert annotations to COCO format");
         }
-        
-        return true;
-        
-    } catch (error) {
-        console.error("[DEBUG] Error saving empty annotations:", error);
-        return false;
+        cocoPayload.BatchID = AppState.currentBatch;
+        cocoPayload.ImageID = AppState.currentImageId;
+        cocoPayload.id = AppState.currentImageId;
+        cocoPayload.Status = "Labelled";
     }
+
+    const payload = {
+        coco: cocoPayload,
+        log: [`Submitted ${AppState.annotations?.length || 0} annotations at ${new Date().toISOString()}`]
+    };
+
+    const apiUrl = `/api/annotations/${AppState.currentBatch}/${AppState.currentImageId}?batch_id=${AppState.currentBatch}&image_id=${AppState.currentImageId}`;
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.detail || `Server error: ${response.status}`);
+        } catch (parseError) {
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
+        }
+    }
+
+    return await response.json();
 }
 
 /**
