@@ -766,22 +766,24 @@ export function setupNotesDialogHandlers() {
  * Setup filter dialog handlers
  */
 export function setupFilterDialogHandlers() {
+    console.log("[DEBUG] Setting up filter dialog handlers");
+    
     const openFilterBtn = document.getElementById('open-filter-dialog');
     const closeFilterBtn = document.getElementById('close-filter-dialog');
     const filterModal = document.getElementById('filter-modal');
     
     if (openFilterBtn) {
         openFilterBtn.addEventListener('click', function() {
-            if (window.filterModule?.openFilterDialog) {
-                window.filterModule.openFilterDialog();
+            if (window.modules?.filterManager?.openFilterDialog) {
+                window.modules.filterManager.openFilterDialog();
             }
         });
     }
     
     if (closeFilterBtn) {
         closeFilterBtn.addEventListener('click', function() {
-            if (window.filterModule?.closeFilterDialog) {
-                window.filterModule.closeFilterDialog();
+            if (window.modules?.filterManager?.closeFilterDialog) {
+                window.modules.filterManager.closeFilterDialog();
             }
         });
     }
@@ -790,12 +792,14 @@ export function setupFilterDialogHandlers() {
     if (filterModal) {
         filterModal.addEventListener('click', function(event) {
             if (event.target === filterModal) {
-                if (window.filterModule?.closeFilterDialog) {
-                    window.filterModule.closeFilterDialog();
+                if (window.modules?.filterManager?.closeFilterDialog) {
+                    window.modules.filterManager.closeFilterDialog();
                 }
             }
         });
     }
+    
+    console.log("[DEBUG] Filter dialog handlers set up");
 }
 
 // Zoom function with clamping and transform update

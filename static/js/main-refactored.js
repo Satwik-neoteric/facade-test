@@ -76,30 +76,6 @@ async function initApp() {
             window.modules.uiDisplay.initializeTheme();
         }
         
-        // Initialize filters module (only once)
-        let filterModulePromise = import('./filter.js');
-        window.filterModulePromise = filterModulePromise; // Store for reuse
-        
-        filterModulePromise.then(module => {
-            if (module.initFilters) {
-                module.initFilters();
-                console.log("[DEBUG] Filters module initialized");
-                
-                // Store filter functions globally
-                window.filterModule = {
-                    initFilters: module.initFilters,
-                    openFilterDialog: module.openFilterDialog,
-                    closeFilterDialog: module.closeFilterDialog,
-                    applyFilters: module.applyFilters,
-                    resetFilters: module.resetFilters
-                };
-            } else {
-                console.warn("[DEBUG] initFilters function not found in filter.js");
-            }
-        }).catch(error => {
-            console.error("[DEBUG] Error loading filters module:", error);
-        });
-        
         console.log("[DEBUG] Application initialization completed successfully");
         
     } catch (error) {
@@ -152,8 +128,9 @@ Promise.all([
     import('./modules/save-manager.js'),
     import('./modules/validation-manager.js'),
     import('./modules/ui-display.js'),
-    import('./modules/event-processor.js')
-]).then(([appState, userRoles, dataLoader, canvasManager, utilities, batchManager, annotationManager, dataConverter, eventHandlers, navigation, uiManager, saveManager, validationManager, uiDisplay, eventProcessor]) => {
+    import('./modules/event-processor.js'),
+    import('./modules/filter-manager.js')
+]).then(([appState, userRoles, dataLoader, canvasManager, utilities, batchManager, annotationManager, dataConverter, eventHandlers, navigation, uiManager, saveManager, validationManager, uiDisplay, eventProcessor, filterManager]) => {
     window.modules.appState = appState;
     window.modules.userRoles = userRoles;
     window.modules.dataLoader = dataLoader;
@@ -169,6 +146,7 @@ Promise.all([
     window.modules.validationManager = validationManager;
     window.modules.uiDisplay = uiDisplay;
     window.modules.eventProcessor = eventProcessor;
+    window.modules.filterManager = filterManager;
     
     // Make key functions globally available for backward compatibility
     window.parseCocoAnnotations = dataConverter.parseCocoAnnotations;
@@ -198,7 +176,11 @@ Promise.all([
     // Enable auto-save
     saveManager.enableAutoSave(5); // Auto-save every 5 minutes
     
-    console.log("[DEBUG] All 15 modules loaded and available globally");
+    // Initialize filter manager
+    filterManager.initFilterManager();
+    filterManager.setupFilterEventHandlers();
+    
+    console.log("[DEBUG] All 16 modules loaded and available globally");
     console.log("[DEBUG] Labelling code refactoring complete - organized into modular structure");
     
 }).catch(error => {
