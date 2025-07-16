@@ -3,7 +3,8 @@
 {% block title %}Label Studio - Facade AI Studio{% endblock %}
 
 {% block content %}
-<main class="h-screen overflow-hidden flex flex-col">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/label-styles.css') }}">
+<main class="overflow-hidden flex flex-col" style="height: calc(100vh - 65px);">
     <div class="flex-1 flex overflow-hidden">
         <!-- Left Sidebar - Image List -->
         <div id="left-sidebar" class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col transition-all duration-300 overflow-hidden">
@@ -44,7 +45,7 @@
         <!-- Center Panel - Label Studio -->
         <div class="flex-1 flex flex-col overflow-hidden min-w-0">
             <!-- Action Toolbar -->
-            <div class="action-toolbar bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+            <div class="action-toolbar bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
                 <div class="flex items-center justify-between">
                     <!-- Action Buttons -->
                     <div class="flex items-center gap-3">
@@ -131,9 +132,9 @@
                     </div>
                     
                     <!-- Pan/Zoom Instructions -->
-                    <div class="pan-instructions">
+                    <!-- <div class="pan-instructions">
                         Shift + Drag: Pan | Ctrl + Wheel: Zoom | R: Reset | H: Hide Annotations
-                    </div>
+                    </div> -->
                 </div>
                 <!-- Status Bar -->
                 <div id="status-bar" class="absolute bottom-0 left-0 right-0 bg-gray-800 text-white px-4 py-2 text-sm font-mono">
@@ -182,7 +183,7 @@
                     <i class="fas fa-info-circle text-green-600"></i>
                     Image Metadata
                 </h3>
-                <div id="metadata-box" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm">
+                <div id="metadata-box" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm max-h-32 overflow-y-auto break-words">
                     <p class="text-gray-500 dark:text-gray-400">No image loaded</p>
                 </div>
             </div>
@@ -193,7 +194,7 @@
                     <i class="fas fa-chart-line text-purple-600"></i>
                     Sensor Data
                 </h3>
-                <div id="sensor-data-container" class="bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden">
+                <div id="sensor-data-container" class="bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden max-h-32 overflow-y-auto">
                     <table id="sensor-data-table" class="w-full text-sm">
                         <!-- Sensor data will be populated here by JavaScript -->
                     </table>
@@ -214,7 +215,7 @@
     </div>
 
     <!-- Class Selection Bottom Panel - Collapsible -->
-    <div id="bottom-panel" class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 transition-all duration-300">
+    <div id="bottom-panel" class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-2 flex-shrink-0 transition-all duration-300">
         <div class="flex items-center justify-between mb-4">
 
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -352,12 +353,20 @@
     <!-- Include jQuery before other scripts -->
     <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', path='/js/fabric.min.js') }}"></script>
-    <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script>
-    <script src="{{ url_for('static', path='/js/user-info.js') }}"></script>
-    <script src="{{ url_for('static', path='/js/label.js') }}"></script>
     
-    <!-- Theme Manager for Dark Mode Toggle -->
-    <script src="{{ url_for('static', path='/updated_ui/core/theme-manager.js') }}"></script>
+    <!-- Refactored modular JavaScript files -->
+    <script type="module" src="{{ url_for('static', path='/js/main-refactored.js') }}"></script>
+    
+    <!-- Keep original files for backward compatibility during transition -->
+    <script src="{{ url_for('static', path='/js/user-info.js') }}"></script>
+    <!-- label.js removed - all functionality migrated to modular structure in main-refactored.js -->
+    <!-- Functions migrated include: user roles, batch management, data loading, event handling, canvas operations -->
+    
+    <!-- Original main.js commented out for testing -->
+    <!-- <script type="module" src="{{ url_for('static', path='/js/main.js') }}"></script> -->
+    
+    <!-- Theme Manager for Dark Mode Toggle - handled by basic.html -->
+    <!-- <script src="{{ url_for('static', path='/updated_ui/core/theme-manager.js') }}"></script> -->
     
     <!-- Theme Manager Initialization -->
     <script>
@@ -418,87 +427,7 @@
      <!-- Load facade studio loader for theme management and other features -->
     <script src="{{ url_for('static', path='updated_ui/facade-studio-loader.js') }}"></script>
     <style>
-        /* Image list styling */
-        #image-list {
-            height: 100%;
-            overflow-y: auto;
-        }
-        
-        #image-list li {
-            padding: 12px 16px;
-            margin: 4px 0;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 14px;
-            word-break: break-word;
-        }
-        
-        #image-list li:hover {
-            background: #e9ecef;
-            border-color: #007bff;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        #image-list li.active {
-            background: #007bff;
-            color: white;
-            border-color: #0056b3;
-            box-shadow: 0 2px 8px rgba(0,123,255,0.3);
-        }
-        
-        #image-list li.loading {
-            text-align: center;
-            font-style: italic;
-            color: #6c757d;
-            cursor: default;
-        }
-        
-        #image-list li.empty {
-            text-align: center;
-            color: #6c757d;
-            cursor: default;
-            font-style: italic;
-        }
-        
-        #image-list li.error {
-            text-align: center;
-            color: #dc3545;
-            cursor: default;
-            background: #f8d7da;
-            border-color: #f5c6cb;
-        }
-        
-        /* Dark mode image list styling */
-        .dark #image-list li {
-            background: #374151;
-            border-color: #4b5563;
-            color: #f3f4f6;
-        }
-        
-        .dark #image-list li:hover {
-            background: #4b5563;
-            border-color: #3b82f6;
-        }
-        
-        .dark #image-list li.active {
-            background: #3b82f6;
-            border-color: #2563eb;
-        }
-        
-        .dark #image-list li.loading,
-        .dark #image-list li.empty {
-            color: #9ca3af;
-        }
-        
-        .dark #image-list li.error {
-            color: #fca5a5;
-            background: #7f1d1d;
-            border-color: #991b1b;
-        }
+       
         
         /* Sidebar collapse styling */
         #left-sidebar {
@@ -551,6 +480,7 @@
         /* Bottom panel collapse styling */
         #bottom-panel.collapsed {
             height: auto !important;
+            max-height: 5vh !important;
         }
         
         #bottom-panel.collapsed #class-selection-content {
@@ -567,282 +497,7 @@
             transition: transform 0.3s ease;
         }
         
-        /* Class selection grid styling */
-        #class-selection-table {
-            max-width: 100%;
-            overflow: hidden;
-            /* Ensure consistent height regardless of hover effects */
-            min-height: fit-content;
-        }
         
-        #class-selection-table .class-button {
-            min-width: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            /* Prevent layout shift on hover by removing transform and using other effects */
-            transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-            transform: none !important;
-        }
-        
-        /* Override any existing hover transforms on class buttons */
-        #class-selection-table .class-button:hover {
-            transform: none !important;
-            /* Use subtle shadow and color changes instead of scaling */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-            border-color: currentColor;
-        }
-        
-        /* Ensure the content container has proper overflow handling */
-        #class-selection-content {
-            overflow-y: auto;
-            overflow-x: hidden;
-            max-height: 120px; /* Limit height to approximately 2 rows of buttons */
-        }
-        
-        /* Hide scrollbar when not needed */
-        #class-selection-content::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        #class-selection-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        
-        #class-selection-content::-webkit-scrollbar-thumb {
-            background: rgba(156, 163, 175, 0.5);
-            border-radius: 3px;
-        }
-        
-        #class-selection-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(156, 163, 175, 0.7);
-        }
-        
-        .dark #class-selection-content::-webkit-scrollbar-thumb {
-            background: rgba(75, 85, 99, 0.5);
-        }
-        
-        .dark #class-selection-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(75, 85, 99, 0.7);
-        }
-        
-        /* Responsive toolbar styling */
-        @media (max-width: 1024px) {
-            .action-toolbar .flex {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            
-            .action-toolbar .batch-controls {
-                order: 3;
-                width: 100%;
-                margin-top: 0.5rem;
-                margin-left: 0 !important;
-            }
-            
-            .action-toolbar .batch-controls select {
-                min-width: auto;
-                flex: 1;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .action-toolbar .flex > div:first-child {
-                flex-wrap: wrap;
-            }
-            
-            .action-toolbar button span {
-                display: none;
-            }
-            
-            .action-toolbar button {
-                padding: 0.5rem;
-                min-width: auto;
-            }
-        }
-        
-        .sidebar-collapse-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 60px;
-            flex-shrink: 0;
-        }
-        
-        /* Collapsed sidebar header */
-        .sidebar-header-collapsed {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            height: 60px;
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .dark .sidebar-header-collapsed {
-            border-color: #4b5563;
-        }
-        
-        /* Canvas container sizing */
-        #canvas-container {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-            min-height: 0;
-            cursor: default;
-            user-select: none;
-            /* Ensure perfect centering */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #canvas-container.panning {
-            cursor: grabbing !important;
-        }
-
-        #canvas-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            /* Remove fixed dimensions to allow responsive sizing */
-            max-width: 100%;
-            max-height: 100%;
-            overflow: visible;
-        }
-
-        #annotation-canvas {
-            display: block;
-            max-width: 100%;
-            max-height: 100%;
-            /* Ensure the canvas is centered and responsive */
-            width: auto;
-            height: auto;
-            pointer-events: auto;
-            user-select: none;
-        }
-
-        #main-image {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            display: block;
-            pointer-events: none;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-        
-        /* Ensure both canvas and image maintain proper aspect ratio and centering */
-        #canvas-wrapper > * {
-            object-fit: contain;
-        }
-        
-        /* Pan/zoom instructions */
-        .pan-instructions {
-            position: absolute;
-            bottom: 40px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-family: monospace;
-            pointer-events: none;
-            z-index: 5;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        #canvas-container:hover .pan-instructions {
-            opacity: 1;
-        }
-        
-        /* Loading overlay */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-        }
-        
-        .dark .loading-overlay {
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-        }
-        
-        /* Responsive design */
-        @media (max-width: 1280px) {
-            #left-sidebar, #right-sidebar {
-                width: 16rem; /* 256px */
-            }
-            
-            #class-selection-table {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            #left-sidebar, #right-sidebar {
-                width: 14rem; /* 224px */
-            }
-            
-            #class-selection-table {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-        
-        @media (max-width: 768px) {
-            #left-sidebar, #right-sidebar {
-                width: 12rem; /* 192px */
-            }
-            
-            #class-selection-table {
-                grid-template-columns: repeat(1, minmax(0, 1fr));
-            }
-        }
-        
-        /* Improved transitions */
-        #left-sidebar, #right-sidebar {
-            transition: width 0.3s ease-in-out;
-        }
-        
-        /* Class selection panel styling */
-        #class-selection-table {
-            max-height: 120px;
-            overflow-y: auto;
-        }
-        
-        .class-button {
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            /* Ensure buttons don't shrink and maintain consistent size */
-            flex-shrink: 0;
-            /* Prevent any transform effects */
-            transform: none !important;
-        }
-        
-        .class-button:hover {
-            /* Override any inherited hover transforms */
-            transform: none !important;
-        }
         
         /* Comprehensive CSS override to prevent transform/scale effects on all action and class buttons */
         .class-button,
@@ -1183,16 +838,20 @@
         const expandClassBtn = document.getElementById('expand-class-selection');
         const classTable = document.getElementById('class-selection-table');
         // --- Fix: Use CSS classes and transitions only, avoid inline style overrides except for expand button ---
-        collapseClassBtn.addEventListener('click', function() {
-            classPanel.classList.add('collapsed');
-            collapseClassBtn.style.display = 'none';
-            expandClassBtn.style.display = 'flex';
-        });
-        expandClassBtn.addEventListener('click', function() {
-            classPanel.classList.remove('collapsed');
-            collapseClassBtn.style.display = '';
-            expandClassBtn.style.display = 'none';
-        });
+        if (collapseClassBtn) {
+            collapseClassBtn.addEventListener('click', function() {
+                classPanel.classList.add('collapsed');
+                collapseClassBtn.style.display = 'none';
+                expandClassBtn.style.display = 'flex';
+            });
+        }
+        if (expandClassBtn) {
+            expandClassBtn.addEventListener('click', function() {
+                classPanel.classList.remove('collapsed');
+                collapseClassBtn.style.display = '';
+                expandClassBtn.style.display = 'none';
+            });
+        }
 
         // --- Left sidebar collapse/expand logic ---
         const leftSidebar = document.getElementById('left-sidebar');

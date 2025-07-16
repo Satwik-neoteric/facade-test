@@ -18,6 +18,30 @@ def get_statistics_service(
 ) -> StatisticsService:
     return StatisticsService(cosmos_service=cosmos_service, settings=settings)
 
+@router.get("/statistics/images", summary="Get total images count for dashboard")
+async def get_images_statistics(
+    batch_id: Optional[str] = None,
+    stats_service: StatisticsService = Depends(get_statistics_service)
+):
+    """
+    Get total images count across all batches or for a specific batch.
+    Returns a simple count for dashboard display.
+    """
+    try:
+        statistics = await stats_service.get_all_statistics(batch_id=batch_id)
+        if statistics is None:
+            raise HTTPException(status_code=500, detail="Error retrieving statistics.")
+        
+        # Calculate total images from images_per_batch
+        total_images = sum(batch.count for batch in statistics.images_per_batch)
+        
+        return {"total_images": total_images}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in /statistics/images endpoint (batch_id: {batch_id}): {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error while retrieving image statistics.")
+
 @router.get("/statistics", response_model=StatisticsResponse, summary="Get various statistics for dashboard")
 @router.get("/statistics/", response_model=StatisticsResponse, summary="Get various statistics for dashboard (root path)")
 async def get_statistics(
